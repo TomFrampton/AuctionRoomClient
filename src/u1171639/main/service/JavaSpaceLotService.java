@@ -26,6 +26,7 @@ public class JavaSpaceLotService implements LotService {
 	@Override
 	public long addLot(Lot lot) {
 		try {
+			// Create a highest bid tracker for this lot
 			LotIDCounter counter = (LotIDCounter) space.take(new LotIDCounter(), null, Lease.FOREVER);
 			
 			lot.id = counter.id;
@@ -47,7 +48,13 @@ public class JavaSpaceLotService implements LotService {
 		Lot lot = this.getLotDetails(id);
 		
 		if(lot.sellerId != bidder.id) {
-			
+			try {
+				// Get current bid info
+				// Make bid for lot
+				// Add bid to JS
+			} catch(Exception e) {
+				
+			}
 		} else {
 			// throw some InvalidBidException
 		}
