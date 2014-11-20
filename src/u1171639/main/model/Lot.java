@@ -4,9 +4,8 @@ import java.util.Date;
 
 import net.jini.core.entry.Entry;
 
-public class Lot implements Entry {
-	
-	public Integer id;
+public class Lot implements Entry {	
+	public Long id;
 	public String name;
 	public String description;
 	public Date timeAdded;

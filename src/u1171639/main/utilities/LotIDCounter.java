@@ -7,13 +7,13 @@ import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
 public class LotIDCounter implements Entry {
-	public Integer id;
+	public Long id;
 	
 	public LotIDCounter() {
 		
 	}
 	
-	public LotIDCounter(int id) {
+	public LotIDCounter(long id) {
 		this.id = id;
 	}
 	
