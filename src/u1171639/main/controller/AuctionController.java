@@ -1,6 +1,7 @@
 package u1171639.main.controller;
 
-import u1171639.main.model.Lot;
+import u1171639.main.model.lot.Car;
+import u1171639.main.model.lot.Lot;
 import u1171639.main.service.LotService;
 import u1171639.main.utilities.Callback;
 import u1171639.main.view.AuctionView;
@@ -21,6 +22,10 @@ public class AuctionController {
 	
 	public void listenForLot(Lot template, Callback<Void, Lot> callback) {
 		this.lotService.listenForLot(template, callback);
+	}
+
+	public void subscribeToLot(long id, Callback<Void, Lot> callback) {
+		this.lotService.subscribeToLot(id, callback);
 	}
 
 }

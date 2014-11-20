@@ -1,4 +1,4 @@
-package u1171639.main.model;
+package u1171639.main.model.lot;
 
 import java.util.Date;
 
@@ -9,5 +9,13 @@ public class Lot implements Entry {
 	public String name;
 	public String description;
 	public Date timeAdded;
-	public Integer sellerID;
+	public Long sellerId;
+	
+	public Lot() {
+		
+	}
+	
+	public Lot(long id) {
+		this.id = id;
+	}
 }
