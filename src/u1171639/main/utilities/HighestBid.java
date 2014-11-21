@@ -19,4 +19,8 @@ public class HighestBid implements Entry {
 	public long nextBidId() {
 		return ++bidId;
 	}
+	
+	public boolean hasBid() {
+		return bidId != NO_BID_ID;
+	}
 }

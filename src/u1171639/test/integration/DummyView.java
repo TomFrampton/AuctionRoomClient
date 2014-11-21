@@ -22,8 +22,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import u1171639.main.controller.AuctionController;
+import u1171639.main.exception.AuthorisationException;
 import u1171639.main.model.lot.Car;
 import u1171639.main.model.lot.Lot;
+import u1171639.main.service.AccountService;
 import u1171639.main.service.JavaSpaceLotService;
 import u1171639.main.service.LotService;
 import u1171639.main.utilities.Callback;
@@ -31,6 +33,7 @@ import u1171639.main.utilities.HighestBid;
 import u1171639.main.utilities.LotIDCounter;
 import u1171639.main.utilities.SpaceUtils;
 import u1171639.main.view.AuctionView;
+import u1171639.test.mock.MockAccountService;
 
 public class DummyView implements AuctionView {
 
@@ -48,7 +51,9 @@ public class DummyView implements AuctionView {
 		}
 		
 		LotService lotService = new JavaSpaceLotService(space);
-		new AuctionController(this, lotService);
+		AccountService accountService = new MockAccountService();
+		
+		new AuctionController(this, lotService, accountService);
 		
 		LotIDCounter.initialiseInSpace(space);
 	}
@@ -67,7 +72,10 @@ public class DummyView implements AuctionView {
 		}
 	}
 	
-	
+	@Test
+	public void registerTest() {
+		
+	}
 
 	@Test
 	public void testAddLot() throws Exception {
@@ -96,7 +104,29 @@ public class DummyView implements AuctionView {
 	
 	
 	
-	public void testBidForLot() {
+	public void testBidForLot() throws AuthorisationException {
+		Car car = new Car();
+		car.make = "Test";
+		car.model = "BidForLot";
+		
+		Car car2 = new Car();
+		car.make = "Test2";
+		car.model = "BidForLot2";
+		
+		Car car3 = new Car();
+		car.make = "Test3";
+		car.model = "BidForLot3";
+		
+		car.id = this.controller.addLot(car);
+		car2.id = this.controller.addLot(car);
+		car3.id = this.controller.addLot(car);
+		
+		assertTrue(car2.id == car.id + 1);
+		assertTrue(car3.id == car2.id + 1);
+		
+	}
+	
+	public void testGetHighestBid() {
 		
 	}
 	

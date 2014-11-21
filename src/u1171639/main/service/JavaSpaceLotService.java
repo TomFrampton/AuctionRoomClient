@@ -69,22 +69,44 @@ public class JavaSpaceLotService implements LotService {
 			try {
 				HighestBid template = new HighestBid(lotId);
 				HighestBid highestBidPtr = (HighestBid) space.take(template, null, Lease.FOREVER);
+				Bid highestBid = null;
 				
-				// A bid is uniquely identified using a combination of bidId and lotId.
-				Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
-				Bid highestBid = (Bid) space.take(bidTemplate, null, Lease.FOREVER);
-				
-				// If the new amount is greater than the old highest bid
-				if(amount.compareTo(highestBid.amount)  == 1) {
+				if(highestBidPtr.hasBid()) {
+					// A bid is uniquely identified using a combination of bidId and lotId.
+					Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
+					highestBid = (Bid) space.take(bidTemplate, null, Lease.FOREVER);
+				}
+					
+				// If the new amount is greater than the old highest bid or there is no previous bid
+				if(highestBid == null || amount.compareTo(highestBid.amount)  == 1) {
 					Bid newBid = new Bid(highestBidPtr.nextBidId(), lotId, amount);
 					space.write(newBid, null, Lease.FOREVER);
 					space.write(highestBidPtr, null, Lease.FOREVER);
 				}
 			} catch(Exception e) {
-				
+				e.printStackTrace();;
 			}
 		} else {
 			// throw some InvalidBidException
+		}
+	}
+	
+	@Override
+	public Bid getHighestBid(long lotId) {
+		try {
+			HighestBid template = new HighestBid(lotId);
+			HighestBid highestBidPtr = (HighestBid) space.read(template, null, Lease.FOREVER);
+			
+			if(highestBidPtr.hasBid()) {
+				// A bid is uniquely identified using a combination of bidId and lotId.
+				Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
+				return (Bid) space.read(bidTemplate, null, Lease.FOREVER);
+			} else {
+				return null;
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 
