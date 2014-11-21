@@ -15,4 +15,8 @@ public class HighestBid implements Entry {
 	public HighestBid(long lotId) {
 		this.lotId = lotId;
 	}
+	
+	public long nextBidId() {
+		return ++bidId;
+	}
 }

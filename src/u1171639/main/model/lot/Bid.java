@@ -15,7 +15,12 @@ public class Bid implements Entry {
 		
 	}
 	
-	public Bid(long id) {
+	public Bid(long id, long lotId) {
 		this.id = id;
+		this.lotId = lotId;
+	}
+	
+	public Bid(long id, long lotId, BigDecimal amount) {
+		
 	}
 }

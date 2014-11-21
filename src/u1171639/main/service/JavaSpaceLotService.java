@@ -12,6 +12,7 @@ import net.jini.core.lease.Lease;
 import net.jini.core.transaction.TransactionException;
 import net.jini.space.JavaSpace;
 import u1171639.main.model.account.User;
+import u1171639.main.model.lot.Bid;
 import u1171639.main.model.lot.Lot;
 import u1171639.main.utilities.Callback;
 import u1171639.main.utilities.HighestBid;
@@ -61,14 +62,24 @@ public class JavaSpaceLotService implements LotService {
 	}
 	
 	@Override
-	public void bidForLot(long id, BigDecimal amount, User bidder) {
-		Lot lot = this.getLotDetails(id);
+	public void bidForLot(long lotId, BigDecimal amount, User bidder) {
+		Lot lot = this.getLotDetails(lotId);
 		
 		if(lot.sellerId != bidder.id) {
 			try {
-				// Get current bid info
-				// Make bid for lot
-				// Add bid to JS
+				HighestBid template = new HighestBid(lotId);
+				HighestBid highestBidPtr = (HighestBid) space.take(template, null, Lease.FOREVER);
+				
+				// A bid is uniquely identified using a combination of bidId and lotId.
+				Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
+				Bid highestBid = (Bid) space.take(bidTemplate, null, Lease.FOREVER);
+				
+				// If the new amount is greater than the old highest bid
+				if(amount.compareTo(highestBid.amount)  == 1) {
+					Bid newBid = new Bid(highestBidPtr.nextBidId(), lotId, amount);
+					space.write(newBid, null, Lease.FOREVER);
+					space.write(highestBidPtr, null, Lease.FOREVER);
+				}
 			} catch(Exception e) {
 				
 			}

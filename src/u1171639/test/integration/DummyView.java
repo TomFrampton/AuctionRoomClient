@@ -96,6 +96,15 @@ public class DummyView implements AuctionView {
 	
 	
 	
+	public void testBidForLot() {
+		
+	}
+	
+	public void  testUpdateLot() {
+		
+	}
+	
+	
 	@Test
 	public void testSubscribeToLot() throws Exception {
 		Car car = new Car();
