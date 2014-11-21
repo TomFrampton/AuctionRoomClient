@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.net.ConnectException;
 import java.rmi.RemoteException;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -22,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import u1171639.main.controller.AuctionController;
+import u1171639.main.model.DistributedObject;
 import u1171639.main.model.lot.Car;
 import u1171639.main.model.lot.Lot;
 import u1171639.main.service.JavaSpaceLotService;
@@ -37,12 +39,11 @@ public class DummyView implements AuctionView {
 	private AuctionController controller;
 	private Object object;
 	private JavaSpace space;
-	
-	private static final String TESTING_FLAG = "TESTING";
+	private UUID executionId = DistributedObject.EXECUTION_ID;
 	
 	@Before
 	public void setUp() throws Exception {
-		this.space = SpaceUtils.getSpace("localhost");
+		this.space = SpaceUtils.getSpace();
 		if(space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
@@ -57,11 +58,12 @@ public class DummyView implements AuctionView {
 
 	@After
 	public void tearDown() throws Exception {
-		Lot template = new Lot();
-		template.description = TESTING_FLAG;
+		DistributedObject template = new DistributedObject() {
+		};
 		
 		for(;;) {
 			if(this.space.takeIfExists(template, null, 0) == null) {
+				System.out.println("EXECUTIONID");
 				break;
 			}
 		}
@@ -74,7 +76,6 @@ public class DummyView implements AuctionView {
 		Car car = new Car();
 		car.make = "Ford";
 		car.model = "Focus";
-		car.description = TESTING_FLAG;
 		
 		long carId = this.controller.addLot(car);
 		assertTrue(carId >= 0);
@@ -110,7 +111,6 @@ public class DummyView implements AuctionView {
 		Car car = new Car();
 		car.make = "Mazda";
 		car.model = "RX8";
-		car.description = TESTING_FLAG;
 		
 		car.id = this.controller.addLot(car);
 		
@@ -151,7 +151,6 @@ public class DummyView implements AuctionView {
 		Car car = new Car();
 		car.make = "Honda";
 		car.model = "Civic";
-		car.description = TESTING_FLAG;
 		
 		final Object finished = new Object();
 		this.controller.listenForLot(car, new Callback<Void, Lot>() {
