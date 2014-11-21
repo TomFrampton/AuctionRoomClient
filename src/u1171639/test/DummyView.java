@@ -27,6 +27,7 @@ import u1171639.main.model.lot.Lot;
 import u1171639.main.service.JavaSpaceLotService;
 import u1171639.main.service.LotService;
 import u1171639.main.utilities.Callback;
+import u1171639.main.utilities.HighestBid;
 import u1171639.main.utilities.LotIDCounter;
 import u1171639.main.utilities.SpaceUtils;
 import u1171639.main.view.AuctionView;
@@ -41,13 +42,13 @@ public class DummyView implements AuctionView {
 	
 	@Before
 	public void setUp() throws Exception {
-		this.space = SpaceUtils.getSpace("localhost");
+		this.space = SpaceUtils.getSpace();
 		if(space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
 		LotService lotService = new JavaSpaceLotService(space);
-		AuctionController controller = new AuctionController(this, lotService);
+		new AuctionController(this, lotService);
 		
 		LotIDCounter.initialiseInSpace(space);
 	}
@@ -69,7 +70,7 @@ public class DummyView implements AuctionView {
 	
 
 	@Test
-	public void testAddLot() {
+	public void testAddLot() throws Exception {
 		Car car = new Car();
 		car.make = "Ford";
 		car.model = "Focus";
@@ -80,6 +81,17 @@ public class DummyView implements AuctionView {
 		
 		long carId2 = this.controller.addLot(car);
 		assertTrue(carId2 == carId + 1);
+		
+		HighestBid template1 = new HighestBid(carId);
+		HighestBid template2 = new HighestBid(carId2);
+		
+		HighestBid carBid1 = (HighestBid) space.readIfExists(template1, null, 0);
+		HighestBid carBid2 = (HighestBid) space.readIfExists(template2, null, 0);
+		
+		assertNotNull(carBid1);
+		assertNotNull(carBid2);
+		assertEquals(carBid1.bidId, HighestBid.NO_BID_ID);
+		assertEquals(carBid2.bidId, HighestBid.NO_BID_ID);	
 	}
 	
 	
@@ -116,7 +128,7 @@ public class DummyView implements AuctionView {
 		
 		Car retrievedCar = (Car) this.object;
 		
-		assertNotEquals(car, retrievedCar);
+		assertNotSame(car, retrievedCar);
 		assertEquals(car.make, retrievedCar.make);
 		assertEquals(car.model, retrievedCar.model);
 		
@@ -151,7 +163,7 @@ public class DummyView implements AuctionView {
 		}
 		
 		Car retrievedCar = (Car) this.object;
-		assertNotEquals(car, retrievedCar);
+		assertNotSame(car, retrievedCar);
 		assertEquals(car.make, retrievedCar.make);
 		assertEquals(car.model, retrievedCar.model);
 		this.space.take(car, null, Lease.FOREVER);

@@ -6,6 +6,7 @@ import net.jini.space.JavaSpace;
 public class HighestBid implements Entry {
 	public Long lotId;
 	public Long bidId;
+	public static final Long NO_BID_ID = -1l;
 	
 	public HighestBid() {
 		

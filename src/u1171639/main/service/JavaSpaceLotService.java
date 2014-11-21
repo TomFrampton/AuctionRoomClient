@@ -14,6 +14,7 @@ import net.jini.space.JavaSpace;
 import u1171639.main.model.account.User;
 import u1171639.main.model.lot.Lot;
 import u1171639.main.utilities.Callback;
+import u1171639.main.utilities.HighestBid;
 import u1171639.main.utilities.LotIDCounter;
 
 public class JavaSpaceLotService implements LotService {
@@ -27,13 +28,18 @@ public class JavaSpaceLotService implements LotService {
 	public long addLot(Lot lot) {
 		try {
 			// Create a highest bid tracker for this lot
+			HighestBid highestBid = new HighestBid();
+			highestBid.bidId = HighestBid.NO_BID_ID;
+			
 			LotIDCounter counter = (LotIDCounter) space.take(new LotIDCounter(), null, Lease.FOREVER);
 			
 			lot.id = counter.id;
+			highestBid.lotId = lot.id;
 			counter.increment();
 			
-			space.write(lot, null, Lease.FOREVER);
 			space.write(counter, null, Lease.FOREVER);
+			space.write(lot, null, Lease.FOREVER);
+			space.write(highestBid, null, Lease.FOREVER);
 			
 			return lot.id;
 			
