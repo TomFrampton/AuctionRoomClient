@@ -20,6 +20,10 @@ public class AuctionController {
 		return this.lotService.addLot(lot);
 	}
 	
+	public void updateLot(Lot lot) {
+		this.lotService.updateLot(lot);
+	}
+	
 	public void listenForLot(Lot template, Callback<Void, Lot> callback) {
 		this.lotService.listenForLot(template, callback);
 	}

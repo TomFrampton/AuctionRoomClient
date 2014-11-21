@@ -8,6 +8,7 @@ import u1171639.main.utilities.Callback;
 
 public interface LotService {
 	public long addLot(Lot lot);
+	public void updateLot(Lot lot);
 	public void bidForLot(long id, BigDecimal amount, User bidder);
 	public Lot getLotDetails(long id);
 	public void subscribeToLot(long id, Callback<Void, Lot> callback);

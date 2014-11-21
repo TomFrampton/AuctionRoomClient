@@ -1,4 +1,4 @@
-package u1171639.test;
+package u1171639.test.integration;
 
 import static org.junit.Assert.*;
 
@@ -42,7 +42,7 @@ public class DummyView implements AuctionView {
 	
 	@Before
 	public void setUp() throws Exception {
-		this.space = SpaceUtils.getSpace();
+		this.space = SpaceUtils.getSpace("localhost");
 		if(space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
@@ -103,11 +103,11 @@ public class DummyView implements AuctionView {
 		car.model = "RX8";
 		car.description = TESTING_FLAG;
 		
-		long carId = this.controller.addLot(car);
+		car.id = this.controller.addLot(car);
 		
 		final Object finished = new Object();
 		
-		this.controller.subscribeToLot(carId, new Callback<Void, Lot>() {
+		this.controller.subscribeToLot(car.id, new Callback<Void, Lot>() {
 			
 			@Override
 			public Void call(Lot lot) {
@@ -120,7 +120,7 @@ public class DummyView implements AuctionView {
 			}
 		});
 		
-		this.controller.addLot(car);
+		this.controller.updateLot(car);
 		
 		synchronized(finished) {
 			finished.wait();

@@ -50,6 +50,17 @@ public class JavaSpaceLotService implements LotService {
 	}
 	
 	@Override
+	public void updateLot(Lot lot) {
+		try {
+			Lot template = new Lot(lot.id);
+			space.take(template, null, Lease.FOREVER);
+			space.write(lot, null, Lease.FOREVER);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
 	public void bidForLot(long id, BigDecimal amount, User bidder) {
 		Lot lot = this.getLotDetails(id);
 		
