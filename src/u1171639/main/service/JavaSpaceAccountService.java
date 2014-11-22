@@ -1,6 +1,7 @@
 package u1171639.main.service;
 
 import net.jini.space.JavaSpace;
+import u1171639.main.exception.AuthenticationException;
 import u1171639.main.exception.RegistrationException;
 import u1171639.main.model.account.User;
 import u1171639.main.utilities.PasswordHashScheme;
@@ -15,7 +16,7 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 	
 	@Override
-	public User login(User credentials) {
+	public User login(User credentials) throws AuthenticationException {
 		// TODO Auto-generated method stub
 		return null;
 	}
