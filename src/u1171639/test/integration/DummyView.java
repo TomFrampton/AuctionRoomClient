@@ -14,9 +14,12 @@ import org.junit.Test;
 
 import u1171639.main.controller.AuctionController;
 import u1171639.main.exception.AuthenticationException;
-import u1171639.main.exception.AuthorisationException;
+import u1171639.main.exception.InvalidBidException;
+import u1171639.main.exception.RequiresLoginException;
 import u1171639.main.exception.RegistrationException;
+import u1171639.main.exception.UnauthorisedBidException;
 import u1171639.main.model.account.User;
+import u1171639.main.model.lot.Bid;
 import u1171639.main.model.lot.Car;
 import u1171639.main.model.lot.Lot;
 import u1171639.main.service.AccountService;
@@ -35,8 +38,11 @@ public class DummyView implements AuctionView {
 	private Object object;
 	private JavaSpace space;
 	
-	private static final String USER_EMAIL = "user@testing.com";
-	private static final String USER_PASSWORD = "password";
+	private static final String USER_EMAIL1 = "user@testing.com";
+	private static final String USER_PASSWORD1 = "password";
+	
+	private static final String USER_EMAIL2 = "user2@testing.com";
+	private static final String USER_PASSWORD2 = "password2";
 	
 	@Before
 	public void setUp() throws Exception {
@@ -52,11 +58,16 @@ public class DummyView implements AuctionView {
 		
 		LotIDCounter.initialiseInSpace(space);
 		
-		// Generate a user that we can use during testing
+		// Generate users that we can use during testing
 		User user = new User();
-		user.email = USER_EMAIL;
-		user.password = USER_PASSWORD;
+		user.email = USER_EMAIL1;
+		user.password = USER_PASSWORD1;
 		this.controller.register(user);
+		
+		User user2 = new User();
+		user2.email = USER_EMAIL2;
+		user2.password = USER_PASSWORD2;
+		this.controller.register(user2);
 	}
 	
 	
@@ -101,7 +112,7 @@ public class DummyView implements AuctionView {
 		try {
 			this.controller.addLot(car);
 			fail("Lot added without being logged in");
-		} catch(AuthorisationException e) {
+		} catch(RequiresLoginException e) {
 			// Pass
 		}
 		
@@ -109,10 +120,8 @@ public class DummyView implements AuctionView {
 		
 		try {
 			long carId = this.controller.addLot(car);
-			assertTrue(carId >= 0);
-			
 			long carId2 = this.controller.addLot(car);
-			assertTrue(carId2 == carId + 1);
+			assertEquals(carId2, carId + 1);
 			
 			HighestBid template1 = new HighestBid(carId);
 			HighestBid template2 = new HighestBid(carId2);
@@ -124,7 +133,7 @@ public class DummyView implements AuctionView {
 			assertNotNull(carBid2);
 			assertEquals(carBid1.bidId, HighestBid.NO_BID_ID);
 			assertEquals(carBid2.bidId, HighestBid.NO_BID_ID);
-		} catch(AuthorisationException e) {
+		} catch(RequiresLoginException e) {
 			fail("AuthorisationException despite being logged in.");
 		} finally {
 			this.logout();
@@ -133,7 +142,7 @@ public class DummyView implements AuctionView {
 	
 	
 	@Test
-	public void testBidForLot() throws AuthorisationException {
+	public void testBidForLot() throws RequiresLoginException {
 		Car car = new Car();
 		car.make = "Test";
 		car.model = "BidForLot";
@@ -149,7 +158,9 @@ public class DummyView implements AuctionView {
 		try {
 			this.controller.bidForLot(-1, new BigDecimal(100.00));
 			fail("Bid made without being logged in");
-		} catch(AuthorisationException e) {
+		} catch(UnauthorisedBidException | InvalidBidException e) {
+			fail("Bid attempted without being logged in");
+		} catch(RequiresLoginException e) {
 			// Pass
 		}
 		
@@ -160,12 +171,63 @@ public class DummyView implements AuctionView {
 			car2.id = this.controller.addLot(car2);
 			car3.id = this.controller.addLot(car3);
 
-			assertTrue(car2.id == car.id + 1);
-			assertTrue(car3.id == car2.id + 1);
+			assertTrue(car2.id.equals(car.id + 1));
+			assertTrue(car3.id.equals(car2.id + 1));
 			
-			// TODO Adding a bid
-		} catch(AuthorisationException e) {
+			try {
+				this.controller.bidForLot(car.id, new BigDecimal(1000.00));
+				fail("Should not have been able to bid for own Lot");
+			} catch(UnauthorisedBidException e) {
+				// Pass
+			} finally {
+				this.logout();
+			}
+			
+			// Log in with a different user
+			this.logIn(USER_EMAIL2, USER_PASSWORD2);
+			this.controller.bidForLot(car.id, new BigDecimal(1000.00));
+			Bid highestBid1 = this.controller.getHighestBid(car.id);
+			
+			assertTrue(highestBid1.id.equals(0l));
+			assertEquals(highestBid1.lotId, car.id);
+			assertTrue(highestBid1.amount.compareTo(new BigDecimal(1000.00)) == 0);
+			
+			try {
+				this.controller.bidForLot(car.id, new BigDecimal(100.00));
+				highestBid1 = this.controller.getHighestBid(car.id);
+				fail("Bid should exceed current bid amount");
+			} catch(InvalidBidException e) {
+				// Pass
+			}
+			
+			assertTrue(highestBid1.id.equals(0l));
+			assertEquals(highestBid1.lotId, car.id);
+			assertTrue(highestBid1.amount.compareTo(new BigDecimal(1000.00)) == 0);
+			
+			this.controller.bidForLot(car.id, new BigDecimal(1001.00));
+			highestBid1 = this.controller.getHighestBid(car.id);
+			
+			assertTrue(highestBid1.id.equals(1l));
+			assertEquals(highestBid1.lotId, car.id);
+			assertTrue(highestBid1.amount.compareTo(new BigDecimal(1001.00)) == 0);
+			
+			assertNull(this.controller.getHighestBid(car2.id));
+			
+			try {
+				this.controller.bidForLot(car2.id, new BigDecimal(-500.00));
+				fail("Bid amount should be greater than zero");
+			} catch (InvalidBidException e) {
+				// Pass
+			}
+			Bid highestBid2 = this.controller.getHighestBid(car2.id);
+			assertNull(this.controller.getHighestBid(car2.id));
+			
+		} catch(RequiresLoginException e) {
 			fail("AuthorisationException despite being logged in.");
+		} catch (UnauthorisedBidException e) {
+			fail("Should have been able to bid on Lot.");
+		} catch(InvalidBidException e) {
+			fail("Bid was valid. Should have been accepted");
 		} finally {
 			this.logout();
 		}
@@ -204,7 +266,7 @@ public class DummyView implements AuctionView {
 		try {
 			this.controller.subscribeToLot(0, callback);
 			fail("Lot subscribed to without being logged in");
-		} catch(AuthorisationException e) {
+		} catch(RequiresLoginException e) {
 			// Pass
 		} finally {
 			synchronized(finished) {
@@ -228,7 +290,7 @@ public class DummyView implements AuctionView {
 			assertNotSame(car, retrievedCar);
 			assertEquals(car.make, retrievedCar.make);
 			assertEquals(car.model, retrievedCar.model);
-		} catch(AuthorisationException e) {
+		} catch(RequiresLoginException e) {
 			fail("AuthorisationException despite being logged in.");
 		} finally {
 			synchronized(finished) {
@@ -264,7 +326,7 @@ public class DummyView implements AuctionView {
 		try {
 			this.controller.listenForLot(car, callback);
 			fail("Listened for lot without being logged in");
-		} catch(AuthorisationException e) {
+		} catch(RequiresLoginException e) {
 			// Pass
 		} finally {
 			synchronized(finished) {
@@ -286,7 +348,7 @@ public class DummyView implements AuctionView {
 			assertEquals(car.make, retrievedCar.make);
 			assertEquals(car.model, retrievedCar.model);
 			this.space.take(car, null, Lease.FOREVER);
-		} catch(AuthorisationException e) {
+		} catch(RequiresLoginException e) {
 			fail("AuthorisationException despite being logged in.");
 		} finally {
 			synchronized(finished) {
@@ -306,9 +368,13 @@ public class DummyView implements AuctionView {
 	}
 	
 	private User logIn() {
+		return this.logIn(USER_EMAIL1, USER_PASSWORD1);
+	}
+	
+	private User logIn(String email, String password) {
 		User credentials = new User();
-		credentials.email = USER_EMAIL;
-		credentials.password = USER_PASSWORD;
+		credentials.email = email;
+		credentials.password = password;
 
 		try {
 			User user = this.controller.login(credentials);
@@ -317,7 +383,6 @@ public class DummyView implements AuctionView {
 			fail("Failed to log in with default credentials.");
 			return null;
 		}
-		
 	}
 	
 	private void logout() {

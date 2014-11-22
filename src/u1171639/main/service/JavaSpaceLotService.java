@@ -11,6 +11,9 @@ import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
 import net.jini.core.transaction.TransactionException;
 import net.jini.space.JavaSpace;
+import u1171639.main.exception.InvalidBidException;
+import u1171639.main.exception.RequiresLoginException;
+import u1171639.main.exception.UnauthorisedBidException;
 import u1171639.main.model.account.User;
 import u1171639.main.model.lot.Bid;
 import u1171639.main.model.lot.Lot;
@@ -62,32 +65,50 @@ public class JavaSpaceLotService implements LotService {
 	}
 	
 	@Override
-	public void bidForLot(long lotId, BigDecimal amount, User bidder) {
-		Lot lot = this.getLotDetails(lotId);
-		
-		if(lot.sellerId != bidder.id) {
-			try {
-				HighestBid template = new HighestBid(lotId);
-				HighestBid highestBidPtr = (HighestBid) space.take(template, null, Lease.FOREVER);
-				Bid highestBid = null;
-				
-				if(highestBidPtr.hasBid()) {
-					// A bid is uniquely identified using a combination of bidId and lotId.
-					Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
-					highestBid = (Bid) space.take(bidTemplate, null, Lease.FOREVER);
-				}
+	public void bidForLot(long lotId, BigDecimal amount, User bidder) throws UnauthorisedBidException, InvalidBidException {
+		if (amount.compareTo(BigDecimal.ZERO) > 0) {
+			Lot lot = this.getLotDetails(lotId);
+			
+			if(!lot.sellerId.equals(bidder.id)) {
+				try {
+					HighestBid template = new HighestBid(lotId);
+					HighestBid highestBidPtr = (HighestBid) space.take(template, null, Lease.FOREVER);
+					Bid highestBid = null;
 					
-				// If the new amount is greater than the old highest bid or there is no previous bid
-				if(highestBid == null || amount.compareTo(highestBid.amount)  == 1) {
-					Bid newBid = new Bid(highestBidPtr.nextBidId(), lotId, amount);
-					space.write(newBid, null, Lease.FOREVER);
+					if(highestBidPtr.hasBid()) {
+						// A bid is uniquely identified using a combination of bidId and lotId.
+						Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
+						highestBid = (Bid) space.take(bidTemplate, null, Lease.FOREVER);
+					}
+						
+					// If the new amount is greater than the old highest bid or there is no previous bid
+					if(highestBid == null || amount.compareTo(highestBid.amount)  == 1) {
+						Bid newBid = new Bid(highestBidPtr.nextBidId(), lotId, amount);
+						space.write(newBid, null, Lease.FOREVER);
+					} else {
+						space.write(highestBid, null, Lease.FOREVER);
+						space.write(highestBidPtr, null, Lease.FOREVER);
+						throw new InvalidBidException("Bid amount must exceed current highest bid.");
+					}
+					
 					space.write(highestBidPtr, null, Lease.FOREVER);
+				} catch(RemoteException e) {
+					e.printStackTrace();
+				} catch (TransactionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (UnusableEntryException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-			} catch(Exception e) {
-				e.printStackTrace();;
+			} else {
+				throw new UnauthorisedBidException("You are not allowed to bid on your own Lot.");
 			}
 		} else {
-			// throw some InvalidBidException
+			throw new InvalidBidException("Bid amount must be greater than 0");
 		}
 	}
 	

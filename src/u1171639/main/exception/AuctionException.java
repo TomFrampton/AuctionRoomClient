@@ -1,13 +1,9 @@
 package u1171639.main.exception;
 
-public class AuthorisationException extends Exception {
+public class AuctionException extends Exception {
 	private String error;
 	
-	public AuthorisationException() {
-		
-	}
-	
-	public AuthorisationException(String error) {
+	public AuctionException(String error) {
 		this.error = error;
 	}
 	

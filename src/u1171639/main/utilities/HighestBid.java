@@ -21,6 +21,6 @@ public class HighestBid implements Entry {
 	}
 	
 	public boolean hasBid() {
-		return bidId != NO_BID_ID;
+		return !bidId.equals(NO_BID_ID);
 	}
 }

@@ -3,9 +3,12 @@ package u1171639.main.controller;
 import java.math.BigDecimal;
 
 import u1171639.main.exception.AuthenticationException;
-import u1171639.main.exception.AuthorisationException;
+import u1171639.main.exception.InvalidBidException;
+import u1171639.main.exception.RequiresLoginException;
 import u1171639.main.exception.RegistrationException;
+import u1171639.main.exception.UnauthorisedBidException;
 import u1171639.main.model.account.User;
+import u1171639.main.model.lot.Bid;
 import u1171639.main.model.lot.Car;
 import u1171639.main.model.lot.Lot;
 import u1171639.main.service.AccountService;
@@ -37,43 +40,52 @@ public class AuctionController {
 		this.accountService.logout();
 	}
 	
-	public long addLot(Lot lot) throws AuthorisationException {
+	public long addLot(Lot lot) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
+			lot.sellerId = this.accountService.getCurrentUser().id;
 			return this.lotService.addLot(lot);
 		} else {
-			throw new AuthorisationException("User must be logged in to partake in auction");
+			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 	
-	public void updateLot(Lot lot) throws AuthorisationException {
+	public void updateLot(Lot lot) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.updateLot(lot);
 		} else {
-			throw new AuthorisationException("User must be logged in to partake in auction");
+			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 	
-	public void bidForLot(long lotId, BigDecimal amount) throws AuthorisationException {
+	public void bidForLot(long lotId, BigDecimal amount) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.bidForLot(lotId, amount, accountService.getCurrentUser());
 		} else {
-			throw new AuthorisationException("User must be logged in to partake in auction");
+			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 	
-	public void listenForLot(Lot template, Callback<Void, Lot> callback) throws AuthorisationException {
+	public Bid getHighestBid(long lotId) throws RequiresLoginException {
+		if(accountService.isLoggedIn()) {
+			return this.lotService.getHighestBid(lotId);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	public void listenForLot(Lot template, Callback<Void, Lot> callback) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.listenForLot(template, callback);
 		} else {
-			throw new AuthorisationException("User must be logged in to partake in auction");
+			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 
-	public void subscribeToLot(long id, Callback<Void, Lot> callback) throws AuthorisationException {
+	public void subscribeToLot(long id, Callback<Void, Lot> callback) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.subscribeToLot(id, callback);
 		} else {
-			throw new AuthorisationException("User must be logged in to partake in auction");
+			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 

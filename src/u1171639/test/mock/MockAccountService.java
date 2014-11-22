@@ -9,9 +9,10 @@ import u1171639.main.model.account.User;
 import u1171639.main.service.AccountService;
 
 public class MockAccountService implements AccountService {
-
+	
 	private Hashtable<String, User> registeredUsers = new Hashtable<String, User>();
 	private User currentUser = null;
+	private long idCounter = 0;
 	
 	@Override
 	public User login(User credentials) throws AuthenticationException {
@@ -40,6 +41,7 @@ public class MockAccountService implements AccountService {
 	@Override
 	public User register(User newUser) throws RegistrationException {
 		if(!registeredUsers.containsKey(newUser.email)) {
+			newUser.id = this.idCounter++;
 			registeredUsers.put(newUser.email, newUser);
 		} else {
 			throw new RegistrationException("Email already in use.");
