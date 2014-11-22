@@ -10,4 +10,6 @@ public interface AccountService {
 	public boolean isLoggedIn();
 	public User getCurrentUser();
 	public User register(User newUser) throws RegistrationException;
+	public User getUserDetails(long userId);
+	public User getUserDetails(String email);
 }

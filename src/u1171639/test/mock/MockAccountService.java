@@ -55,4 +55,16 @@ public class MockAccountService implements AccountService {
 		return this.currentUser != null;
 	}
 
+	@Override
+	public User getUserDetails(long userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public User getUserDetails(String email) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

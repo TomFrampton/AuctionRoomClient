@@ -1,7 +1,5 @@
 package u1171639.main.utilities;
 
-import java.rmi.RemoteException;
-
 import net.jini.core.entry.Entry;
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
@@ -24,7 +22,6 @@ public class LotIDCounter implements Entry {
 	public static void initialiseInSpace(JavaSpace space) {
 		try {
 			LotIDCounter template = new LotIDCounter();
-			
 			LotIDCounter counter = (LotIDCounter) space.readIfExists(template, null, Lease.FOREVER);
 			
 			if(counter == null) {
