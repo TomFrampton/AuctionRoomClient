@@ -23,7 +23,7 @@ public class MockLotService implements LotService {
 	}
 
 	@Override
-	public void bidForLot(long lotId, BigDecimal amount, User bidder) {
+	public void bidForLot(long lotId, BigDecimal amount, long bidderId) {
 		// TODO Auto-generated method stub
 		
 	}

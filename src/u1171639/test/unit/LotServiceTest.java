@@ -20,6 +20,7 @@ import u1171639.main.model.lot.Lot;
 import u1171639.main.service.JavaSpaceLotService;
 import u1171639.main.service.LotService;
 import u1171639.main.utilities.Callback;
+import u1171639.main.utilities.LotIDCounter;
 import u1171639.main.utilities.SpaceUtils;
 
 public class LotServiceTest {
@@ -32,18 +33,13 @@ public class LotServiceTest {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		this.lotService = new JavaSpaceLotService(space);
+		LotIDCounter.initialiseInSpace(space);
 	}
 
 	@After
 	public void tearDown() throws Exception {
 	}
 
-//	public void bidForLot(long lotId, BigDecimal amount, User bidder) throws UnauthorisedBidException, InvalidBidException;
-//	public Bid getHighestBid(long lotId);
-//	public Lot getLotDetails(long lotId);
-//	public void subscribeToLot(long lotId, Callback<Void, Lot> callback);
-//	public void listenForLot(Lot template, Callback<Void, Lot> callback);
-	
 	@Test
 	public void testAddLot() {
 		Car car = new Car();
@@ -93,6 +89,144 @@ public class LotServiceTest {
 		assertTrue(retrievedCar.model.equals(car.model));
 		assertTrue(retrievedCar.sellerId.equals(car.sellerId));
 		assertTrue(retrievedCar.description.equals(car.description));
+	}
+	
+	@Test
+	public void bidForLot() {
+		Car car = new Car();
+		car.make = "UnitTest"; 
+		car.model = "BidForLot";
+		car.sellerId = 0l;
+		car.id = this.lotService.addLot(car);
+		
+		Car car2 = new Car();
+		car2.make = "UnitTest2"; 
+		car2.model = "BidForLot2";
+		car2.sellerId = 0l;
+		car2.id = this.lotService.addLot(car2);
+		
+		try {
+			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 0l);
+			fail("User should not be able to bid on own Lot");
+		} catch (UnauthorisedBidException e) {
+			// Pass
+		} catch (InvalidBidException e) {
+			fail("Bid amount is valid.");
+		}
+		
+		try {
+			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 1l);
+		} catch (UnauthorisedBidException e) {
+			fail("User should be able to bid on other User's Lots.");
+		} catch (InvalidBidException e) {
+			fail("Bid amount is valid.");
+		}
+		
+		try {
+			this.lotService.bidForLot(car.id, new BigDecimal(500.00), 1l);
+			fail("Should not be able to bid lower than currrent bid.");
+		} catch (UnauthorisedBidException e) {
+			fail("User should be able to bid on other User's Lots.");
+		} catch (InvalidBidException e) {
+			// Pass
+		}
+		
+		try {
+			this.lotService.bidForLot(car2.id, new BigDecimal(200.00), 1l);
+		} catch (UnauthorisedBidException e) {
+			fail("User should be able to bid on other User's Lots.");
+		} catch (InvalidBidException e) {
+			fail("Bid amount is valid.");
+		}
+		
+		Bid highestBid = this.lotService.getHighestBid(car.id);
+		Bid highestBid2 = this.lotService.getHighestBid(car2.id);
+		
+		assertTrue(highestBid.amount.compareTo(new BigDecimal(1000.0)) == 0);
+		assertTrue(highestBid2.amount.compareTo(new BigDecimal(200.0)) == 0);
+	}
+	
+	@Test
+	public void testSubscribeToLot() {
+		Car car = new Car();
+		car.make = "UnitTest"; 
+		car.model = "SubscribeToLot";
+		car.sellerId = 0l;
+		car.id = this.lotService.addLot(car);
+		
+		final Object finished = new Object();
+		
+		// Used for returning the lot in the callback
+		final Lot[] lot = new Lot[1];
+		
+		this.lotService.subscribeToLot(car.id, new Callback<Void, Lot>() {
+			@Override
+			public Void call(Lot changedLot) {
+				lot[0] = changedLot;
+				
+				synchronized(finished) {
+					finished.notify();
+				}
+				return null;
+			}
+		});
+		
+		try {
+			synchronized(finished) {
+				car.description = "Updated!";
+				this.lotService.updateLot(car);
+				finished.wait();
+			}
+			
+			Car retrievedCar = (Car) lot[0];
+			
+			assertTrue(retrievedCar.id.equals(car.id));
+			assertTrue(retrievedCar.make.equals(car.make));
+			assertTrue(retrievedCar.model.equals(car.model));
+			assertTrue(retrievedCar.sellerId.equals(car.sellerId));
+			assertTrue(retrievedCar.description.equals(car.description));
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	public void testListenForLot() {
+		Car car = new Car();
+		car.make = "UnitTest"; 
+		car.model = "ListenForLot";
+		
+		final Object finished = new Object();
+		
+		// Used for returning the lot in the callback
+		final Lot[] lot = new Lot[1];
+		
+		this.lotService.listenForLot(car, new Callback<Void, Lot>() {
+			@Override
+			public Void call(Lot addedLot) {
+				lot[0] = addedLot;
+				
+				synchronized(finished) {
+					finished.notify();
+				}
+				return null;
+			}
+		});
+		
+		try {
+			synchronized(finished) {
+				car.id = this.lotService.addLot(car);
+				finished.wait();
+			}
+			
+			Car retrievedCar = (Car) lot[0];
+			
+			assertTrue(retrievedCar.id.equals(car.id));
+			assertTrue(retrievedCar.make.equals(car.make));
+			assertTrue(retrievedCar.model.equals(car.model));
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

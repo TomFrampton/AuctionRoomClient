@@ -65,11 +65,11 @@ public class JavaSpaceLotService implements LotService {
 	}
 	
 	@Override
-	public void bidForLot(long lotId, BigDecimal amount, User bidder) throws UnauthorisedBidException, InvalidBidException {
+	public void bidForLot(long lotId, BigDecimal amount, long bidderId) throws UnauthorisedBidException, InvalidBidException {
 		if (amount.compareTo(BigDecimal.ZERO) > 0) {
 			Lot lot = this.getLotDetails(lotId);
 			
-			if(!lot.sellerId.equals(bidder.id)) {
+			if(!lot.sellerId.equals(bidderId)) {
 				try {
 					HighestBid template = new HighestBid(lotId);
 					HighestBid highestBidPtr = (HighestBid) space.take(template, null, Lease.FOREVER);

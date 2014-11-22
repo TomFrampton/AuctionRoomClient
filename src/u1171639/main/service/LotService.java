@@ -12,7 +12,7 @@ import u1171639.main.utilities.Callback;
 public interface LotService {
 	public long addLot(Lot lot);
 	public void updateLot(Lot lot);
-	public void bidForLot(long lotId, BigDecimal amount, User bidder) throws UnauthorisedBidException, InvalidBidException;
+	public void bidForLot(long lotId, BigDecimal amount, long bidderId) throws UnauthorisedBidException, InvalidBidException;
 	public Bid getHighestBid(long lotId);
 	public Lot getLotDetails(long lotId);
 	public void subscribeToLot(long lotId, Callback<Void, Lot> callback);

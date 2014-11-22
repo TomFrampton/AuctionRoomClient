@@ -59,7 +59,7 @@ public class AuctionController {
 	
 	public void bidForLot(long lotId, BigDecimal amount) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException {
 		if(accountService.isLoggedIn()) {
-			this.lotService.bidForLot(lotId, amount, accountService.getCurrentUser());
+			this.lotService.bidForLot(lotId, amount, accountService.getCurrentUser().id);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}

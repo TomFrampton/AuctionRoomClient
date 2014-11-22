@@ -84,7 +84,7 @@ public class DummyView implements AuctionView {
 	}
 	
 	@Test
-	public void registerTest() {
+	public void testRegister() {
 		User user = new User();
 		user.email = "registration@testing.com";
 		user.password = "password";
