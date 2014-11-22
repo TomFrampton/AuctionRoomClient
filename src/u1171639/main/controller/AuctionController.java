@@ -33,6 +33,10 @@ public class AuctionController {
 		return this.accountService.login(credentials);
 	}
 	
+	public void logout() {
+		this.accountService.logout();
+	}
+	
 	public long addLot(Lot lot) throws AuthorisationException {
 		if(accountService.isLoggedIn()) {
 			return this.lotService.addLot(lot);
@@ -49,20 +53,28 @@ public class AuctionController {
 		}
 	}
 	
-	public void bidForLot(long lotId, BigDecimal amount) {
+	public void bidForLot(long lotId, BigDecimal amount) throws AuthorisationException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.bidForLot(lotId, amount, accountService.getCurrentUser());
+		} else {
+			throw new AuthorisationException("User must be logged in to partake in auction");
 		}
 	}
 	
-	public void listenForLot(Lot template, Callback<Void, Lot> callback) {
+	public void listenForLot(Lot template, Callback<Void, Lot> callback) throws AuthorisationException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.listenForLot(template, callback);
+		} else {
+			throw new AuthorisationException("User must be logged in to partake in auction");
 		}
 	}
 
-	public void subscribeToLot(long id, Callback<Void, Lot> callback) {
-		this.lotService.subscribeToLot(id, callback);
+	public void subscribeToLot(long id, Callback<Void, Lot> callback) throws AuthorisationException {
+		if(accountService.isLoggedIn()) {
+			this.lotService.subscribeToLot(id, callback);
+		} else {
+			throw new AuthorisationException("User must be logged in to partake in auction");
+		}
 	}
 
 }

@@ -2,17 +2,8 @@ package u1171639.test.integration;
 
 import static org.junit.Assert.*;
 
+import java.math.BigDecimal;
 import java.net.ConnectException;
-
-import java.rmi.RemoteException;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
@@ -22,8 +13,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import u1171639.main.controller.AuctionController;
+import u1171639.main.exception.AuthenticationException;
 import u1171639.main.exception.AuthorisationException;
-import u1171639.main.model.DistributedObject;
+import u1171639.main.exception.RegistrationException;
+import u1171639.main.model.account.User;
 import u1171639.main.model.lot.Car;
 import u1171639.main.model.lot.Lot;
 import u1171639.main.service.AccountService;
@@ -41,11 +34,13 @@ public class DummyView implements AuctionView {
 	private AuctionController controller;
 	private Object object;
 	private JavaSpace space;
-	private UUID executionId = DistributedObject.EXECUTION_ID;
+	
+	private static final String USER_EMAIL = "user@testing.com";
+	private static final String USER_PASSWORD = "password";
 	
 	@Before
 	public void setUp() throws Exception {
-		this.space = SpaceUtils.getSpace();
+		this.space = SpaceUtils.getSpace("localhost");
 		if(space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
@@ -56,6 +51,12 @@ public class DummyView implements AuctionView {
 		new AuctionController(this, lotService, accountService);
 		
 		LotIDCounter.initialiseInSpace(space);
+		
+		// Generate a user that we can use during testing
+		User user = new User();
+		user.email = USER_EMAIL;
+		user.password = USER_PASSWORD;
+		this.controller.register(user);
 	}
 	
 	
@@ -66,7 +67,6 @@ public class DummyView implements AuctionView {
 		
 		for(;;) {
 			if(this.space.takeIfExists(template, null, 0) == null) {
-				System.out.println("EXECUTIONID");
 				break;
 			}
 		}
@@ -74,7 +74,22 @@ public class DummyView implements AuctionView {
 	
 	@Test
 	public void registerTest() {
+		User user = new User();
+		user.email = "registration@testing.com";
+		user.password = "password";
 		
+		try {
+			this.controller.register(user);
+		} catch(RegistrationException e) {
+			fail("Registering new user failed.");
+		}
+		
+		try {
+			this.controller.register(user);
+			fail("User with non-unique email added.");
+		} catch(RegistrationException e) {
+			// Passed
+		}
 	}
 
 	@Test
@@ -83,45 +98,77 @@ public class DummyView implements AuctionView {
 		car.make = "Ford";
 		car.model = "Focus";
 		
-		long carId = this.controller.addLot(car);
-		assertTrue(carId >= 0);
+		try {
+			this.controller.addLot(car);
+			fail("Lot added without being logged in");
+		} catch(AuthorisationException e) {
+			// Pass
+		}
 		
-		long carId2 = this.controller.addLot(car);
-		assertTrue(carId2 == carId + 1);
+		this.logIn();
 		
-		HighestBid template1 = new HighestBid(carId);
-		HighestBid template2 = new HighestBid(carId2);
-		
-		HighestBid carBid1 = (HighestBid) space.readIfExists(template1, null, 0);
-		HighestBid carBid2 = (HighestBid) space.readIfExists(template2, null, 0);
-		
-		assertNotNull(carBid1);
-		assertNotNull(carBid2);
-		assertEquals(carBid1.bidId, HighestBid.NO_BID_ID);
-		assertEquals(carBid2.bidId, HighestBid.NO_BID_ID);	
+		try {
+			long carId = this.controller.addLot(car);
+			assertTrue(carId >= 0);
+			
+			long carId2 = this.controller.addLot(car);
+			assertTrue(carId2 == carId + 1);
+			
+			HighestBid template1 = new HighestBid(carId);
+			HighestBid template2 = new HighestBid(carId2);
+			
+			HighestBid carBid1 = (HighestBid) space.readIfExists(template1, null, 0);
+			HighestBid carBid2 = (HighestBid) space.readIfExists(template2, null, 0);
+			
+			assertNotNull(carBid1);
+			assertNotNull(carBid2);
+			assertEquals(carBid1.bidId, HighestBid.NO_BID_ID);
+			assertEquals(carBid2.bidId, HighestBid.NO_BID_ID);
+		} catch(AuthorisationException e) {
+			fail("AuthorisationException despite being logged in.");
+		} finally {
+			this.logout();
+		}
 	}
 	
 	
-	
+	@Test
 	public void testBidForLot() throws AuthorisationException {
 		Car car = new Car();
 		car.make = "Test";
 		car.model = "BidForLot";
 		
 		Car car2 = new Car();
-		car.make = "Test2";
-		car.model = "BidForLot2";
+		car2.make = "Test2";
+		car2.model = "BidForLot2";
 		
 		Car car3 = new Car();
-		car.make = "Test3";
-		car.model = "BidForLot3";
+		car3.make = "Test3";
+		car3.model = "BidForLot3";
 		
-		car.id = this.controller.addLot(car);
-		car2.id = this.controller.addLot(car);
-		car3.id = this.controller.addLot(car);
+		try {
+			this.controller.bidForLot(-1, new BigDecimal(100.00));
+			fail("Bid made without being logged in");
+		} catch(AuthorisationException e) {
+			// Pass
+		}
 		
-		assertTrue(car2.id == car.id + 1);
-		assertTrue(car3.id == car2.id + 1);
+		this.logIn();
+		
+		try {
+			car.id = this.controller.addLot(car);
+			car2.id = this.controller.addLot(car2);
+			car3.id = this.controller.addLot(car3);
+
+			assertTrue(car2.id == car.id + 1);
+			assertTrue(car3.id == car2.id + 1);
+			
+			// TODO Adding a bid
+		} catch(AuthorisationException e) {
+			fail("AuthorisationException despite being logged in.");
+		} finally {
+			this.logout();
+		}
 		
 	}
 	
@@ -140,12 +187,9 @@ public class DummyView implements AuctionView {
 		car.make = "Mazda";
 		car.model = "RX8";
 		
-		car.id = this.controller.addLot(car);
-		
 		final Object finished = new Object();
 		
-		this.controller.subscribeToLot(car.id, new Callback<Void, Lot>() {
-			
+		Callback<Void, Lot> callback = new Callback<Void, Lot>() {
 			@Override
 			public Void call(Lot lot) {
 				object = lot;
@@ -155,21 +199,45 @@ public class DummyView implements AuctionView {
 				}
 				return null;
 			}
-		});
+		};
 		
-		this.controller.updateLot(car);
-		
-		synchronized(finished) {
-			finished.wait();
+		try {
+			this.controller.subscribeToLot(0, callback);
+			fail("Lot subscribed to without being logged in");
+		} catch(AuthorisationException e) {
+			// Pass
+		} finally {
+			synchronized(finished) {
+				finished.notifyAll();
+			}
 		}
 		
-		Car retrievedCar = (Car) this.object;
 		
-		assertNotSame(car, retrievedCar);
-		assertEquals(car.make, retrievedCar.make);
-		assertEquals(car.model, retrievedCar.model);
+		this.logIn();
 		
-		this.space.take(car, null, Lease.FOREVER);
+		try {		
+			car.id = this.controller.addLot(car);
+			this.controller.subscribeToLot(car.id, callback);
+			this.controller.updateLot(car);
+			
+			synchronized(finished) {
+				finished.wait();
+			}
+			
+			Car retrievedCar = (Car) this.object;
+			assertNotSame(car, retrievedCar);
+			assertEquals(car.make, retrievedCar.make);
+			assertEquals(car.model, retrievedCar.model);
+		} catch(AuthorisationException e) {
+			fail("AuthorisationException despite being logged in.");
+		} finally {
+			synchronized(finished) {
+				finished.notifyAll();
+			}
+			
+			this.logout();
+			this.space.take(car, null, Lease.FOREVER);
+		}
 	}
 	
 	
@@ -181,8 +249,8 @@ public class DummyView implements AuctionView {
 		car.model = "Civic";
 		
 		final Object finished = new Object();
-		this.controller.listenForLot(car, new Callback<Void, Lot>() {
-			
+		
+		Callback<Void, Lot> callback = new Callback<Void, Lot>() {
 			@Override
 			public Void call(Lot lot) {
 				object = lot;
@@ -191,18 +259,42 @@ public class DummyView implements AuctionView {
 				}
 				return null;
 			}
-		});
-		
-		this.controller.addLot(car);
-		synchronized(finished) {
-			finished.wait();
+		};
+				
+		try {
+			this.controller.listenForLot(car, callback);
+			fail("Listened for lot without being logged in");
+		} catch(AuthorisationException e) {
+			// Pass
+		} finally {
+			synchronized(finished) {
+				finished.notifyAll();
+			}
 		}
 		
-		Car retrievedCar = (Car) this.object;
-		assertNotSame(car, retrievedCar);
-		assertEquals(car.make, retrievedCar.make);
-		assertEquals(car.model, retrievedCar.model);
-		this.space.take(car, null, Lease.FOREVER);
+		this.logIn();
+		
+		try {
+			synchronized(finished) {
+				this.controller.listenForLot(car, callback);
+				this.controller.addLot(car);
+				finished.wait();
+			}
+			
+			Car retrievedCar = (Car) this.object;
+			assertNotSame(car, retrievedCar);
+			assertEquals(car.make, retrievedCar.make);
+			assertEquals(car.model, retrievedCar.model);
+			this.space.take(car, null, Lease.FOREVER);
+		} catch(AuthorisationException e) {
+			fail("AuthorisationException despite being logged in.");
+		} finally {
+			synchronized(finished) {
+				finished.notifyAll();
+			}
+			
+			this.logout();
+		}
 	}
 	
 	
@@ -211,5 +303,24 @@ public class DummyView implements AuctionView {
 	public void init(AuctionController controller) {
 		this.controller = controller;
 		
+	}
+	
+	private User logIn() {
+		User credentials = new User();
+		credentials.email = USER_EMAIL;
+		credentials.password = USER_PASSWORD;
+
+		try {
+			User user = this.controller.login(credentials);
+			return user;
+		} catch (AuthenticationException e) {
+			fail("Failed to log in with default credentials.");
+			return null;
+		}
+		
+	}
+	
+	private void logout() {
+		this.controller.logout();
 	}
 }

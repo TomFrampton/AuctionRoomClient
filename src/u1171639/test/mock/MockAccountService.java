@@ -29,14 +29,12 @@ public class MockAccountService implements AccountService {
 
 	@Override
 	public void logout() {
-		// TODO Auto-generated method stub
-		
+		this.currentUser = null;
 	}
 
 	@Override
 	public User getCurrentUser() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.currentUser;
 	}
 
 	@Override
