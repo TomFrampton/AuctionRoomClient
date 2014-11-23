@@ -28,12 +28,12 @@ public class AuctionController {
 		this.view.init(this);
 	}
 	
-	public User register(User newUser) throws RegistrationException {
+	public long register(User newUser) throws RegistrationException {
 		return this.accountService.register(newUser);
 	}
 	
-	public User login(User credentials) throws AuthenticationException {
-		return this.accountService.login(credentials);
+	public void login(User credentials) throws AuthenticationException {
+		this.accountService.login(credentials);
 	}
 	
 	public void logout() {

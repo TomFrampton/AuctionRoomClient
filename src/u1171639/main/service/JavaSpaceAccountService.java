@@ -8,6 +8,7 @@ import net.jini.core.transaction.TransactionException;
 import net.jini.space.JavaSpace;
 import u1171639.main.exception.AuthenticationException;
 import u1171639.main.exception.RegistrationException;
+import u1171639.main.exception.UserNotFoundException;
 import u1171639.main.model.account.User;
 import u1171639.main.utilities.LotIDCounter;
 import u1171639.main.utilities.PasswordHashScheme;
@@ -25,33 +26,53 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 	
 	@Override
-	public User login(User credentials) throws AuthenticationException {
-		// TODO Auto-generated method stub
-		return null;
+	public void login(User credentials) throws AuthenticationException {
+		try {
+			User registeredUser = (User) this.space.readIfExists(new User(credentials.email), null, 0);
+			if(registeredUser == null) {
+				throw new AuthenticationException("Invalid email or password.");
+			}
+			
+			String hashedPass = this.hashScheme.hashPassword(credentials.password, registeredUser.salt);
+			if(!hashedPass.equals(registeredUser.password)) {
+				throw new AuthenticationException("Invalid email or password.");
+			}
+			
+			// User logged in
+			this.loggedInUser = registeredUser;
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnusableEntryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransactionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void logout() {
-		// TODO Auto-generated method stub
-		
+		this.loggedInUser = null;
 	}
 
 	@Override
 	public User getCurrentUser() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.loggedInUser;
 	}
 
 	@Override
-	public User register(User newUser) throws RegistrationException {
+	public long register(User newUser) throws RegistrationException {
 		User template = new User();
 		template.email = newUser.email;
 		
-		User registeredUser = null;
-		
 		try {
 			// TODO improve this in case user exists but is temporarily taken from space
-			User sameEmailUser = (User) this.space.takeIfExists(template, null, 0);
+			User sameEmailUser = (User) this.space.readIfExists(template, null, 0);
 			if(sameEmailUser != null) {
 				throw new RegistrationException("Email already in use.");
 			}
@@ -70,6 +91,8 @@ public class JavaSpaceAccountService implements AccountService {
 		}
 			
 		try {
+			String unhashedPass = newUser.password;
+			
 			newUser.salt = hashScheme.generateSalt();
 			newUser.password = hashScheme.hashPassword(newUser.password, newUser.salt);
 			
@@ -81,7 +104,7 @@ public class JavaSpaceAccountService implements AccountService {
 			space.write(counter, null, Lease.FOREVER);
 			space.write(newUser, null, Lease.FOREVER);
 			
-			registeredUser = newUser;
+			newUser.password = unhashedPass;
 		} catch (RemoteException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -96,7 +119,7 @@ public class JavaSpaceAccountService implements AccountService {
 			e1.printStackTrace();
 		}
 		
-		return registeredUser;
+		return newUser.id;
 	}
 
 	@Override
@@ -105,14 +128,24 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public User getUserDetails(long userId) {
-		User template = new User();
-		template.id = userId;
-		
+	public User getUserDetails(long userId) throws UserNotFoundException {
+		return this.getUserDetails(new User(userId));
+	}
+
+	@Override
+	public User getUserDetails(String email) throws UserNotFoundException {
+		return this.getUserDetails(new User(email));
+	}
+	
+	private User getUserDetails(User template) throws UserNotFoundException {
 		User retrievedUser = null;
 		
 		try {
+			// TODO improve this in case user is temporarily taken from space
 			retrievedUser = (User) this.space.readIfExists(template, null, 0);
+			if(retrievedUser == null) {
+				throw new UserNotFoundException("That user does not exist.");
+			}
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -131,9 +164,32 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public User getUserDetails(String email) {
+	public void removeUser(long userId) throws UserNotFoundException {
+		User removedUser;
+		try {
+			removedUser = (User) this.space.takeIfExists(new User(userId), null, 0);
+			if(removedUser == null) {
+				throw new UserNotFoundException("User not found.");
+			}
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnusableEntryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransactionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void removeUser(String email) throws UserNotFoundException {
 		// TODO Auto-generated method stub
-		return null;
+		
 	}
 
 }

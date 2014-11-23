@@ -5,6 +5,7 @@ import java.util.List;
 
 import u1171639.main.exception.AuthenticationException;
 import u1171639.main.exception.RegistrationException;
+import u1171639.main.exception.UserNotFoundException;
 import u1171639.main.model.account.User;
 import u1171639.main.service.AccountService;
 
@@ -15,13 +16,13 @@ public class MockAccountService implements AccountService {
 	private long idCounter = 0;
 	
 	@Override
-	public User login(User credentials) throws AuthenticationException {
+	public void login(User credentials) throws AuthenticationException {
 		if(registeredUsers.containsKey(credentials.email)) {
 			User identifiedUser = registeredUsers.get(credentials.email);
 			
 			if(identifiedUser.password.equals(credentials.password)) {
 				this.currentUser = identifiedUser;
-				return this.currentUser;
+				return;
 			}
 		}
 		
@@ -39,7 +40,7 @@ public class MockAccountService implements AccountService {
 	}
 
 	@Override
-	public User register(User newUser) throws RegistrationException {
+	public long register(User newUser) throws RegistrationException {
 		if(!registeredUsers.containsKey(newUser.email)) {
 			newUser.id = this.idCounter++;
 			registeredUsers.put(newUser.email, newUser);
@@ -47,7 +48,7 @@ public class MockAccountService implements AccountService {
 			throw new RegistrationException("Email already in use.");
 		}
 		
-		return newUser;
+		return newUser.id;
 	}
 
 	@Override
@@ -65,6 +66,18 @@ public class MockAccountService implements AccountService {
 	public User getUserDetails(String email) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void removeUser(long userId) throws UserNotFoundException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeUser(String email) throws UserNotFoundException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

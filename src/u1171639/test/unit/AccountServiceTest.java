@@ -3,6 +3,8 @@ package u1171639.test.unit;
 import static org.junit.Assert.*;
 
 import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.jini.space.JavaSpace;
 
@@ -12,6 +14,7 @@ import org.junit.Test;
 
 import u1171639.main.exception.AuthenticationException;
 import u1171639.main.exception.RegistrationException;
+import u1171639.main.exception.UserNotFoundException;
 import u1171639.main.model.account.User;
 import u1171639.main.service.AccountService;
 import u1171639.main.service.JavaSpaceAccountService;
@@ -26,6 +29,8 @@ public class AccountServiceTest {
 	private JavaSpaceAccountService accountService;
 	private PasswordHashScheme hashScheme;
 	
+	private List<User> usersToRemove = new ArrayList<User>();
+	
 	@Before
 	public void setUp() throws Exception {
 		JavaSpace space = SpaceUtils.getSpace("localhost");
@@ -39,6 +44,13 @@ public class AccountServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
+		for(User user : this.usersToRemove) {
+			try {
+				this.accountService.removeUser(user.id);
+			} catch(UserNotFoundException e) {
+				// Keep going
+			}
+		}
 	}
 	
 	@Test
@@ -47,20 +59,25 @@ public class AccountServiceTest {
 		newUser.email = "test@register.com";
 		newUser.password = "password";
 		
-		User registeredUser = null;
 		// Test that we can add a new user
 		try {
-			registeredUser = this.accountService.register(newUser);
+			newUser.id = this.accountService.register(newUser);
+			this.usersToRemove.add(newUser);
 			
-			assertTrue(registeredUser.email.equals(newUser.email));
-			assertTrue(registeredUser.password.equals(this.hashScheme.hashPassword(newUser.password, newUser.salt)));
+			assertTrue(newUser.email.equals("test@register.com"));
+			
+			User retrievedUser = this.accountService.getUserDetails(newUser.id);
+			assertTrue(retrievedUser.password.equals(this.hashScheme.hashPassword(newUser.password, retrievedUser.salt)));
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
+		} catch(UserNotFoundException e) {
+			fail("User was registed. They should be able to be found.");
 		}
 		
 		// Test that trying to add a user with a email that is already in use throws an exception
 		try {
-			this.accountService.register(newUser);
+			User newUser2 = new User(this.accountService.register(newUser));
+			this.usersToRemove.add(newUser2);
 			fail("Added two users with same email.");
 		} catch (RegistrationException e) {
 			// Pass
@@ -72,9 +89,10 @@ public class AccountServiceTest {
 		newUser2.password = "password2";
 		
 		try {
-			User registeredUser2 = this.accountService.register(newUser2);
+			newUser2.id = this.accountService.register(newUser2);
+			this.usersToRemove.add(newUser2);
 			
-			assertTrue(registeredUser2.id.equals(registeredUser.id + 1));
+			assertTrue(newUser2.id.equals(newUser.id + 1));
 
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
@@ -88,7 +106,8 @@ public class AccountServiceTest {
 		newUser.password = "password";
 		
 		try {
-			this.accountService.register(newUser);
+			newUser.id = this.accountService.register(newUser);
+			this.usersToRemove.add(newUser);
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
 		}
@@ -119,7 +138,7 @@ public class AccountServiceTest {
 		try {
 			User credentials = new User();
 			credentials.email = "test@login.com";
-			credentials.email = "password";
+			credentials.password = "password";
 			this.accountService.login(credentials);
 		} catch(AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
@@ -134,18 +153,18 @@ public class AccountServiceTest {
 		newUser.email = "test@logout.com";
 		newUser.password = "password";
 		
-		User currentUser = null;
 		// Make sure no one is logged in to start with
 		assertFalse(this.accountService.isLoggedIn());
 		
 		try {
-			this.accountService.register(newUser);
+			newUser.id = this.accountService.register(newUser);
+			this.usersToRemove.add(newUser);
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
 		}
 		
 		try {
-			currentUser = this.accountService.login(newUser);
+			this.accountService.login(newUser);
 		} catch (AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
 		}
@@ -154,8 +173,8 @@ public class AccountServiceTest {
 		
 		// Test we can get the current user and that we are logged in
 		assertNotNull(retrievedCurrentUser);
-		assertTrue(currentUser.id.equals(retrievedCurrentUser.id));
-		assertTrue(currentUser.email.equals(retrievedCurrentUser.email));
+		assertTrue(newUser.id.equals(retrievedCurrentUser.id));
+		assertTrue(newUser.email.equals(retrievedCurrentUser.email));
 		assertTrue(this.accountService.isLoggedIn());
 		
 		this.accountService.logout();
@@ -171,12 +190,15 @@ public class AccountServiceTest {
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@currentUser1.com";
-		user2.password = "password";
+		user2.email = "test@currentUser2.com";
+		user2.password = "password2";
 		
 		try {
-			this.accountService.register(user1);
-			this.accountService.register(user2);
+			user1.id = this.accountService.register(user1);
+			user2.id = this.accountService.register(user2);
+			
+			this.usersToRemove.add(user1);
+			this.usersToRemove.add(user2);
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
 		}
@@ -206,5 +228,15 @@ public class AccountServiceTest {
 		} finally {
 			this.accountService.logout();
 		}
+	}
+	
+	@Test
+	public void testGetUserDetails() {
+		
+	}
+	
+	@Test
+	public void testRemoveUser() {
+		
 	}
 }

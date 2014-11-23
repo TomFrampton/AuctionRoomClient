@@ -377,8 +377,8 @@ public class DummyView implements AuctionView {
 		credentials.password = password;
 
 		try {
-			User user = this.controller.login(credentials);
-			return user;
+			this.controller.login(credentials);
+			return credentials;
 		} catch (AuthenticationException e) {
 			fail("Failed to log in with default credentials.");
 			return null;

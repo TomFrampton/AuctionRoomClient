@@ -17,6 +17,10 @@ public class User extends Person implements Entry {
 		this.id = id;
 	}
 	
+	public User(String email) {
+		this.email = email;
+	}
+	
 	public User(String email, String username, String password) {
 		this.email = email;
 		this.username = username;
