@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.net.ConnectException;
+import java.util.List;
 
 import net.jini.space.JavaSpace;
 
@@ -71,7 +72,104 @@ public class LotServiceTest {
 	}
 	
 	@Test
-	public void updateLot() {
+	public void testSearchLots() {
+		Car car1 = new Car();
+		car1.make = "Honda"; 
+		car1.model = "Civic";
+		car1.description = "A really nice car!";
+		car1.sellerId = 0l;
+		
+		Car car2 = new Car();
+		car2.make = "Honda"; 
+		car2.model = "NSX";
+		car2.description = "A really nice car!";
+		car2.sellerId = 0l;
+		
+		Car car3 = new Car();
+		car3.make = "Ford"; 
+		car3.model = "Focus";
+		car3.description = "A really rubbish car!";
+		car3.sellerId = 0l;
+		
+		Car car4 = new Car();
+		car4.make = "Ford"; 
+		car4.model = "Fiesta";
+		car4.description = "A really nice car!";
+		car4.sellerId = 1l;
+		
+		this.lotService.addLot(car1);
+		this.lotService.addLot(car2);
+		this.lotService.addLot(car3);
+		this.lotService.addLot(car4);
+		
+		// Search 1
+		Car template1 = new Car();
+		template1.make = "Honda";
+		
+		List<Lot> search1 = this.lotService.searchLots(template1);
+		
+		assertTrue(search1.size() == 2);
+		
+		for(Lot lot : search1) {
+			Car car = (Car) lot;
+			assertEquals(car.make, template1.make);
+		}
+		
+		// Search 2
+		Car template2 = new Car();
+		template2.make = "Ford";
+		
+		List<Lot> search2 = this.lotService.searchLots(template2);
+		
+		assertTrue(search2.size() == 2);
+		
+		for(Lot lot : search2) {
+			Car car = (Car) lot;
+			assertEquals(car.make, template2.make);
+		}
+		
+		// Search 3
+		Car template3 = new Car();
+		car2.sellerId = 0l;
+		
+		List<Lot> search3 = this.lotService.searchLots(template3);
+		
+		assertTrue(search3.size() == 3);
+		
+		int fords = 0;
+		int hondas = 0;
+		
+		for(Lot lot : search3) {
+			Car car = (Car) lot;
+			assertTrue(car.sellerId.equals(0));
+			
+			if(car.make.equals("Honda")) {
+				hondas++;
+			} else if(car.make.equals("Ford")) {
+				fords++;
+			}
+		}
+		
+		assertTrue(fords == 1);
+		assertTrue(hondas == 2);
+		
+		// Search 4
+		Car template4 = new Car();
+		template4.description = "A really nice car!";
+		
+		List<Lot> search4 = this.lotService.searchLots(template4);
+		
+		assertTrue(search4.size() == 3);
+		
+		// Search 5
+		Car template5 = new Car();
+		List<Lot> search5 = this.lotService.searchLots(template4);
+		
+		assertTrue(search5.size() == 4);	
+	}
+	
+	@Test
+	public void testUpdateLot() {
 		Car car = new Car();
 		car.make = "UnitTest"; 
 		car.model = "UpdateLot";
@@ -92,7 +190,7 @@ public class LotServiceTest {
 	}
 	
 	@Test
-	public void bidForLot() {
+	public void testBidForLot() {
 		Car car = new Car();
 		car.make = "UnitTest"; 
 		car.model = "BidForLot";

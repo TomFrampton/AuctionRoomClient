@@ -3,6 +3,8 @@ package u1171639.main.service;
 import java.math.BigDecimal;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.event.RemoteEvent;
@@ -51,6 +53,34 @@ public class JavaSpaceLotService implements LotService {
 			e.printStackTrace();
 			return -1;
 		}
+	}
+	
+	@Override
+	public List<Lot> searchLots(Lot template) {
+		List<Lot> retrievedLots = new ArrayList<Lot>();
+		
+		boolean lotsToTake = true;
+		while(lotsToTake) {
+			try {
+				Lot retrievedLot = (Lot) this.space.readIfExists(template, null, 0);
+				
+				if(retrievedLot != null) {
+					retrievedLots.add(retrievedLot);
+				} else {
+					lotsToTake = false;
+				}
+			} catch (RemoteException e) {
+				lotsToTake = false;
+			} catch (UnusableEntryException e) {
+				lotsToTake = false;
+			} catch (TransactionException e) {
+				lotsToTake = false;
+			} catch (InterruptedException e) {
+				lotsToTake = false;
+			}	
+		}
+		
+		return retrievedLots;
 	}
 	
 	@Override

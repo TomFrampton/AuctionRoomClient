@@ -1,6 +1,7 @@
 package u1171639.test.mock;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import u1171639.main.model.account.User;
 import u1171639.main.model.lot.Bid;
@@ -14,6 +15,12 @@ public class MockLotService implements LotService {
 	public long addLot(Lot lot) {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+	
+	@Override
+	public List<Lot> searchLots(Lot template) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
