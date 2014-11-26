@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.net.ConnectException;
 
 import net.jini.core.lease.Lease;
+import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 
 import org.junit.After;
@@ -51,7 +52,12 @@ public class DummyView implements AuctionView {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
-		LotService lotService = new JavaSpaceLotService(space);
+		TransactionManager transMgr = SpaceUtils.getManager("localhost");
+		if(transMgr == null) {
+			throw new ConnectException("Could not connect to TransactionManager");
+		}
+		
+		LotService lotService = new JavaSpaceLotService(space, transMgr);
 		AccountService accountService = new MockAccountService();
 		
 		new AuctionController(this, lotService, accountService);

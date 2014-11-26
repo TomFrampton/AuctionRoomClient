@@ -11,7 +11,11 @@ import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
+import net.jini.core.lease.LeaseDeniedException;
+import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
+import net.jini.core.transaction.TransactionFactory;
+import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 import u1171639.main.exception.InvalidBidException;
 import u1171639.main.exception.RequiresLoginException;
@@ -25,9 +29,11 @@ import u1171639.main.utilities.LotIDCounter;
 
 public class JavaSpaceLotService implements LotService {
 	private final JavaSpace space;
+	private final TransactionManager transMgr;
 	
-	public JavaSpaceLotService(JavaSpace space) {
+	public JavaSpaceLotService(JavaSpace space, TransactionManager transMgr) {
 		this.space = space;
+		this.transMgr = transMgr;
 	}
 	
 	@Override
@@ -59,15 +65,27 @@ public class JavaSpaceLotService implements LotService {
 	public List<Lot> searchLots(Lot template) {
 		List<Lot> retrievedLots = new ArrayList<Lot>();
 		
+		// Create a transaction
+		Transaction.Created trc = null;
+		
+		try {
+			trc = TransactionFactory.create(transMgr, 2000);
+		} catch(RemoteException | LeaseDeniedException e) {
+			// TODO
+		}
+		
+		Transaction transaction = trc.transaction;
+		
 		boolean lotsToTake = true;
 		while(lotsToTake) {
 			try {
-				Lot retrievedLot = (Lot) this.space.readIfExists(template, null, 0);
+				Lot retrievedLot = (Lot) this.space.takeIfExists(template, transaction, 0);
 				
 				if(retrievedLot != null) {
 					retrievedLots.add(retrievedLot);
 				} else {
 					lotsToTake = false;
+					transaction.abort();
 				}
 			} catch (RemoteException e) {
 				lotsToTake = false;

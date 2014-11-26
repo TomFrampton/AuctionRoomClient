@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.util.List;
 
+import net.jini.core.entry.Entry;
+import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 
 import org.junit.After;
@@ -26,19 +28,51 @@ import u1171639.main.utilities.SpaceUtils;
 
 public class LotServiceTest {
 	JavaSpaceLotService lotService;
+	JavaSpace space;
 	
 	@Before
 	public void setUp() throws Exception {
-		JavaSpace space = SpaceUtils.getSpace("localhost");
+		this.space = SpaceUtils.getSpace("localhost");
 		if(space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
-		this.lotService = new JavaSpaceLotService(space);
+		
+		TransactionManager transMgr = SpaceUtils.getManager("localhost");
+		if(transMgr == null) {
+			throw new ConnectException("Could not connect to TransactionManager");
+		}
+		
+		this.lotService = new JavaSpaceLotService(space, transMgr);
 		LotIDCounter.initialiseInSpace(space);
 	}
 
 	@After
 	public void tearDown() throws Exception {
+		int objectCounter = 0;
+		boolean somethingToTake = true;
+		
+		while(somethingToTake) {
+			Entry entry = this.space.takeIfExists(new Lot(), null, 0);
+			
+			if(entry != null) {
+				objectCounter++;
+			} else {
+				somethingToTake = false;
+			}
+		}
+		
+		somethingToTake = true;
+		while(somethingToTake) {
+			Entry entry = this.space.takeIfExists(new Bid(), null, 0);
+			
+			if(entry != null) {
+				objectCounter++;
+			} else {
+				somethingToTake = false;
+			}
+		}
+		
+		System.out.println(objectCounter);
 	}
 
 	@Test
@@ -130,7 +164,7 @@ public class LotServiceTest {
 		
 		// Search 3
 		Car template3 = new Car();
-		car2.sellerId = 0l;
+		template3.sellerId = 0l;
 		
 		List<Lot> search3 = this.lotService.searchLots(template3);
 		
@@ -141,7 +175,7 @@ public class LotServiceTest {
 		
 		for(Lot lot : search3) {
 			Car car = (Car) lot;
-			assertTrue(car.sellerId.equals(0));
+			assertTrue(car.sellerId.equals(0l));
 			
 			if(car.make.equals("Honda")) {
 				hondas++;
@@ -163,7 +197,7 @@ public class LotServiceTest {
 		
 		// Search 5
 		Car template5 = new Car();
-		List<Lot> search5 = this.lotService.searchLots(template4);
+		List<Lot> search5 = this.lotService.searchLots(template5);
 		
 		assertTrue(search5.size() == 4);	
 	}
