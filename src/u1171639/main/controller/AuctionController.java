@@ -2,6 +2,7 @@ package u1171639.main.controller;
 
 import java.math.BigDecimal;
 import java.net.ConnectException;
+import java.util.List;
 
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
@@ -10,6 +11,7 @@ import u1171639.main.exception.InvalidBidException;
 import u1171639.main.exception.RequiresLoginException;
 import u1171639.main.exception.RegistrationException;
 import u1171639.main.exception.UnauthorisedBidException;
+import u1171639.main.exception.UserNotFoundException;
 import u1171639.main.model.account.User;
 import u1171639.main.model.lot.Bid;
 import u1171639.main.model.lot.Car;
@@ -47,10 +49,42 @@ public class AuctionController {
 		this.accountService.logout();
 	}
 	
+	public boolean isLoggedIn() {
+		return this.accountService.isLoggedIn();
+	}
+	
+	public User getCurrentUser() {
+		return this.accountService.getCurrentUser();
+	}
+	
+	public User getUserDetails(long userId) throws UserNotFoundException {
+		return this.accountService.getUserDetails(userId);
+	}
+	
+	public User getUserDetails(String email) throws UserNotFoundException {
+		return this.accountService.getUserDetails(email);
+	}
+	
+	public void removeUser(long userId) throws UserNotFoundException {
+		this.accountService.removeUser(userId);
+	}
+	
+	public void removeUser(String email) throws UserNotFoundException {
+		this.accountService.removeUser(email);
+	}
+	
 	public long addLot(Lot lot) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
 			lot.sellerId = this.accountService.getCurrentUser().id;
 			return this.lotService.addLot(lot);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	public List<Lot> searchLots(Lot template) throws RequiresLoginException {
+		if(accountService.isLoggedIn()) {
+			return this.lotService.searchLots(template);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -91,6 +125,14 @@ public class AuctionController {
 	public void subscribeToLot(long id, Callback<Void, Lot> callback) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.subscribeToLot(id, callback);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	public Lot getLotDetails(long lotId) throws RequiresLoginException {
+		if(accountService.isLoggedIn()) {
+			return this.lotService.getLotDetails(lotId);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
