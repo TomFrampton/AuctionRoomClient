@@ -232,11 +232,122 @@ public class AccountServiceTest {
 	
 	@Test
 	public void testGetUserDetails() {
+		User user1 = new User();
+		user1.email = "test@getUserDetails1.com";
+		user1.password = "password1";
 		
+		User user2 = new User();
+		user2.email = "test@getUserDetails2.com";
+		user2.password = "password2";
+		
+		try {
+			user1.id = this.accountService.register(user1);
+			this.usersToRemove.add(user1);
+			
+			user2.id = this.accountService.register(user2);
+			this.usersToRemove.add(user2);
+		} catch (RegistrationException e) {
+			fail("Unique users - should have been registered.");
+		}
+		
+		// Test we can retrieve registered users using their ID
+		try {
+			User retrievedUserId1 = this.accountService.getUserDetails(user1.id);
+			User retrievedUserId2 = this.accountService.getUserDetails(user2.id);
+			
+			assertEquals(user1.id, retrievedUserId1.id);
+			assertEquals(user1.email, retrievedUserId1.email);
+			
+			assertEquals(user2.id, retrievedUserId2.id);
+			assertEquals(user2.email, retrievedUserId2.email);
+		} catch (UserNotFoundException e) {
+			fail("Users were registered so should be able to retrieve details.");
+		}
+		
+		// Test that we can get registered users using their email
+		try {
+			User retrievedUserId1 = this.accountService.getUserDetails(user1.email);
+			User retrievedUserId2 = this.accountService.getUserDetails(user2.email);
+			
+			assertEquals(user1.id, retrievedUserId1.id);
+			assertEquals(user1.email, retrievedUserId1.email);
+			
+			assertEquals(user2.id, retrievedUserId2.id);
+			assertEquals(user2.email, retrievedUserId2.email);
+		} catch (UserNotFoundException e) {
+			fail("Users were registered so should be able to retrieve details.");
+		}
+		
+		// Test that trying to retrieve unregistered users results in an exception
+		try {
+			this.accountService.getUserDetails("madeup@email.com");
+			fail("User doesn't exist. UserNotFoundException should have been thrown.");
+		} catch(UserNotFoundException e) {
+			// Pass
+		}
+		
+		try {
+			this.accountService.getUserDetails(-1);
+			fail("User doesn't exist. UserNotFoundException should have been thrown.");
+		} catch(UserNotFoundException e) {
+			// Pass
+		}
 	}
 	
 	@Test
 	public void testRemoveUser() {
+		User user1 = new User();
+		user1.email = "test@removeUser1.com";
+		user1.password = "password1";
 		
+		User user2 = new User();
+		user2.email = "test@removeUser2.com";
+		user2.password = "password2";
+		
+		// Test we can remove user using their ID
+		try {
+			user1.id = this.accountService.register(user1);
+			this.accountService.getUserDetails(user1.id);
+		} catch (RegistrationException e) {
+			fail("Unique users - should have been registered.");
+		} catch (UserNotFoundException e) {
+			fail("User was registered so should be able to be found.");
+		}
+		
+		try {
+			this.accountService.removeUser(user1.id);
+		} catch(UserNotFoundException e) {
+			fail("User was registered so should be able to be removed.");
+		}
+		
+		try {
+			this.accountService.getUserDetails(user1.id);
+			fail("User was removed so details should not be found");
+		} catch(UserNotFoundException e) {
+			// Pass
+		}
+		
+		// Test that we can removed a user using their email
+		try {
+			user2.id = this.accountService.register(user2);
+			this.accountService.getUserDetails(user2.email);
+		} catch (RegistrationException e) {
+			fail("Unique users - should have been registered.");
+		} catch (UserNotFoundException e) {
+			fail("User was registered so should be able to be found.");
+		}
+		
+		try {
+			this.accountService.removeUser(user2.email);
+		} catch(UserNotFoundException e) {
+			fail("User was registered so should be able to be removed.");
+		}
+		
+		try {
+			this.accountService.getUserDetails(user2.email);
+			fail("User was removed so details should not be found");
+		} catch(UserNotFoundException e) {
+			// Pass
+		}
 	}
 }

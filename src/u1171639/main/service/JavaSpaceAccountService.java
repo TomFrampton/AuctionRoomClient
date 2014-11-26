@@ -165,9 +165,17 @@ public class JavaSpaceAccountService implements AccountService {
 
 	@Override
 	public void removeUser(long userId) throws UserNotFoundException {
-		User removedUser;
+		this.removeUser(new User(userId));
+	}
+
+	@Override
+	public void removeUser(String email) throws UserNotFoundException {
+		this.removeUser(new User(email));
+	}
+	
+	private void removeUser(User template) throws UserNotFoundException {
 		try {
-			removedUser = (User) this.space.takeIfExists(new User(userId), null, 0);
+			User removedUser = (User) this.space.takeIfExists(template, null, 0);
 			if(removedUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}
@@ -184,12 +192,6 @@ public class JavaSpaceAccountService implements AccountService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void removeUser(String email) throws UserNotFoundException {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

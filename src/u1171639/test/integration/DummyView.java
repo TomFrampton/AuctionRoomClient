@@ -24,12 +24,16 @@ import u1171639.main.model.lot.Bid;
 import u1171639.main.model.lot.Car;
 import u1171639.main.model.lot.Lot;
 import u1171639.main.service.AccountService;
+import u1171639.main.service.JavaSpaceAccountService;
 import u1171639.main.service.JavaSpaceLotService;
 import u1171639.main.service.LotService;
 import u1171639.main.utilities.Callback;
 import u1171639.main.utilities.HighestBid;
 import u1171639.main.utilities.LotIDCounter;
+import u1171639.main.utilities.MediumSecurityHashScheme;
+import u1171639.main.utilities.PasswordHashScheme;
 import u1171639.main.utilities.SpaceUtils;
+import u1171639.main.utilities.UserIDCounter;
 import u1171639.main.view.AuctionView;
 import u1171639.test.mock.MockAccountService;
 
@@ -57,12 +61,15 @@ public class DummyView implements AuctionView {
 			throw new ConnectException("Could not connect to TransactionManager");
 		}
 		
+		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
+		
 		LotService lotService = new JavaSpaceLotService(space, transMgr);
-		AccountService accountService = new MockAccountService();
+		AccountService accountService = new JavaSpaceAccountService(space, hashScheme);
 		
 		new AuctionController(this, lotService, accountService);
 		
 		LotIDCounter.initialiseInSpace(space);
+		UserIDCounter.initialiseInSpace(space);
 		
 		// Generate users that we can use during testing
 		User user = new User();
@@ -80,10 +87,24 @@ public class DummyView implements AuctionView {
 
 	@After
 	public void tearDown() throws Exception {
-		Lot template = new Lot();
+		Lot lotTemplate = new Lot();
+		User userTemplate = new User();
+		Bid bidTemplate = new Bid();
 		
 		for(;;) {
-			if(this.space.takeIfExists(template, null, 0) == null) {
+			if(this.space.takeIfExists(lotTemplate, null, 0) == null) {
+				break;
+			}
+		}
+		
+		for(;;) {
+			if(this.space.takeIfExists(userTemplate, null, 0) == null) {
+				break;
+			}
+		}
+		
+		for(;;) {
+			if(this.space.takeIfExists(bidTemplate, null, 0) == null) {
 				break;
 			}
 		}
@@ -144,6 +165,11 @@ public class DummyView implements AuctionView {
 		} finally {
 			this.logout();
 		}
+	}
+	
+	@Test
+	public void testSearchForLot() {
+		
 	}
 	
 	
