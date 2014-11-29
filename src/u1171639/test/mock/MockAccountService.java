@@ -3,11 +3,11 @@ package u1171639.test.mock;
 import java.util.Hashtable;
 import java.util.List;
 
-import u1171639.main.exception.AuthenticationException;
-import u1171639.main.exception.RegistrationException;
-import u1171639.main.exception.UserNotFoundException;
-import u1171639.main.model.account.User;
-import u1171639.main.service.AccountService;
+import u1171639.main.java.exception.AuthenticationException;
+import u1171639.main.java.exception.RegistrationException;
+import u1171639.main.java.exception.UserNotFoundException;
+import u1171639.main.java.model.account.User;
+import u1171639.main.java.service.AccountService;
 
 public class MockAccountService implements AccountService {
 	

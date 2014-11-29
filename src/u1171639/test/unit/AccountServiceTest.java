@@ -12,18 +12,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import u1171639.main.exception.AuthenticationException;
-import u1171639.main.exception.RegistrationException;
-import u1171639.main.exception.UserNotFoundException;
-import u1171639.main.model.account.User;
-import u1171639.main.service.AccountService;
-import u1171639.main.service.JavaSpaceAccountService;
-import u1171639.main.service.JavaSpaceLotService;
-import u1171639.main.utilities.LotIDCounter;
-import u1171639.main.utilities.MediumSecurityHashScheme;
-import u1171639.main.utilities.PasswordHashScheme;
-import u1171639.main.utilities.SpaceUtils;
-import u1171639.main.utilities.UserIDCounter;
+import u1171639.main.java.exception.AuthenticationException;
+import u1171639.main.java.exception.RegistrationException;
+import u1171639.main.java.exception.UserNotFoundException;
+import u1171639.main.java.model.account.User;
+import u1171639.main.java.service.AccountService;
+import u1171639.main.java.service.JavaSpaceAccountService;
+import u1171639.main.java.service.JavaSpaceLotService;
+import u1171639.main.java.utilities.LotIDCounter;
+import u1171639.main.java.utilities.MediumSecurityHashScheme;
+import u1171639.main.java.utilities.PasswordHashScheme;
+import u1171639.main.java.utilities.SpaceUtils;
+import u1171639.main.java.utilities.UserIDCounter;
 
 public class AccountServiceTest {
 	private JavaSpaceAccountService accountService;

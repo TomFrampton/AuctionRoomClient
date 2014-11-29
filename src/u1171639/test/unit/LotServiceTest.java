@@ -14,17 +14,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import u1171639.main.exception.InvalidBidException;
-import u1171639.main.exception.UnauthorisedBidException;
-import u1171639.main.model.account.User;
-import u1171639.main.model.lot.Bid;
-import u1171639.main.model.lot.Car;
-import u1171639.main.model.lot.Lot;
-import u1171639.main.service.JavaSpaceLotService;
-import u1171639.main.service.LotService;
-import u1171639.main.utilities.Callback;
-import u1171639.main.utilities.LotIDCounter;
-import u1171639.main.utilities.SpaceUtils;
+import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.UnauthorisedBidException;
+import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.lot.Bid;
+import u1171639.main.java.model.lot.Car;
+import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.service.JavaSpaceLotService;
+import u1171639.main.java.service.LotService;
+import u1171639.main.java.utilities.Callback;
+import u1171639.main.java.utilities.LotIDCounter;
+import u1171639.main.java.utilities.SpaceUtils;
 
 public class LotServiceTest {
 	JavaSpaceLotService lotService;
@@ -291,7 +291,7 @@ public class LotServiceTest {
 		// Used for returning the lot in the callback
 		final Lot[] lot = new Lot[1];
 		
-		this.lotService.subscribeToLot(car.id, new Callback<Void, Lot>() {
+		this.lotService.subscribeToLot(car.id, new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot changedLot) {
 				lot[0] = changedLot;
@@ -333,7 +333,7 @@ public class LotServiceTest {
 		// Used for returning the lot in the callback
 		final Lot[] lot = new Lot[1];
 		
-		this.lotService.listenForLot(car, new Callback<Void, Lot>() {
+		this.lotService.listenForLot(car, new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot addedLot) {
 				lot[0] = addedLot;

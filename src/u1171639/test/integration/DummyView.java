@@ -15,29 +15,30 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import u1171639.main.controller.AuctionController;
-import u1171639.main.exception.AuthenticationException;
-import u1171639.main.exception.InvalidBidException;
-import u1171639.main.exception.RequiresLoginException;
-import u1171639.main.exception.RegistrationException;
-import u1171639.main.exception.UnauthorisedBidException;
-import u1171639.main.exception.UserNotFoundException;
-import u1171639.main.model.account.User;
-import u1171639.main.model.lot.Bid;
-import u1171639.main.model.lot.Car;
-import u1171639.main.model.lot.Lot;
-import u1171639.main.service.AccountService;
-import u1171639.main.service.JavaSpaceAccountService;
-import u1171639.main.service.JavaSpaceLotService;
-import u1171639.main.service.LotService;
-import u1171639.main.utilities.Callback;
-import u1171639.main.utilities.HighestBid;
-import u1171639.main.utilities.LotIDCounter;
-import u1171639.main.utilities.MediumSecurityHashScheme;
-import u1171639.main.utilities.PasswordHashScheme;
-import u1171639.main.utilities.SpaceUtils;
-import u1171639.main.utilities.UserIDCounter;
-import u1171639.main.view.AuctionView;
+import u1171639.main.java.controller.AuctionController;
+import u1171639.main.java.controller.ConcreteAuctionController;
+import u1171639.main.java.exception.AuthenticationException;
+import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.RegistrationException;
+import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.exception.UnauthorisedBidException;
+import u1171639.main.java.exception.UserNotFoundException;
+import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.lot.Bid;
+import u1171639.main.java.model.lot.Car;
+import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.service.AccountService;
+import u1171639.main.java.service.JavaSpaceAccountService;
+import u1171639.main.java.service.JavaSpaceLotService;
+import u1171639.main.java.service.LotService;
+import u1171639.main.java.utilities.Callback;
+import u1171639.main.java.utilities.HighestBid;
+import u1171639.main.java.utilities.LotIDCounter;
+import u1171639.main.java.utilities.MediumSecurityHashScheme;
+import u1171639.main.java.utilities.PasswordHashScheme;
+import u1171639.main.java.utilities.SpaceUtils;
+import u1171639.main.java.utilities.UserIDCounter;
+import u1171639.main.java.view.AuctionView;
 
 public class DummyView implements AuctionView {
 
@@ -62,7 +63,8 @@ public class DummyView implements AuctionView {
 		LotService lotService = new JavaSpaceLotService(space, transMgr);
 		AccountService accountService = new JavaSpaceAccountService(space, hashScheme);
 		
-		new AuctionController(this, lotService, accountService);
+		AuctionController controller = new ConcreteAuctionController(this, lotService, accountService);
+		controller.launch();
 		
 		LotIDCounter.initialiseInSpace(space);
 		UserIDCounter.initialiseInSpace(space);
@@ -707,7 +709,7 @@ public class DummyView implements AuctionView {
 		
 		final Object finished = new Object();
 		
-		Callback<Void, Lot> callback = new Callback<Void, Lot>() {
+		Callback<Lot, Void> callback = new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot lot) {
 				object = lot;
@@ -780,7 +782,7 @@ public class DummyView implements AuctionView {
 		
 		final Object finished = new Object();
 		
-		Callback<Void, Lot> callback = new Callback<Void, Lot>() {
+		Callback<Lot, Void> callback = new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot lot) {
 				object = lot;
@@ -832,7 +834,7 @@ public class DummyView implements AuctionView {
 	}
 
 	@Override
-	public void init(AuctionController controller) {
+	public void start(AuctionController controller) {
 		this.controller = controller;
 	}
 }
