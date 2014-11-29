@@ -48,6 +48,8 @@ public abstract class ViewController implements Initializable {
 			
 			return new FXMLView(controller, component);
 		} catch(IOException e) {
+			// TODO
+			e.printStackTrace();
 			return null;
 		}
 	}

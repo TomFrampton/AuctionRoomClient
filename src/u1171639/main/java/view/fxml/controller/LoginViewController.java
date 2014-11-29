@@ -29,6 +29,7 @@ public class LoginViewController extends ViewController {
 			}
 		} catch (AuthenticationException e) {
 			// TODO invalid login
+			e.printStackTrace();
 		}
 	}
 

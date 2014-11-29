@@ -18,11 +18,15 @@ import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.AccountService;
+import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.service.LotService;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.LotIDCounter;
+import u1171639.main.java.utilities.MediumSecurityHashScheme;
+import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceUtils;
+import u1171639.main.java.utilities.UserIDCounter;
 import u1171639.main.java.view.AuctionView;
 import u1171639.main.java.view.JavaFXAuctionView;
 import u1171639.test.mock.MockAccountService;
@@ -156,9 +160,11 @@ public class ConcreteAuctionController implements AuctionController {
 		}
 		
 		LotIDCounter.initialiseInSpace(space);
+		UserIDCounter.initialiseInSpace(space);
 		
+		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
 		LotService lotService = new JavaSpaceLotService(space, transMgr);
-		AccountService accountService = new MockAccountService();
+		AccountService accountService = new JavaSpaceAccountService(space, hashScheme);
 		AuctionView view = new JavaFXAuctionView();
 		
 		AuctionController controller = new ConcreteAuctionController(view, lotService, accountService);

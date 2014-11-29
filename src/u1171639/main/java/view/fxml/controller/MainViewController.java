@@ -6,18 +6,31 @@ import java.util.ResourceBundle;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.view.fxml.utilities.FXMLView;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 
 public class MainViewController extends ViewController {
 	@FXML private BorderPane mainLayout;
 	
 	private FXMLView loginView;
+	private FXMLView registerView;
+	
 	private FXMLView auctionView;
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		this.loginView = loadView("login.fxml");
-		//this.auctionView = loadView("auction.fxml");
+		this.registerView = loadView("register.fxml");
+		this.auctionView = loadView("auction.fxml");
+		
+		HBox layout = new HBox();
+		layout.setAlignment(Pos.CENTER);
+		layout.getChildren().addAll(
+				loginView.getComponent(),
+				new Separator(),
+				registerView.getComponent());
 		
 		LoginViewController loginController = (LoginViewController) this.loginView.getController();
 		
@@ -29,6 +42,6 @@ public class MainViewController extends ViewController {
 			}
 		});
 		
-		this.mainLayout.setCenter(this.loginView.getComponent());
+		this.mainLayout.setCenter(layout);
 	}
 }

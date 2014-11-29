@@ -8,7 +8,7 @@
 
 
 <GridPane xmlns:fx="http://javafx.com/fxml"
-	fx:controller="u1171639.main.java.view.fxml.controller.LoginViewController"
+	fx:controller="u1171639.main.java.view.fxml.controller.RegisterViewController"
 	alignment="CENTER"
 	hgap="10"
 	vgap="10">
@@ -17,39 +17,58 @@
 		<Insets top="25" right="25" bottom="10" left="25" />	
 	</padding>
 	
-	<Text text="Already have an account with us?"
+	<Text text="Don't have an account with us?"
 		GridPane.rowIndex="0"
 		GridPane.columnIndex="0"
 		GridPane.columnSpan="2" />
 		
-	<Label text="Email"
+		
+		
+	<Label text="Forename"
 		GridPane.rowIndex="1"
 		GridPane.columnIndex="0" />
 		
-	<TextField fx:id="email" 
+	<TextField fx:id="forename" 
 		GridPane.rowIndex="1"
 		GridPane.columnIndex="1" />
 		
-	<Label text="Password"
+		
+		
+	<Label text="Surname"
 		GridPane.rowIndex="2"
 		GridPane.columnIndex="0" />
 		
-	<PasswordField fx:id="password"
+	<TextField fx:id="surname" 
 		GridPane.rowIndex="2"
+		GridPane.columnIndex="1" />
+		
+		
+		
+	<Label text="Email"
+		GridPane.rowIndex="3"
+		GridPane.columnIndex="0" />
+		
+	<TextField fx:id="email" 
+		GridPane.rowIndex="3"
+		GridPane.columnIndex="1" />
+		
+		
+		
+	<Label text="Password"
+		GridPane.rowIndex="4"
+		GridPane.columnIndex="0" />
+		
+	<PasswordField fx:id="password"
+		GridPane.rowIndex="4"
 		GridPane.columnIndex="1" />
 		
 	<!-- HBox needed to set an alignment for the button that is different from the default alignment -->
 	<HBox spacing="10"
 		alignment="BOTTOM_RIGHT"
-		GridPane.rowIndex="4"
+		GridPane.rowIndex="6"
 		GridPane.columnIndex="1">
 		
-		<Button text="Log In" onAction="#handleLoginButtonAction" />
+		<Button text="Sign Up" onAction="#handleRegisterButtonAction" />
 	</HBox>
-	
-	<Text fx:id="actionTarget"
-		GridPane.rowIndex="6"
-		GridPane.columnIndex="1" />
 				
 </GridPane>
-
