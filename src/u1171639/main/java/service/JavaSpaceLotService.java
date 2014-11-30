@@ -43,7 +43,7 @@ public class JavaSpaceLotService implements LotService {
 			HighestBid highestBid = new HighestBid();
 			highestBid.bidId = HighestBid.NO_BID_ID;
 			
-			LotIDCounter counter = (LotIDCounter) space.take(new LotIDCounter(), null, Lease.FOREVER);
+			LotIDCounter counter = (LotIDCounter) space.take(new LotIDCounter(), null, 5000);
 			
 			lot.id = counter.id;
 			highestBid.lotId = lot.id;
@@ -69,7 +69,7 @@ public class JavaSpaceLotService implements LotService {
 		Transaction.Created trc = null;
 		
 		try {
-			trc = TransactionFactory.create(transMgr, 2000);
+			trc = TransactionFactory.create(transMgr, Lease.FOREVER);
 		} catch(RemoteException | LeaseDeniedException e) {
 			// TODO
 		}

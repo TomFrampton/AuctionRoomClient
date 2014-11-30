@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<GridPane xmlns:fx="http://javafx.com/fxml"
+	fx:controller="u1171639.main.java.view.fxml.controller.LotViewController"
+	fx:id="lotPane">
+	
+	<Text fx:id="lotName" />
+	
+	<Text text="test" />
+	
+</GridPane>

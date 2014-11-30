@@ -18,4 +18,8 @@ public class Lot implements Entry {
 	public Lot(long id) {
 		this.id = id;
 	}
+	
+	public enum Type {
+		Car
+	}
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+	fx:controller="u1171639.main.java.view.fxml.controller.SellingViewController"
+	fx:id="sellingPane">
+	
+	<left>
+		<VBox>
+			<ListView fx:id="yourLots" 
+				onMouseClicked="#handleLotSelected" />
+				
+			<HBox>
+				<Button text="Add Lot For Sale" onAction="#handleAddLotAction"/>
+			</HBox>
+		</VBox>		
+	</left>
+</BorderPane>
