@@ -9,17 +9,21 @@ import javafx.scene.control.Tab;
 public class AuctionViewController extends ViewController {
 	@FXML private Tab buyingTab;
 	@FXML private Tab sellingTab;
+	@FXML private Tab accountTab;
 	
-	private ViewController buyingView;
-	private ViewController sellingView;
+	private ViewController buyingController;
+	private ViewController sellingController;
+	private ViewController accountView;
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		this.buyingView = this.loadView("buying.fxml");
-		this.sellingView = this.loadView("selling.fxml");
+		this.buyingController = this.loadView("buying.fxml");
+		this.sellingController = this.loadView("selling.fxml");
+		this.accountView = this.loadView("account.fxml");
 		
-		this.buyingTab.setContent(this.buyingView.getViewComponent());
-		this.sellingTab.setContent(this.sellingView.getViewComponent());
+		this.buyingTab.setContent(this.buyingController.getViewComponent());
+		this.sellingTab.setContent(this.sellingController.getViewComponent());
+		this.accountTab.setContent(this.accountView.getViewComponent());
 	}
 
 }

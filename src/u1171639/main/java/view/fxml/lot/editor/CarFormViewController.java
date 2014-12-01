@@ -15,6 +15,8 @@ public class CarFormViewController extends LotFormViewController {
 	@FXML private TextField make;
 	@FXML private TextField model;
 	
+	private Car car = new Car();
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		// TODO Auto-generated method stub
@@ -22,15 +24,13 @@ public class CarFormViewController extends LotFormViewController {
 	}
 	
 	@FXML protected void handleSubmitAction(ActionEvent event) {
-		Car lot = new Car();
-		
-		lot.name = this.name.getText().equals("") ? null : this.name.getText();
-		lot.description = this.description.getText().equals("") ? null : this.description.getText();
-		lot.make = this.make.getText().equals("") ? null : this.make.getText();
-		lot.model = this.model.getText().equals("") ? null : this.model.getText();
+		this.car.name = this.name.getText().equals("") ? null : this.name.getText();
+		this.car.description = this.description.getText().equals("") ? null : this.description.getText();
+		this.car.make = this.make.getText().equals("") ? null : this.make.getText();
+		this.car.model = this.model.getText().equals("") ? null : this.model.getText();
 		
 		if(getLotSubmittedCallback() != null) {
-			getLotSubmittedCallback().call(lot);
+			getLotSubmittedCallback().call(this.car);
 		}
 	}
 	
@@ -40,11 +40,12 @@ public class CarFormViewController extends LotFormViewController {
 		this.description.setText("");
 		this.make.setText("");
 		this.model.setText("");
+		this.car = null;
 	}
 	
 	@Override
 	public void setLot(Lot lot) {
-		Car car = (Car) lot;
+		this.car = (Car) lot;
 		this.name.setText(car.name);
 		this.description.setText(car.description);
 		this.make.setText(car.make);

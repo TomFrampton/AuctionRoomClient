@@ -43,6 +43,7 @@ public class SellingViewController extends ViewController {
 			@Override
 			public Void call(Lot param) {
 				SellingViewController.this.sellingPane.setCenter(null);
+				SellingViewController.this.sellingPane.setRight(null);
 				return null;
 			}
 		});
@@ -64,6 +65,7 @@ public class SellingViewController extends ViewController {
 			Lot selected = this.yourLots.getSelectionModel().getSelectedItem();
 			
 			this.updateLotController.setLotToUpdate(selected);
+			this.bidsController.setLotForBids(selected);
 			
 			this.sellingPane.setCenter(this.updateLotController.getViewComponent());
 			this.sellingPane.setRight(this.bidsController.getViewComponent());

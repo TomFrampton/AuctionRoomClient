@@ -147,7 +147,18 @@ public class ConcreteAuctionController implements AuctionController {
 	@Override
 	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException {
 		if(this.accountService.isLoggedIn()) {
-			return this.lotService.getVisibleBids(lotId, this.accountService.getCurrentUser().id);
+			List<Bid> bids = this.lotService.getVisibleBids(lotId, this.accountService.getCurrentUser().id);
+			
+			for(Bid bid : bids) {
+				try {
+					bid.bidder = this.accountService.getUserDetails(bid.bidderId);
+				} catch (UserNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			return bids;
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}

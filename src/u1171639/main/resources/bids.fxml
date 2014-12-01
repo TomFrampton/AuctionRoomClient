@@ -14,13 +14,58 @@
 	</padding>
 	
 	<Text text="Bids For This Lot" />
-	<TableView fx:id="bidList" />
+	<TableView fx:id="bidList" maxHeight="200" prefWidth="430"/>
 	
-	<HBox fx:id="buyingOptions">
-		<Button text="Make Bid" onAction="#handleMakeBidAction"/>
-	</HBox>
+	<VBox fx:id="makeBidForm">
+		<Text text="Place a Bid" />
+		<GridPane>
+			<Label text="Amount"
+				GridPane.rowIndex="0"
+				GridPane.columnIndex="0" />
+				
+			<HBox GridPane.rowIndex="0"
+				GridPane.columnIndex="1"
+				GridPane.columnSpan="2">
+				
+				<Text text="£" />
+				<TextField fx:id="amountPounds" />
+				<Text text="." />
+				<TextField fx:id="amountPence" />
+			</HBox>
+			
+				
+			<fx:define>  
+    			<ToggleGroup fx:id="bidPrivacyGroup" />  
+			</fx:define>
+			
+			<Label text="Bid Privacy"
+				GridPane.rowIndex="1"
+				GridPane.columnIndex="0" />
+				
+			<HBox alignment="CENTER"
+				GridPane.rowIndex="1"
+				GridPane.columnIndex="1"
+				GridPane.columnSpan="2">
+				
+				<Label text="Public" />
+				<RadioButton fx:id="publicBid" 
+					toggleGroup="$bidPrivacyGroup" />
+				
+				<Label text="Private" />	 
+				<RadioButton fx:id="privateBid" 
+					toggleGroup="$bidPrivacyGroup" /> 
+			</HBox>
+			
+			<HBox GridPane.rowIndex="2"
+				GridPane.columnIndex="2"
+				alignment="CENTER_RIGHT">
+				
+				<Button text="Place Bid" onAction="#handlePlaceBidAction"/>
+			</HBox>
+		</GridPane>
+	</VBox>
 	
-	<HBox fx:id="sellingOptions">
+	<!-- <HBox fx:id="sellingOptions">
 		<Button text="Accept Highest Bid" onAction="#handleAcceptHighestBidAction"/>
-	</HBox>
+	</HBox> -->
 </VBox>

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import net.jini.core.entry.UnusableEntryException;
@@ -130,6 +131,7 @@ public class JavaSpaceLotService implements LotService {
 					// If the new amount is greater than the old highest bid or there is no previous bid
 					if(highestBid == null || amount.compareTo(highestBid.amount)  == 1) {
 						Bid newBid = new Bid(highestBidPtr.nextBidId(), lotId, bidderId, amount, isPrivateBid);
+						newBid.bidTime = new Date(System.currentTimeMillis());
 						this.space.write(newBid, null, Lease.FOREVER);
 					} else {
 						this.space.write(highestBid, null, Lease.FOREVER);

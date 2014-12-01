@@ -3,6 +3,7 @@ package u1171639.main.java.model.lot;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import u1171639.main.java.model.account.User;
 import net.jini.core.entry.Entry;
 
 public class Bid implements Entry {
@@ -12,6 +13,8 @@ public class Bid implements Entry {
 	public BigDecimal amount;
 	public Date bidTime;
 	public Boolean privateBid;
+	
+	public transient User bidder;
 	
 	public Bid() {
 		

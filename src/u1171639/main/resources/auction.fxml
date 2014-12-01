@@ -17,7 +17,7 @@
 		<Tab text="Selling" closable="false" fx:id="sellingTab">
 		</Tab>
 		
-		<Tab text="Account" closable="false">
+		<Tab text="Account" closable="false" fx:id="accountTab">
 		</Tab>
 	</tabs>			
 </TabPane>

@@ -13,9 +13,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 
 public class BuyingViewController extends ViewController {
-	@FXML private BorderPane buyingPane;
+	@FXML private Pane lotPane;
+	@FXML private Pane bidsPane;
+	
 	@FXML private ListView<Lot> lotList;
 	
 	private ViewLotViewController viewLotController;
@@ -51,19 +54,24 @@ public class BuyingViewController extends ViewController {
 			this.viewLotController.setLotToView(selectedLot);
 			this.bidsController.setLotForBids(selectedLot);
 
-			this.buyingPane.setCenter(this.viewLotController.getViewComponent());
-			this.buyingPane.setRight(this.bidsController.getViewComponent());
+			this.lotPane.getChildren().clear();
+			this.lotPane.getChildren().add(this.viewLotController.getViewComponent());
+			
+			this.bidsPane.getChildren().clear();
+			this.bidsPane.getChildren().add(this.bidsController.getViewComponent());
 		}
 	}
 	
 	@FXML protected void handleEditSearch(MouseEvent event) {
-		this.buyingPane.setCenter(this.searchLotsController.getViewComponent());
-		this.buyingPane.setRight(null);
+		this.lotPane.getChildren().clear();
+		this.lotPane.getChildren().add(this.searchLotsController.getViewComponent());
+		
+		this.bidsPane.getChildren().clear();
 	}
 	
 	@FXML protected void handleClearSearch(MouseEvent event) {
 		this.retrievedLots.clear();
-		this.buyingPane.setCenter(null);
-		this.buyingPane.setRight(null);
+		this.lotPane.getChildren().clear();
+		this.bidsPane.getChildren().clear();
 	}
 }
