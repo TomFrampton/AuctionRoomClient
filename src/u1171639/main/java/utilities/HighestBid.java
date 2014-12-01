@@ -1,7 +1,6 @@
 package u1171639.main.java.utilities;
 
 import net.jini.core.entry.Entry;
-import net.jini.space.JavaSpace;
 
 public class HighestBid implements Entry {
 	public Long lotId;
@@ -17,10 +16,10 @@ public class HighestBid implements Entry {
 	}
 	
 	public long nextBidId() {
-		return ++bidId;
+		return ++this.bidId;
 	}
 	
 	public boolean hasBid() {
-		return !bidId.equals(NO_BID_ID);
+		return !this.bidId.equals(NO_BID_ID);
 	}
 }

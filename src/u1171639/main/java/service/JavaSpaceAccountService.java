@@ -10,7 +10,6 @@ import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.account.User;
-import u1171639.main.java.utilities.LotIDCounter;
 import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.UserIDCounter;
 
@@ -93,16 +92,16 @@ public class JavaSpaceAccountService implements AccountService {
 		try {
 			String unhashedPass = newUser.password;
 			
-			newUser.salt = hashScheme.generateSalt();
-			newUser.password = hashScheme.hashPassword(newUser.password, newUser.salt);
+			newUser.salt = this.hashScheme.generateSalt();
+			newUser.password = this.hashScheme.hashPassword(newUser.password, newUser.salt);
 			
-			UserIDCounter counter = (UserIDCounter) space.take(new UserIDCounter(), null, Lease.FOREVER);
+			UserIDCounter counter = (UserIDCounter) this.space.take(new UserIDCounter(), null, Lease.FOREVER);
 		
 			newUser.id = counter.id;
 			counter.increment();
 		
-			space.write(counter, null, Lease.FOREVER);
-			space.write(newUser, null, Lease.FOREVER);
+			this.space.write(counter, null, Lease.FOREVER);
+			this.space.write(newUser, null, Lease.FOREVER);
 			
 			newUser.password = unhashedPass;
 		} catch (RemoteException e1) {

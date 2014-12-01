@@ -10,7 +10,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.text.Text;
 
 public class LoginViewController extends ViewController {
 	@FXML private TextField email;
@@ -19,10 +18,10 @@ public class LoginViewController extends ViewController {
 	private Callback<Object, Void> loginSuccessCallback;
 	
 	@FXML protected void handleLoginButtonAction(ActionEvent event) {
-		User credentials = new User(email.getText(), password.getText());
+		User credentials = new User(this.email.getText(), this.password.getText());
 		
 		try {
-			this.getAuctionController().login(credentials);
+			getAuctionController().login(credentials);
 			
 			if(this.loginSuccessCallback != null) {
 				this.loginSuccessCallback.call(new Object());

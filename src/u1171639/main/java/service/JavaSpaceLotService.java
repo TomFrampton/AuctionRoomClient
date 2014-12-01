@@ -18,9 +18,7 @@ import net.jini.core.transaction.TransactionFactory;
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 import u1171639.main.java.exception.InvalidBidException;
-import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
-import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
@@ -43,15 +41,15 @@ public class JavaSpaceLotService implements LotService {
 			HighestBid highestBid = new HighestBid();
 			highestBid.bidId = HighestBid.NO_BID_ID;
 			
-			LotIDCounter counter = (LotIDCounter) space.take(new LotIDCounter(), null, 5000);
+			LotIDCounter counter = (LotIDCounter) this.space.take(new LotIDCounter(), null, 5000);
 			
 			lot.id = counter.id;
 			highestBid.lotId = lot.id;
 			counter.increment();
 			
-			space.write(counter, null, Lease.FOREVER);
-			space.write(lot, null, Lease.FOREVER);
-			space.write(highestBid, null, Lease.FOREVER);
+			this.space.write(counter, null, Lease.FOREVER);
+			this.space.write(lot, null, Lease.FOREVER);
+			this.space.write(highestBid, null, Lease.FOREVER);
 			
 			return lot.id;
 			
@@ -69,7 +67,7 @@ public class JavaSpaceLotService implements LotService {
 		Transaction.Created trc = null;
 		
 		try {
-			trc = TransactionFactory.create(transMgr, Lease.FOREVER);
+			trc = TransactionFactory.create(this.transMgr, Lease.FOREVER);
 		} catch(RemoteException | LeaseDeniedException e) {
 			// TODO
 		}
@@ -105,8 +103,8 @@ public class JavaSpaceLotService implements LotService {
 	public void updateLot(Lot lot) {
 		try {
 			Lot template = new Lot(lot.id);
-			space.take(template, null, Lease.FOREVER);
-			space.write(lot, null, Lease.FOREVER);
+			this.space.take(template, null, Lease.FOREVER);
+			this.space.write(lot, null, Lease.FOREVER);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -115,34 +113,34 @@ public class JavaSpaceLotService implements LotService {
 	@Override
 	public void bidForLot(long lotId, BigDecimal amount, long bidderId, boolean isPrivateBid) throws UnauthorisedBidException, InvalidBidException {
 		if (amount.compareTo(BigDecimal.ZERO) > 0) {
-			Lot lot = this.getLotDetails(lotId);
+			Lot lot = getLotDetails(lotId);
 			
 			if(!lot.sellerId.equals(bidderId)) {
 				try {
 					HighestBid template = new HighestBid(lotId);
-					HighestBid highestBidPtr = (HighestBid) space.take(template, null, Lease.FOREVER);
+					HighestBid highestBidPtr = (HighestBid) this.space.take(template, null, Lease.FOREVER);
 					Bid highestBid = null;
 					
 					if(highestBidPtr.hasBid()) {
 						// A bid is uniquely identified using a combination of bidId and lotId.
 						Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
-						highestBid = (Bid) space.take(bidTemplate, null, Lease.FOREVER);
+						highestBid = (Bid) this.space.take(bidTemplate, null, Lease.FOREVER);
 					}
 						
 					// If the new amount is greater than the old highest bid or there is no previous bid
 					if(highestBid == null || amount.compareTo(highestBid.amount)  == 1) {
 						Bid newBid = new Bid(highestBidPtr.nextBidId(), lotId, bidderId, amount, isPrivateBid);
-						space.write(newBid, null, Lease.FOREVER);
+						this.space.write(newBid, null, Lease.FOREVER);
 					} else {
-						space.write(highestBid, null, Lease.FOREVER);
-						space.write(highestBidPtr, null, Lease.FOREVER);
+						this.space.write(highestBid, null, Lease.FOREVER);
+						this.space.write(highestBidPtr, null, Lease.FOREVER);
 						throw new InvalidBidException("Bid amount must exceed current highest bid.");
 					}
 					
 					if(highestBid != null) {
-						space.write(highestBid, null, Lease.FOREVER);
+						this.space.write(highestBid, null, Lease.FOREVER);
 					}
-					space.write(highestBidPtr, null, Lease.FOREVER);
+					this.space.write(highestBidPtr, null, Lease.FOREVER);
 				} catch(RemoteException e) {
 					e.printStackTrace();
 				} catch (TransactionException e) {
@@ -167,12 +165,12 @@ public class JavaSpaceLotService implements LotService {
 	public Bid getHighestBid(long lotId) {
 		try {
 			HighestBid template = new HighestBid(lotId);
-			HighestBid highestBidPtr = (HighestBid) space.read(template, null, Lease.FOREVER);
+			HighestBid highestBidPtr = (HighestBid) this.space.read(template, null, Lease.FOREVER);
 			
 			if(highestBidPtr.hasBid()) {
 				// A bid is uniquely identified using a combination of bidId and lotId.
 				Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
-				return (Bid) space.read(bidTemplate, null, Lease.FOREVER);
+				return (Bid) this.space.read(bidTemplate, null, Lease.FOREVER);
 			} else {
 				return null;
 			}
@@ -186,7 +184,7 @@ public class JavaSpaceLotService implements LotService {
 	public Lot getLotDetails(long id) {
 		Lot template = new Lot(id);
 		try {
-			return (Lot) space.readIfExists(template, null, 0);
+			return (Lot) this.space.readIfExists(template, null, 0);
 		} catch (UnusableEntryException | TransactionException | InterruptedException | RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -230,7 +228,7 @@ public class JavaSpaceLotService implements LotService {
 		Transaction.Created trc = null;
 		
 		try {
-			trc = TransactionFactory.create(transMgr, Lease.FOREVER);
+			trc = TransactionFactory.create(this.transMgr, Lease.FOREVER);
 		} catch(RemoteException | LeaseDeniedException e) {
 			// TODO
 		}
@@ -280,7 +278,7 @@ public class JavaSpaceLotService implements LotService {
 			@Override
 			public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
 				try {
-					Lot lot = (Lot) space.readIfExists(template, null, 0);
+					Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, 0);
 					
 					if(lot != null) {
 						callback.call(lot);
@@ -303,7 +301,7 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			UnicastRemoteObject.exportObject(listener,0);
-			space.notify(template, null, listener, Lease.FOREVER, null);
+			this.space.notify(template, null, listener, Lease.FOREVER, null);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -320,7 +318,7 @@ public class JavaSpaceLotService implements LotService {
 			@Override
 			public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
 				try {
-					Lot lot = (Lot) space.readIfExists(template, null, 0);
+					Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, 0);
 					if(lot != null) {
 						callback.call(lot);
 					}
@@ -342,7 +340,7 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			UnicastRemoteObject.exportObject(listener,0);
-			space.notify(template, null, listener, Lease.FOREVER, null);
+			this.space.notify(template, null, listener, Lease.FOREVER, null);
 			
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block

@@ -18,12 +18,10 @@ import org.junit.Test;
 
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.UnauthorisedBidException;
-import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.JavaSpaceLotService;
-import u1171639.main.java.service.LotService;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.HighestBid;
 import u1171639.main.java.utilities.LotIDCounter;
@@ -36,7 +34,7 @@ public class LotServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		this.space = SpaceUtils.getSpace("localhost");
-		if(space == null) {
+		if(this.space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
@@ -45,8 +43,8 @@ public class LotServiceTest {
 			throw new ConnectException("Could not connect to TransactionManager");
 		}
 		
-		this.lotService = new JavaSpaceLotService(space, transMgr);
-		LotIDCounter.initialiseInSpace(space);
+		this.lotService = new JavaSpaceLotService(this.space, transMgr);
+		LotIDCounter.initialiseInSpace(this.space);
 	}
 
 	@After

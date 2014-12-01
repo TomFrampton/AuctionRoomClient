@@ -3,7 +3,6 @@ package u1171639.test.mock;
 import java.math.BigDecimal;
 import java.util.List;
 
-import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.LotService;

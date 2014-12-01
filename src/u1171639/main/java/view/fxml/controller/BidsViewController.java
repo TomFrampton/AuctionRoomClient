@@ -19,7 +19,7 @@ public class BidsViewController extends ViewController {
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		this.bidList.setItems(retrievedBids);
+		this.bidList.setItems(this.retrievedBids);
 	}
 	
 	public void setLotForBids(Lot lot) {

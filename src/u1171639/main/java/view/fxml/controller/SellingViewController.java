@@ -1,14 +1,11 @@
 package u1171639.main.java.view.fxml.controller;
 
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.RequiresLoginException;
-import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.view.fxml.utilities.FXMLView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -16,13 +13,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 
 public class SellingViewController extends ViewController {
-	private FXMLView addLotView;
-	private FXMLView updateLotView;
-	private FXMLView bidsView;
+	private AddLotViewController addLotController;
+	private UpdateLotViewController updateLotController;
+	private BidsViewController bidsController;
 	
 	@FXML private BorderPane sellingPane;
 	@FXML private ListView<Lot> yourLots;
@@ -31,44 +26,24 @@ public class SellingViewController extends ViewController {
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		this.addLotView = this.loadView("addLot.fxml");
-		this.updateLotView = this.loadView("updateLot.fxml");
-		this.bidsView = this.loadView("bids.fxml");
+		this.addLotController = (AddLotViewController) this.loadView("addLot.fxml");
+		this.updateLotController = (UpdateLotViewController) this.loadView("updateLot.fxml");
+		this.bidsController = (BidsViewController) this.loadView("bids.fxml");
 		
-		AddLotViewController addController = (AddLotViewController) this.addLotView.getController();
-		addController.setLotSubmittedCallback(new Callback<Lot, Void>() {
-			
+		this.addLotController.setLotAddedCallback(new Callback<Lot, Void>() {
 			@Override
-			public Void call(Lot param) {
-				try {
-					param.id = getAuctionController().addLot(param);
-					SellingViewController.this.yourRetrivedLots.add(param);
-					
-					SellingViewController.this.sellingPane.setCenter(null);
-					return null;
-				} catch (RequiresLoginException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return null;
-				}
+			public Void call(Lot param) {	
+				SellingViewController.this.yourRetrivedLots.add(param);
+				SellingViewController.this.sellingPane.setCenter(null);
+				return null;
 			}
 		});
 		
-		UpdateLotViewController updateController = (UpdateLotViewController) this.updateLotView.getController();
-		updateController.setLotSubmittedCallback(new Callback<Lot, Void>() {
-			
+		this.updateLotController.setLotUpdatedCallback(new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot param) {
-				try {
-					getAuctionController().updateLot(param);
-					
-					SellingViewController.this.sellingPane.setCenter(null);
-					return null;
-				} catch (RequiresLoginException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return null;
-				}
+				SellingViewController.this.sellingPane.setCenter(null);
+				return null;
 			}
 		});
 		
@@ -88,15 +63,15 @@ public class SellingViewController extends ViewController {
 		if(this.yourLots.getSelectionModel().getSelectedIndex() >= 0) {
 			Lot selected = this.yourLots.getSelectionModel().getSelectedItem();
 			
-			UpdateLotViewController updateController = (UpdateLotViewController) this.updateLotView.getController();
-			updateController.setLotToUpdate(selected);
+			this.updateLotController.setLotToUpdate(selected);
 			
-			this.sellingPane.setCenter(this.updateLotView.getComponent());
-			this.sellingPane.setRight(this.bidsView.getComponent());
+			this.sellingPane.setCenter(this.updateLotController.getViewComponent());
+			this.sellingPane.setRight(this.bidsController.getViewComponent());
 		}
 	}
 	
 	@FXML protected void handleAddLotAction(ActionEvent event) {
-		this.sellingPane.setCenter(this.addLotView.getComponent());
+		this.sellingPane.setCenter(this.addLotController.getViewComponent());
+		this.sellingPane.setRight(null);
 	}
 }

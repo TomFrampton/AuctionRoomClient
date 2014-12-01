@@ -1,17 +1,13 @@
 package u1171639.main.java.view.fxml.lot.editor;
 
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
-import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.view.fxml.controller.ViewController;
 
 public class CarFormViewController extends LotFormViewController {	
 	@FXML private TextField name;
@@ -38,6 +34,7 @@ public class CarFormViewController extends LotFormViewController {
 		}
 	}
 	
+	@Override
 	public void clearFields() {
 		this.name.setText("");
 		this.description.setText("");
@@ -45,6 +42,7 @@ public class CarFormViewController extends LotFormViewController {
 		this.model.setText("");
 	}
 	
+	@Override
 	public void setLot(Lot lot) {
 		Car car = (Car) lot;
 		this.name.setText(car.name);

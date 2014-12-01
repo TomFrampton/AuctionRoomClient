@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.net.ConnectException;
-import java.rmi.RemoteException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -51,7 +50,7 @@ public class DummyView implements AuctionView {
 	@Before
 	public void setUp() throws Exception {
 		this.space = SpaceUtils.getSpace("localhost");
-		if(space == null) {
+		if(this.space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
@@ -62,14 +61,14 @@ public class DummyView implements AuctionView {
 		
 		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
 		
-		LotService lotService = new JavaSpaceLotService(space, transMgr);
-		AccountService accountService = new JavaSpaceAccountService(space, hashScheme);
+		LotService lotService = new JavaSpaceLotService(this.space, transMgr);
+		AccountService accountService = new JavaSpaceAccountService(this.space, hashScheme);
 		
 		AuctionController controller = new ConcreteAuctionController(this, lotService, accountService);
 		controller.launch();
 		
-		LotIDCounter.initialiseInSpace(space);
-		UserIDCounter.initialiseInSpace(space);
+		LotIDCounter.initialiseInSpace(this.space);
+		UserIDCounter.initialiseInSpace(this.space);
 	}
 	
 	@After
@@ -402,8 +401,8 @@ public class DummyView implements AuctionView {
 			HighestBid template1 = new HighestBid(carId);
 			HighestBid template2 = new HighestBid(carId2);
 			
-			HighestBid carBid1 = (HighestBid) space.readIfExists(template1, null, 0);
-			HighestBid carBid2 = (HighestBid) space.readIfExists(template2, null, 0);
+			HighestBid carBid1 = (HighestBid) this.space.readIfExists(template1, null, 0);
+			HighestBid carBid2 = (HighestBid) this.space.readIfExists(template2, null, 0);
 			
 			assertNotNull(carBid1);
 			assertNotNull(carBid2);
@@ -883,7 +882,7 @@ public class DummyView implements AuctionView {
 		Callback<Lot, Void> callback = new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot lot) {
-				object = lot;
+				DummyView.this.object = lot;
 				
 				synchronized(finished) {
 					finished.notify();
@@ -956,7 +955,7 @@ public class DummyView implements AuctionView {
 		Callback<Lot, Void> callback = new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot lot) {
-				object = lot;
+				DummyView.this.object = lot;
 				synchronized(finished) {
 					finished.notify();
 				}

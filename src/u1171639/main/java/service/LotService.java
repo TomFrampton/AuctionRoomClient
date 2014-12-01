@@ -5,7 +5,6 @@ import java.util.List;
 
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.UnauthorisedBidException;
-import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;

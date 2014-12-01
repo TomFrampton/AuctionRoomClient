@@ -1,8 +1,6 @@
 package u1171639.test.mock;
 
 import java.util.Hashtable;
-import java.util.List;
-
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.UserNotFoundException;
@@ -17,8 +15,8 @@ public class MockAccountService implements AccountService {
 	
 	@Override
 	public void login(User credentials) throws AuthenticationException {
-		if(registeredUsers.containsKey(credentials.email)) {
-			User identifiedUser = registeredUsers.get(credentials.email);
+		if(this.registeredUsers.containsKey(credentials.email)) {
+			User identifiedUser = this.registeredUsers.get(credentials.email);
 			
 			if(identifiedUser.password.equals(credentials.password)) {
 				this.currentUser = identifiedUser;
@@ -41,9 +39,9 @@ public class MockAccountService implements AccountService {
 
 	@Override
 	public long register(User newUser) throws RegistrationException {
-		if(!registeredUsers.containsKey(newUser.email)) {
+		if(!this.registeredUsers.containsKey(newUser.email)) {
 			newUser.id = this.idCounter++;
-			registeredUsers.put(newUser.email, newUser);
+			this.registeredUsers.put(newUser.email, newUser);
 		} else {
 			throw new RegistrationException("Email already in use.");
 		}

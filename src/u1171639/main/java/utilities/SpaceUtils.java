@@ -5,7 +5,6 @@ import java.rmi.RMISecurityManager;
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
-import net.jini.core.lookup.ServiceMatches;
 
 public class SpaceUtils {
 
