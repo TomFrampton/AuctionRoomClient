@@ -12,6 +12,11 @@
 	
 	<left>
 		<VBox>
+			<padding>
+				<Insets top="25" right="25" bottom="10" left="25" />	
+			</padding>
+			
+			<Text text="Your Lots" />
 			<ListView fx:id="yourLots" 
 				onMouseClicked="#handleLotSelected" />
 				

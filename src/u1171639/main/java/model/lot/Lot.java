@@ -1,6 +1,7 @@
 package u1171639.main.java.model.lot;
 
 import java.util.Date;
+import java.util.List;
 
 import net.jini.core.entry.Entry;
 
@@ -10,6 +11,8 @@ public class Lot implements Entry {
 	public String description;
 	public Date timeAdded;
 	public Long sellerId;
+	
+	public transient List<Bid> bids;
 	
 	public Lot() {
 		

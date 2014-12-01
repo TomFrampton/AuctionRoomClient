@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.rmi.RemoteException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import net.jini.core.lease.Lease;
@@ -532,6 +534,11 @@ public class DummyView implements AuctionView {
 	}
 	
 	@Test
+	public void testGetUsersLots() {
+		// TODO
+	}
+	
+	@Test
 	public void  testUpdateLot() {
 		Car car = new Car();
 		car.make = "UnitTest"; 
@@ -604,7 +611,7 @@ public class DummyView implements AuctionView {
 		}
 		
 		try {
-			this.controller.bidForLot(-1, new BigDecimal(100.00));
+			this.controller.bidForLot(-1, new BigDecimal(100.00), false);
 			fail("Bid made without being logged in");
 		} catch(UnauthorisedBidException | InvalidBidException e) {
 			fail("Bid attempted without being logged in");
@@ -627,7 +634,7 @@ public class DummyView implements AuctionView {
 			assertTrue(car3.id.equals(car2.id + 1));
 			
 			try {
-				this.controller.bidForLot(car.id, new BigDecimal(1000.00));
+				this.controller.bidForLot(car.id, new BigDecimal(1000.00), false);
 				fail("Should not have been able to bid for own Lot");
 			} catch(UnauthorisedBidException e) {
 				// Pass
@@ -642,15 +649,16 @@ public class DummyView implements AuctionView {
 				fail("User was registered. Should be able to login");
 			}
 			
-			this.controller.bidForLot(car.id, new BigDecimal(1000.00));
+			this.controller.bidForLot(car.id, new BigDecimal(1000.00), false);
 			Bid highestBid1 = this.controller.getHighestBid(car.id);
 			
 			assertTrue(highestBid1.id.equals(0l));
 			assertEquals(highestBid1.lotId, car.id);
 			assertTrue(highestBid1.amount.compareTo(new BigDecimal(1000.00)) == 0);
+			assertTrue(highestBid1.privateBid == false);
 			
 			try {
-				this.controller.bidForLot(car.id, new BigDecimal(100.00));
+				this.controller.bidForLot(car.id, new BigDecimal(100.00), false);
 				highestBid1 = this.controller.getHighestBid(car.id);
 				fail("Bid should exceed current bid amount");
 			} catch(InvalidBidException e) {
@@ -660,18 +668,20 @@ public class DummyView implements AuctionView {
 			assertTrue(highestBid1.id.equals(0l));
 			assertEquals(highestBid1.lotId, car.id);
 			assertTrue(highestBid1.amount.compareTo(new BigDecimal(1000.00)) == 0);
+			assertTrue(highestBid1.privateBid == false);
 			
-			this.controller.bidForLot(car.id, new BigDecimal(1001.00));
+			this.controller.bidForLot(car.id, new BigDecimal(1001.00), false);
 			highestBid1 = this.controller.getHighestBid(car.id);
 			
 			assertTrue(highestBid1.id.equals(1l));
 			assertEquals(highestBid1.lotId, car.id);
 			assertTrue(highestBid1.amount.compareTo(new BigDecimal(1001.00)) == 0);
+			assertTrue(highestBid1.privateBid == false);
 			
 			assertNull(this.controller.getHighestBid(car2.id));
 			
 			try {
-				this.controller.bidForLot(car2.id, new BigDecimal(-500.00));
+				this.controller.bidForLot(car2.id, new BigDecimal(-500.00), false);
 				fail("Bid amount should be greater than zero");
 			} catch (InvalidBidException e) {
 				// Pass
@@ -688,7 +698,168 @@ public class DummyView implements AuctionView {
 		} finally {
 			this.controller.logout();
 		}
+	}
+	
+	@Test
+	public void testGetVisibleBids() {
+		Car car = new Car();
+		car.make = "IntegrationTest"; 
+		car.model = "GetVisibleLots";
 		
+		User user1 = new User();
+		user1.email = "test@getVisibleLots1.com";
+		user1.password = "password1";
+		
+		User user2 = new User();
+		user2.email = "test@getVisibleLots2.com";
+		user2.password = "password2";
+		
+		User user3 = new User();
+		user3.email = "test@getVisibleLots3.com";
+		user3.password = "password3";
+		
+		try {
+			user1.id = this.controller.register(user1);
+			user2.id = this.controller.register(user2);
+			user3.id = this.controller.register(user3);
+		} catch (RegistrationException e) {
+			fail("Unique users - should have been registered.");
+		}
+		
+		try {
+			this.controller.login(user1);
+		} catch (AuthenticationException e) {
+			fail("User was registered. Should be able to login");
+		}
+		
+		try {
+			car.id = this.controller.addLot(car);
+		} catch (RequiresLoginException e1) {
+			fail("User logged in. Lot should have been added.");
+		}
+		
+		this.controller.logout();
+
+		try {
+			this.controller.login(user2);
+		} catch (AuthenticationException e) {
+			fail("User was registered. Should be able to login");
+		}
+		
+		
+		try {
+			this.controller.bidForLot(car.id, new BigDecimal(100.00), false);
+			this.controller.bidForLot(car.id, new BigDecimal(200.00), true);
+			
+			this.controller.logout();
+			
+			try {
+				this.controller.login(user3);
+			} catch (AuthenticationException e) {
+				fail("User was registered. Should be able to login");
+			}
+			
+			this.controller.bidForLot(car.id, new BigDecimal(300.00), true);
+			this.controller.bidForLot(car.id, new BigDecimal(400.00), false);
+			this.controller.bidForLot(car.id, new BigDecimal(500.00), false);
+		} catch (UnauthorisedBidException | InvalidBidException e) {
+			fail("Bid was valid. Exception should not have been thrown.");
+		} catch(RequiresLoginException e) {
+			fail("User was logged in");
+		}
+		
+		this.controller.logout();
+		
+		try {
+			this.controller.login(user2);
+		} catch (AuthenticationException e) {
+			fail("User was registered. Should be able to login");
+		}
+		
+		try {
+			List<Bid> visibleBids1 = this.controller.getVisibleBids(car.id);
+			Collections.sort(visibleBids1, new Comparator<Bid>() {
+				@Override
+				public int compare(Bid o1, Bid o2) {
+					return Long.compare(o1.id, o2.id);
+				}
+			});
+			
+			assertTrue(visibleBids1.size() == 4);
+			
+			assertTrue(visibleBids1.get(0).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(0).amount.equals(new BigDecimal(100.00)));
+			assertTrue(visibleBids1.get(0).bidderId.equals(user2.id));
+			assertTrue(visibleBids1.get(0).privateBid == false);
+			
+			assertTrue(visibleBids1.get(1).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(1).amount.equals(new BigDecimal(200.00)));
+			assertTrue(visibleBids1.get(1).bidderId.equals(user2.id));
+			assertTrue(visibleBids1.get(1).privateBid == true);
+			
+			assertTrue(visibleBids1.get(2).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(2).amount.equals(new BigDecimal(400.00)));
+			assertTrue(visibleBids1.get(2).bidderId.equals(user3.id));
+			assertTrue(visibleBids1.get(2).privateBid == false);
+			
+			assertTrue(visibleBids1.get(3).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(3).amount.equals(new BigDecimal(500.00)));
+			assertTrue(visibleBids1.get(3).bidderId.equals(user3.id));
+			assertTrue(visibleBids1.get(3).privateBid == false);
+		
+			this.controller.logout();
+			
+			try {
+				this.controller.login(user3);
+			} catch (AuthenticationException e) {
+				fail("User was registered. Should be able to login");
+			}
+		
+			List<Bid> visibleBids2 = this.controller.getVisibleBids(car.id);
+			
+			Collections.sort(visibleBids2, new Comparator<Bid>() {
+				@Override
+				public int compare(Bid o1, Bid o2) {
+					return Long.compare(o1.id, o2.id);
+				}
+			});
+			
+			assertTrue(visibleBids2.size() == 4);
+			
+			assertTrue(visibleBids2.get(0).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(0).amount.equals(new BigDecimal(100.00)));
+			assertTrue(visibleBids2.get(0).bidderId.equals(user2.id));
+			assertTrue(visibleBids2.get(0).privateBid == false);
+			
+			assertTrue(visibleBids2.get(1).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(1).amount.equals(new BigDecimal(300.00)));
+			assertTrue(visibleBids2.get(1).bidderId.equals(user3.id));
+			assertTrue(visibleBids2.get(1).privateBid == true);
+			
+			assertTrue(visibleBids2.get(2).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(2).amount.equals(new BigDecimal(400.00)));
+			assertTrue(visibleBids2.get(2).bidderId.equals(user3.id));
+			assertTrue(visibleBids2.get(2).privateBid == false);
+			
+			assertTrue(visibleBids2.get(3).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(3).amount.equals(new BigDecimal(500.00)));
+			assertTrue(visibleBids2.get(3).bidderId.equals(user3.id));
+			assertTrue(visibleBids2.get(3).privateBid == false);
+			
+			this.controller.logout();
+			
+			try {
+				this.controller.login(user1);
+			} catch (AuthenticationException e) {
+				fail("User was registered. Should be able to login");
+			}
+			
+			List<Bid> visibleBids3 = this.controller.getVisibleBids(car.id);
+			assertTrue(visibleBids3.size() == 5);
+			
+		} catch (RequiresLoginException e) {
+			fail("User was logged in.");
+		}
 	}
 	
 	@Test

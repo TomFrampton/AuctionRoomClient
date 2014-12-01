@@ -7,7 +7,7 @@
 <?import javafx.scene.text.*?>
 
 <GridPane xmlns:fx="http://javafx.com/fxml"
-	fx:controller="u1171639.main.java.view.fxml.controller.LotViewController"
+	fx:controller="u1171639.main.java.view.fxml.controller.ViewLotViewController"
 	fx:id="lotPane">
 	
 	<Text fx:id="lotName" />

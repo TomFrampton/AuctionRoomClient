@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.net.ConnectException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import net.jini.core.entry.Entry;
@@ -23,6 +25,7 @@ import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.service.LotService;
 import u1171639.main.java.utilities.Callback;
+import u1171639.main.java.utilities.HighestBid;
 import u1171639.main.java.utilities.LotIDCounter;
 import u1171639.main.java.utilities.SpaceUtils;
 
@@ -64,6 +67,17 @@ public class LotServiceTest {
 		somethingToTake = true;
 		while(somethingToTake) {
 			Entry entry = this.space.takeIfExists(new Bid(), null, 0);
+			
+			if(entry != null) {
+				objectCounter++;
+			} else {
+				somethingToTake = false;
+			}
+		}
+		
+		somethingToTake = true;
+		while(somethingToTake) {
+			Entry entry = this.space.takeIfExists(new HighestBid(), null, 0);
 			
 			if(entry != null) {
 				objectCounter++;
@@ -203,6 +217,11 @@ public class LotServiceTest {
 	}
 	
 	@Test
+	public void testGetUsersLots() {
+		// TODO
+	}
+	
+	@Test
 	public void testUpdateLot() {
 		Car car = new Car();
 		car.make = "UnitTest"; 
@@ -238,7 +257,7 @@ public class LotServiceTest {
 		car2.id = this.lotService.addLot(car2);
 		
 		try {
-			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 0l);
+			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 0l, false);
 			fail("User should not be able to bid on own Lot");
 		} catch (UnauthorisedBidException e) {
 			// Pass
@@ -247,7 +266,7 @@ public class LotServiceTest {
 		}
 		
 		try {
-			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 1l);
+			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 1l, false);
 		} catch (UnauthorisedBidException e) {
 			fail("User should be able to bid on other User's Lots.");
 		} catch (InvalidBidException e) {
@@ -255,7 +274,7 @@ public class LotServiceTest {
 		}
 		
 		try {
-			this.lotService.bidForLot(car.id, new BigDecimal(500.00), 1l);
+			this.lotService.bidForLot(car.id, new BigDecimal(500.00), 1l, false);
 			fail("Should not be able to bid lower than currrent bid.");
 		} catch (UnauthorisedBidException e) {
 			fail("User should be able to bid on other User's Lots.");
@@ -264,7 +283,7 @@ public class LotServiceTest {
 		}
 		
 		try {
-			this.lotService.bidForLot(car2.id, new BigDecimal(200.00), 1l);
+			this.lotService.bidForLot(car2.id, new BigDecimal(200.00), 1l, false);
 		} catch (UnauthorisedBidException e) {
 			fail("User should be able to bid on other User's Lots.");
 		} catch (InvalidBidException e) {
@@ -275,7 +294,95 @@ public class LotServiceTest {
 		Bid highestBid2 = this.lotService.getHighestBid(car2.id);
 		
 		assertTrue(highestBid.amount.compareTo(new BigDecimal(1000.0)) == 0);
+		assertTrue(highestBid.bidderId.equals(1l));
+		
 		assertTrue(highestBid2.amount.compareTo(new BigDecimal(200.0)) == 0);
+		assertTrue(highestBid2.bidderId.equals(1l));
+	}
+	
+	@Test
+	public void testGetVisibleBids() {
+		Car car = new Car();
+		car.make = "UnitTest";
+		car.model = "GetVisibleLots";
+		car.sellerId = 0l;
+		car.id = this.lotService.addLot(car);
+		
+		try {
+			this.lotService.bidForLot(car.id, new BigDecimal(100.00), 1l, false);
+			this.lotService.bidForLot(car.id, new BigDecimal(200.00), 1l, true);
+			this.lotService.bidForLot(car.id, new BigDecimal(300.00), 2l, true);
+			this.lotService.bidForLot(car.id, new BigDecimal(400.00), 2l, false);
+			this.lotService.bidForLot(car.id, new BigDecimal(500.00), 2l, false);
+		} catch (UnauthorisedBidException | InvalidBidException e) {
+			fail("Bid was valid. Exception should not have been thrown.");
+		}
+		
+		List<Bid> visibleBids1 = this.lotService.getVisibleBids(car.id, 1l);
+		Collections.sort(visibleBids1, new Comparator<Bid>() {
+			@Override
+			public int compare(Bid o1, Bid o2) {
+				return Long.compare(o1.id, o2.id);
+			}
+		});
+		
+		assertTrue(visibleBids1.size() == 4);
+		
+		assertTrue(visibleBids1.get(0).lotId.equals(car.id));
+		assertTrue(visibleBids1.get(0).amount.equals(new BigDecimal(100.00)));
+		assertTrue(visibleBids1.get(0).bidderId.equals(1l));
+		assertTrue(visibleBids1.get(0).privateBid == false);
+		
+		assertTrue(visibleBids1.get(1).lotId.equals(car.id));
+		assertTrue(visibleBids1.get(1).amount.equals(new BigDecimal(200.00)));
+		assertTrue(visibleBids1.get(1).bidderId.equals(1l));
+		assertTrue(visibleBids1.get(1).privateBid == true);
+		
+		assertTrue(visibleBids1.get(2).lotId.equals(car.id));
+		assertTrue(visibleBids1.get(2).amount.equals(new BigDecimal(400.00)));
+		assertTrue(visibleBids1.get(2).bidderId.equals(2l));
+		assertTrue(visibleBids1.get(2).privateBid == false);
+		
+		assertTrue(visibleBids1.get(3).lotId.equals(car.id));
+		assertTrue(visibleBids1.get(3).amount.equals(new BigDecimal(500.00)));
+		assertTrue(visibleBids1.get(3).bidderId.equals(2l));
+		assertTrue(visibleBids1.get(3).privateBid == false);
+		
+		List<Bid> visibleBids2 = this.lotService.getVisibleBids(car.id, 2l);
+		Collections.sort(visibleBids2, new Comparator<Bid>() {
+			@Override
+			public int compare(Bid o1, Bid o2) {
+				return Long.compare(o1.id, o2.id);
+			}
+		});
+		
+		assertTrue(visibleBids2.size() == 4);
+		
+		assertTrue(visibleBids2.get(0).lotId.equals(car.id));
+		assertTrue(visibleBids2.get(0).amount.equals(new BigDecimal(100.00)));
+		assertTrue(visibleBids2.get(0).bidderId.equals(1l));
+		assertTrue(visibleBids2.get(0).privateBid == false);
+		
+		assertTrue(visibleBids2.get(1).lotId.equals(car.id));
+		assertTrue(visibleBids2.get(1).amount.equals(new BigDecimal(300.00)));
+		assertTrue(visibleBids2.get(1).bidderId.equals(2l));
+		assertTrue(visibleBids2.get(1).privateBid == true);
+		
+		assertTrue(visibleBids2.get(2).lotId.equals(car.id));
+		assertTrue(visibleBids2.get(2).amount.equals(new BigDecimal(400.00)));
+		assertTrue(visibleBids2.get(2).bidderId.equals(2l));
+		assertTrue(visibleBids2.get(2).privateBid == false);
+		
+		assertTrue(visibleBids2.get(3).lotId.equals(car.id));
+		assertTrue(visibleBids2.get(3).amount.equals(new BigDecimal(500.00)));
+		assertTrue(visibleBids2.get(3).bidderId.equals(2l));
+		assertTrue(visibleBids2.get(3).privateBid == false);
+		
+		
+		List<Bid> visibleBids3 = this.lotService.getVisibleBids(car.id, 0l);
+		assertTrue(visibleBids3.size() == 5);
+		
+		
 	}
 	
 	@Test
@@ -360,5 +467,4 @@ public class LotServiceTest {
 			e.printStackTrace();
 		}
 	}
-
 }

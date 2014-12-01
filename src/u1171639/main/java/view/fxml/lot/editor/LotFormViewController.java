@@ -1,4 +1,4 @@
-package u1171639.main.java.view.fxml.lot;
+package u1171639.main.java.view.fxml.lot.editor;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.view.fxml.controller.ViewController;
 
-public abstract class LotForm extends ViewController {
+public abstract class LotFormViewController extends ViewController {
 	private Callback<Lot,Void> lotSubmittedCallback;
 
 	public Callback<Lot, Void> getLotSubmittedCallback() {
@@ -19,4 +19,7 @@ public abstract class LotForm extends ViewController {
 	public void setLotSubmittedCallback(Callback<Lot, Void> lotSubmittedCallback) {
 		this.lotSubmittedCallback = lotSubmittedCallback;
 	}
+	
+	public abstract void clearFields();
+	public abstract void setLot(Lot lot);
 }

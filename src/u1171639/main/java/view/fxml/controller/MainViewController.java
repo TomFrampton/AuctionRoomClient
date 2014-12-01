@@ -23,7 +23,6 @@ public class MainViewController extends ViewController {
 	public void initialize(URL location, ResourceBundle resources) {
 		this.loginView = loadView("login.fxml");
 		this.registerView = loadView("register.fxml");
-		this.auctionView = loadView("auction.fxml");
 		
 		HBox layout = new HBox();
 		layout.setAlignment(Pos.CENTER);
@@ -37,6 +36,7 @@ public class MainViewController extends ViewController {
 		loginController.setLoginSuccessCallback(new Callback<Object, Void>() {
 			@Override
 			public Void call(Object param) {
+				MainViewController.this.auctionView = loadView("auction.fxml");
 				MainViewController.this.mainLayout.setCenter(MainViewController.this.auctionView.getComponent());
 				return null;
 			}

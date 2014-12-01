@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+	fx:controller="u1171639.main.java.view.fxml.controller.BidsViewController">
+	
+	<padding>
+		<Insets top="25" right="25" bottom="10" left="25" />	
+	</padding>
+	
+	<Text text="Bids For This Lot" />
+	<TableView fx:id="bidList" />
+	
+	<HBox fx:id="buyingOptions">
+		<Button text="Make Bid" onAction="#handleMakeBidAction"/>
+	</HBox>
+	
+	<HBox fx:id="sellingOptions">
+		<Button text="Accept Highest Bid" onAction="#handleAcceptHighestBidAction"/>
+	</HBox>
+</VBox>

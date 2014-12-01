@@ -27,9 +27,11 @@ public interface AuctionController {
 	public void removeUser(String email) throws UserNotFoundException;
 	public long addLot(Lot lot) throws RequiresLoginException;
 	public List<Lot> searchLots(Lot template) throws RequiresLoginException;
+	public List<Lot> getUsersLots() throws RequiresLoginException;
 	public void updateLot(Lot lot) throws RequiresLoginException;
-	public void bidForLot(long lotId, BigDecimal amount) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException;
+	public void bidForLot(long lotId, BigDecimal amount, boolean isPrivateBid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException;
 	public Bid getHighestBid(long lotId) throws RequiresLoginException;
+	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException;
 	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException;
 	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException;
 	public Lot getLotDetails(long lotId) throws RequiresLoginException;

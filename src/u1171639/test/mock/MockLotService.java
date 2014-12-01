@@ -30,7 +30,7 @@ public class MockLotService implements LotService {
 	}
 
 	@Override
-	public void bidForLot(long lotId, BigDecimal amount, long bidderId) {
+	public void bidForLot(long lotId, BigDecimal amount, long bidderId, boolean privateBid) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -57,6 +57,18 @@ public class MockLotService implements LotService {
 	public void listenForLot(Lot template, Callback<Lot, Void> callback) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public List<Bid> getVisibleBids(long lotId, long userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Lot> getUsersLots(long userId) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

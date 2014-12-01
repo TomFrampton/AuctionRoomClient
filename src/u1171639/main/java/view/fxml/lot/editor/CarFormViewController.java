@@ -1,4 +1,4 @@
-package u1171639.main.java.view.fxml.lot;
+package u1171639.main.java.view.fxml.lot.editor;
 
 import java.net.URL;
 import java.util.List;
@@ -13,7 +13,7 @@ import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.view.fxml.controller.ViewController;
 
-public class CarViewController extends LotForm {	
+public class CarFormViewController extends LotFormViewController {	
 	@FXML private TextField name;
 	@FXML private TextField description;
 	@FXML private TextField make;
@@ -36,6 +36,21 @@ public class CarViewController extends LotForm {
 		if(getLotSubmittedCallback() != null) {
 			getLotSubmittedCallback().call(lot);
 		}
+	}
+	
+	public void clearFields() {
+		this.name.setText("");
+		this.description.setText("");
+		this.make.setText("");
+		this.model.setText("");
+	}
+	
+	public void setLot(Lot lot) {
+		Car car = (Car) lot;
+		this.name.setText(car.name);
+		this.description.setText(car.description);
+		this.make.setText(car.make);
+		this.model.setText(car.model);
 	}
 
 }

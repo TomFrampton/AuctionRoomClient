@@ -15,10 +15,10 @@ import javafx.scene.layout.Pane;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.view.fxml.lot.LotForm;
+import u1171639.main.java.view.fxml.lot.editor.LotFormViewController;
 import u1171639.main.java.view.fxml.utilities.FXMLView;
 
-public class LotFormViewController extends ViewController {
+public class SearchLotsViewController extends ViewController {
 	private Hashtable<String, FXMLView> lotForms = new Hashtable<String, FXMLView>();
 	
 	@FXML private ComboBox<String> lotTypeSelect;
@@ -31,7 +31,7 @@ public class LotFormViewController extends ViewController {
 		ObservableList<String> typeList = FXCollections.observableArrayList();
 		
 		for(Lot.Type type : Lot.Type.values()) {
-			this.lotForms.put(type.toString(), this.loadView("lot/" + type.toString().toLowerCase() + ".fxml"));
+			this.lotForms.put(type.toString(), this.loadView("lot/editor/" + type.toString().toLowerCase() + ".fxml"));
 			typeList.add(type.toString());
 		}
 		
@@ -40,14 +40,23 @@ public class LotFormViewController extends ViewController {
 	
 	@FXML protected void handleLotTypeAction(ActionEvent event) {
 		String selection = this.lotTypeSelect.getSelectionModel().getSelectedItem();
+		if(selection != null) {
 		
-		LotForm controller = (LotForm) this.lotForms.get(selection).getController();
-		controller.setLotSubmittedCallback(this.lotSubmittedCallback);
-		
-		this.lotForm.getChildren().add(this.lotForms.get(selection).getComponent());
+			LotFormViewController controller = (LotFormViewController) this.lotForms.get(selection).getController();
+			controller.setLotSubmittedCallback(new Callback<Lot, Void>() {
+				
+				@Override
+				public Void call(Lot param) {		
+					SearchLotsViewController.this.lotSubmittedCallback.call(param);
+					return null;
+				}
+			});
+			
+			this.lotForm.getChildren().add(this.lotForms.get(selection).getComponent());
+		}
 	}
 
 	public void setLotSubmittedCallback(Callback<Lot, Void> lotSubmittedCallback) {
 		this.lotSubmittedCallback = lotSubmittedCallback;
-	}	
+	}
 }

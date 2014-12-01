@@ -8,9 +8,12 @@
 <?import javafx.scene.control.ComboBox?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-	fx:controller="u1171639.main.java.view.fxml.controller.LotFormViewController">
+	fx:controller="u1171639.main.java.view.fxml.controller.ViewLotViewController">
 	
-	<ComboBox fx:id="lotTypeSelect" onAction="#handleLotTypeAction"/>
+	<padding>
+		<Insets top="25" right="25" bottom="10" left="25" />	
+	</padding>
 	
+	<Text fx:id="lotName" />
 	<Pane fx:id="lotForm" />
 </VBox>

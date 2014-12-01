@@ -100,6 +100,14 @@ public class ConcreteAuctionController implements AuctionController {
 		}
 	}
 	
+	public List<Lot> getUsersLots() throws RequiresLoginException {
+		if(accountService.isLoggedIn()) {
+			return this.lotService.getUsersLots(this.accountService.getCurrentUser().id);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
 	public void updateLot(Lot lot) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
 			this.lotService.updateLot(lot);
@@ -108,9 +116,9 @@ public class ConcreteAuctionController implements AuctionController {
 		}
 	}
 	
-	public void bidForLot(long lotId, BigDecimal amount) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException {
+	public void bidForLot(long lotId, BigDecimal amount, boolean isPrivateBid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException {
 		if(accountService.isLoggedIn()) {
-			this.lotService.bidForLot(lotId, amount, accountService.getCurrentUser().id);
+			this.lotService.bidForLot(lotId, amount, accountService.getCurrentUser().id, isPrivateBid);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -119,6 +127,15 @@ public class ConcreteAuctionController implements AuctionController {
 	public Bid getHighestBid(long lotId) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
 			return this.lotService.getHighestBid(lotId);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	@Override
+	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException {
+		if(accountService.isLoggedIn()) {
+			return this.lotService.getVisibleBids(lotId, this.accountService.getCurrentUser().id);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -142,7 +159,9 @@ public class ConcreteAuctionController implements AuctionController {
 	
 	public Lot getLotDetails(long lotId) throws RequiresLoginException {
 		if(accountService.isLoggedIn()) {
-			return this.lotService.getLotDetails(lotId);
+			Lot lot = this.lotService.getLotDetails(lotId);
+			lot.bids = this.lotService.getVisibleBids(lotId, this.accountService.getCurrentUser().id);
+			return lot;
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}

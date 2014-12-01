@@ -23,19 +23,19 @@ public class BuyingViewController extends ViewController {
 	@FXML private BorderPane buyingPane;
 	@FXML private ListView<Lot> lotList;
 	
-	private FXMLView lotView;
-	private FXMLView lotFormView;
-	
-	private VBox lotSearchPane = new VBox();
+	private FXMLView viewLotView;
+	private FXMLView searchLotView;
+	private FXMLView bidsView;
 	
 	final ObservableList<Lot> retrievedLots = FXCollections.observableArrayList();
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		this.lotView = this.loadView("lot.fxml");
-		this.lotFormView = this.loadView("lotForm.fxml");
+		this.viewLotView = this.loadView("viewLot.fxml");
+		this.searchLotView = this.loadView("searchLots.fxml");
+		this.bidsView = this.loadView("bids.fxml");
 		
-		LotFormViewController controller = (LotFormViewController) this.lotFormView.getController();
+		SearchLotsViewController controller = (SearchLotsViewController) this.searchLotView.getController();
 		controller.setLotSubmittedCallback(new Callback<Lot, Void>() {
 			
 			@Override
@@ -56,31 +56,31 @@ public class BuyingViewController extends ViewController {
 		
 		
 		this.lotList.setItems(retrievedLots);
-		
-		this.lotSearchPane.getChildren().addAll(
-				new Text("Search For Lots"),
-				this.lotFormView.getComponent());
 	}
 	
 	@FXML protected void handleLotSelected(MouseEvent event) {
 		if(this.lotList.getSelectionModel().getSelectedIndex() >= 0) {
-			Lot selected = this.lotList.getSelectionModel().getSelectedItem();
+			Lot selectedLot = this.lotList.getSelectionModel().getSelectedItem();
 			
-			LotViewController lotController = (LotViewController) this.lotView.getController();
-			lotController.setLot(selected);
+			ViewLotViewController lotController = (ViewLotViewController) this.viewLotView.getController();
+			lotController.setLotToView(selectedLot);
 			
-			this.buyingPane.setRight(this.lotView.getComponent());
+			BidsViewController bidsController = (BidsViewController) this.bidsView.getController();
+			bidsController.setLotForBids(selectedLot);
+
+			this.buyingPane.setCenter(this.viewLotView.getComponent());
+			this.buyingPane.setRight(this.bidsView.getComponent());
 		}
 	}
 	
 	@FXML protected void handleEditSearch(MouseEvent event) {
-		this.buyingPane.setRight(this.lotSearchPane);
+		this.buyingPane.setCenter(this.searchLotView.getComponent());
+		this.buyingPane.setRight(null);
 	}
 	
 	@FXML protected void handleClearSearch(MouseEvent event) {
 		this.retrievedLots.clear();
+		this.buyingPane.setCenter(null);
 		this.buyingPane.setRight(null);
 	}
-	
-
 }
