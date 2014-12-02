@@ -6,6 +6,7 @@ import u1171639.main.java.controller.AuctionController;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 
 public abstract class ViewController implements Initializable {
@@ -65,5 +66,9 @@ public abstract class ViewController implements Initializable {
 	
 	public void setViewComponent(Parent viewComponent) {
 		this.viewComponent = viewComponent;
+	}
+	
+	public Stage getWindow() {
+		return (Stage) this.viewComponent.getScene().getWindow();
 	}
 }

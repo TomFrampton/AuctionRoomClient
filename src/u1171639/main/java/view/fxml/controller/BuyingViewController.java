@@ -32,6 +32,7 @@ public class BuyingViewController extends ViewController {
 		this.viewLotController = (ViewLotViewController) this.loadView("viewLot.fxml");
 		this.searchLotsController = (SearchLotsViewController) this.loadView("searchLots.fxml");
 		this.bidsController = (BidsViewController) this.loadView("bids.fxml");
+		this.bidsController.showBuyingFields();
 		
 		this.searchLotsController.setSearchReturnedCallback(new Callback<List<Lot>, Void>() {
 			

@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
@@ -99,22 +100,26 @@ public class LotServiceTest {
 		car2.model = "AddLot2";
 		car2.sellerId = 1l;
 		
-		car.id = this.lotService.addLot(car);
-		Car retrievedCar = (Car) this.lotService.getLotDetails(car.id);
-		
-		car2.id = this.lotService.addLot(car2);
-		Car retrievedCar2 = (Car) this.lotService.getLotDetails(car2.id);
-		
-		assertTrue(retrievedCar.id.equals(car.id));
-		assertTrue(retrievedCar.make.equals(car.make));
-		assertTrue(retrievedCar.model.equals(car.model));
-		assertTrue(retrievedCar.sellerId.equals(car.sellerId));
-		
-		assertTrue(retrievedCar2.id.equals(retrievedCar.id + 1));
-		assertTrue(retrievedCar2.id.equals(car2.id));
-		assertTrue(retrievedCar2.make.equals(car2.make));
-		assertTrue(retrievedCar2.model.equals(car2.model));
-		assertTrue(retrievedCar2.sellerId.equals(car2.sellerId));
+		try {
+			car.id = this.lotService.addLot(car);
+			Car retrievedCar = (Car) this.lotService.getLotDetails(car.id);
+			
+			car2.id = this.lotService.addLot(car2);
+			Car retrievedCar2 = (Car) this.lotService.getLotDetails(car2.id);
+			
+			assertTrue(retrievedCar.id.equals(car.id));
+			assertTrue(retrievedCar.make.equals(car.make));
+			assertTrue(retrievedCar.model.equals(car.model));
+			assertTrue(retrievedCar.sellerId.equals(car.sellerId));
+			
+			assertTrue(retrievedCar2.id.equals(retrievedCar.id + 1));
+			assertTrue(retrievedCar2.id.equals(car2.id));
+			assertTrue(retrievedCar2.make.equals(car2.make));
+			assertTrue(retrievedCar2.model.equals(car2.model));
+			assertTrue(retrievedCar2.sellerId.equals(car2.sellerId));
+		} catch(LotNotFoundException e) {
+			fail("Lots exist. Should have been found");
+		}
 	}
 	
 	@Test
@@ -231,13 +236,17 @@ public class LotServiceTest {
 		car.description = "Updated!";
 		this.lotService.updateLot(car);
 		
-		Car retrievedCar = (Car) this.lotService.getLotDetails(car.id);
-		
-		assertTrue(retrievedCar.id.equals(car.id));
-		assertTrue(retrievedCar.make.equals(car.make));
-		assertTrue(retrievedCar.model.equals(car.model));
-		assertTrue(retrievedCar.sellerId.equals(car.sellerId));
-		assertTrue(retrievedCar.description.equals(car.description));
+		try {
+			Car retrievedCar = (Car) this.lotService.getLotDetails(car.id);
+			
+			assertTrue(retrievedCar.id.equals(car.id));
+			assertTrue(retrievedCar.make.equals(car.make));
+			assertTrue(retrievedCar.model.equals(car.model));
+			assertTrue(retrievedCar.sellerId.equals(car.sellerId));
+			assertTrue(retrievedCar.description.equals(car.description));
+		} catch(LotNotFoundException e) {
+			fail("Lots exist. Should have been found");
+		}
 	}
 	
 	@Test
@@ -261,6 +270,8 @@ public class LotServiceTest {
 			// Pass
 		} catch (InvalidBidException e) {
 			fail("Bid amount is valid.");
+		} catch (LotNotFoundException e) {
+			fail("Lot exists. Should have been found");
 		}
 		
 		try {
@@ -269,6 +280,8 @@ public class LotServiceTest {
 			fail("User should be able to bid on other User's Lots.");
 		} catch (InvalidBidException e) {
 			fail("Bid amount is valid.");
+		} catch (LotNotFoundException e) {
+			fail("Lot exists. Should have been found");
 		}
 		
 		try {
@@ -278,6 +291,8 @@ public class LotServiceTest {
 			fail("User should be able to bid on other User's Lots.");
 		} catch (InvalidBidException e) {
 			// Pass
+		} catch (LotNotFoundException e) {
+			fail("Lot exists. Should have been found");
 		}
 		
 		try {
@@ -286,6 +301,8 @@ public class LotServiceTest {
 			fail("User should be able to bid on other User's Lots.");
 		} catch (InvalidBidException e) {
 			fail("Bid amount is valid.");
+		} catch (LotNotFoundException e) {
+			fail("Lot exists. Should have been found");
 		}
 		
 		Bid highestBid = this.lotService.getHighestBid(car.id);
@@ -314,71 +331,77 @@ public class LotServiceTest {
 			this.lotService.bidForLot(car.id, new BigDecimal(500.00), 2l, false);
 		} catch (UnauthorisedBidException | InvalidBidException e) {
 			fail("Bid was valid. Exception should not have been thrown.");
+		} catch (LotNotFoundException e) {
+			fail("Lot exists. Should have been found");
 		}
 		
-		List<Bid> visibleBids1 = this.lotService.getVisibleBids(car.id, 1l);
-		Collections.sort(visibleBids1, new Comparator<Bid>() {
-			@Override
-			public int compare(Bid o1, Bid o2) {
-				return Long.compare(o1.id, o2.id);
-			}
-		});
-		
-		assertTrue(visibleBids1.size() == 4);
-		
-		assertTrue(visibleBids1.get(0).lotId.equals(car.id));
-		assertTrue(visibleBids1.get(0).amount.equals(new BigDecimal(100.00)));
-		assertTrue(visibleBids1.get(0).bidderId.equals(1l));
-		assertTrue(visibleBids1.get(0).privateBid == false);
-		
-		assertTrue(visibleBids1.get(1).lotId.equals(car.id));
-		assertTrue(visibleBids1.get(1).amount.equals(new BigDecimal(200.00)));
-		assertTrue(visibleBids1.get(1).bidderId.equals(1l));
-		assertTrue(visibleBids1.get(1).privateBid == true);
-		
-		assertTrue(visibleBids1.get(2).lotId.equals(car.id));
-		assertTrue(visibleBids1.get(2).amount.equals(new BigDecimal(400.00)));
-		assertTrue(visibleBids1.get(2).bidderId.equals(2l));
-		assertTrue(visibleBids1.get(2).privateBid == false);
-		
-		assertTrue(visibleBids1.get(3).lotId.equals(car.id));
-		assertTrue(visibleBids1.get(3).amount.equals(new BigDecimal(500.00)));
-		assertTrue(visibleBids1.get(3).bidderId.equals(2l));
-		assertTrue(visibleBids1.get(3).privateBid == false);
-		
-		List<Bid> visibleBids2 = this.lotService.getVisibleBids(car.id, 2l);
-		Collections.sort(visibleBids2, new Comparator<Bid>() {
-			@Override
-			public int compare(Bid o1, Bid o2) {
-				return Long.compare(o1.id, o2.id);
-			}
-		});
-		
-		assertTrue(visibleBids2.size() == 4);
-		
-		assertTrue(visibleBids2.get(0).lotId.equals(car.id));
-		assertTrue(visibleBids2.get(0).amount.equals(new BigDecimal(100.00)));
-		assertTrue(visibleBids2.get(0).bidderId.equals(1l));
-		assertTrue(visibleBids2.get(0).privateBid == false);
-		
-		assertTrue(visibleBids2.get(1).lotId.equals(car.id));
-		assertTrue(visibleBids2.get(1).amount.equals(new BigDecimal(300.00)));
-		assertTrue(visibleBids2.get(1).bidderId.equals(2l));
-		assertTrue(visibleBids2.get(1).privateBid == true);
-		
-		assertTrue(visibleBids2.get(2).lotId.equals(car.id));
-		assertTrue(visibleBids2.get(2).amount.equals(new BigDecimal(400.00)));
-		assertTrue(visibleBids2.get(2).bidderId.equals(2l));
-		assertTrue(visibleBids2.get(2).privateBid == false);
-		
-		assertTrue(visibleBids2.get(3).lotId.equals(car.id));
-		assertTrue(visibleBids2.get(3).amount.equals(new BigDecimal(500.00)));
-		assertTrue(visibleBids2.get(3).bidderId.equals(2l));
-		assertTrue(visibleBids2.get(3).privateBid == false);
-		
-		
-		List<Bid> visibleBids3 = this.lotService.getVisibleBids(car.id, 0l);
-		assertTrue(visibleBids3.size() == 5);
+		try {
+			List<Bid> visibleBids1 = this.lotService.getVisibleBids(car.id, 1l);
+			Collections.sort(visibleBids1, new Comparator<Bid>() {
+				@Override
+				public int compare(Bid o1, Bid o2) {
+					return Long.compare(o1.id, o2.id);
+				}
+			});
+			
+			assertTrue(visibleBids1.size() == 4);
+			
+			assertTrue(visibleBids1.get(0).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(0).amount.equals(new BigDecimal(100.00)));
+			assertTrue(visibleBids1.get(0).bidderId.equals(1l));
+			assertTrue(visibleBids1.get(0).privateBid == false);
+			
+			assertTrue(visibleBids1.get(1).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(1).amount.equals(new BigDecimal(200.00)));
+			assertTrue(visibleBids1.get(1).bidderId.equals(1l));
+			assertTrue(visibleBids1.get(1).privateBid == true);
+			
+			assertTrue(visibleBids1.get(2).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(2).amount.equals(new BigDecimal(400.00)));
+			assertTrue(visibleBids1.get(2).bidderId.equals(2l));
+			assertTrue(visibleBids1.get(2).privateBid == false);
+			
+			assertTrue(visibleBids1.get(3).lotId.equals(car.id));
+			assertTrue(visibleBids1.get(3).amount.equals(new BigDecimal(500.00)));
+			assertTrue(visibleBids1.get(3).bidderId.equals(2l));
+			assertTrue(visibleBids1.get(3).privateBid == false);
+			
+			List<Bid> visibleBids2 = this.lotService.getVisibleBids(car.id, 2l);
+			Collections.sort(visibleBids2, new Comparator<Bid>() {
+				@Override
+				public int compare(Bid o1, Bid o2) {
+					return Long.compare(o1.id, o2.id);
+				}
+			});
+			
+			assertTrue(visibleBids2.size() == 4);
+			
+			assertTrue(visibleBids2.get(0).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(0).amount.equals(new BigDecimal(100.00)));
+			assertTrue(visibleBids2.get(0).bidderId.equals(1l));
+			assertTrue(visibleBids2.get(0).privateBid == false);
+			
+			assertTrue(visibleBids2.get(1).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(1).amount.equals(new BigDecimal(300.00)));
+			assertTrue(visibleBids2.get(1).bidderId.equals(2l));
+			assertTrue(visibleBids2.get(1).privateBid == true);
+			
+			assertTrue(visibleBids2.get(2).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(2).amount.equals(new BigDecimal(400.00)));
+			assertTrue(visibleBids2.get(2).bidderId.equals(2l));
+			assertTrue(visibleBids2.get(2).privateBid == false);
+			
+			assertTrue(visibleBids2.get(3).lotId.equals(car.id));
+			assertTrue(visibleBids2.get(3).amount.equals(new BigDecimal(500.00)));
+			assertTrue(visibleBids2.get(3).bidderId.equals(2l));
+			assertTrue(visibleBids2.get(3).privateBid == false);
+			
+			
+			List<Bid> visibleBids3 = this.lotService.getVisibleBids(car.id, 0l);
+			assertTrue(visibleBids3.size() == 5);
+		} catch(LotNotFoundException e) {
+			fail("Lot exists. Should have been found");
+		}
 		
 		
 	}
@@ -464,5 +487,10 @@ public class LotServiceTest {
 		} catch(InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	@Test
+	public void testRemoveLot() {
+		//TODO
 	}
 }

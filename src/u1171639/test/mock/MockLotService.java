@@ -70,4 +70,10 @@ public class MockLotService implements LotService {
 		return null;
 	}
 
+	@Override
+	public void removeLot(long lotId, long userId) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

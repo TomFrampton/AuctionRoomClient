@@ -5,9 +5,11 @@ import java.util.List;
 
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
+import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
@@ -29,10 +31,11 @@ public interface AuctionController {
 	public List<Lot> searchLots(Lot template) throws RequiresLoginException;
 	public List<Lot> getUsersLots() throws RequiresLoginException;
 	public void updateLot(Lot lot) throws RequiresLoginException;
-	public void bidForLot(long lotId, BigDecimal amount, boolean isPrivateBid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException;
+	public void bidForLot(long lotId, BigDecimal amount, boolean isPrivateBid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException;
 	public Bid getHighestBid(long lotId) throws RequiresLoginException;
-	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException;
+	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException;
 	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException;
 	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException;
-	public Lot getLotDetails(long lotId) throws RequiresLoginException;
+	public Lot getLotDetails(long lotId) throws RequiresLoginException, LotNotFoundException;
+	public void removeLot(long lotId) throws UnauthorisedLotActionException, LotNotFoundException, RequiresLoginException;
 }

@@ -13,14 +13,18 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import jfx.messagebox.MessageBox;
 
 public class SellingViewController extends ViewController {
+	@FXML private Pane lotPane;
+	@FXML private Pane bidsPane; 
+	
+	@FXML private ListView<Lot> yourLots;
+	
 	private AddLotViewController addLotController;
 	private UpdateLotViewController updateLotController;
 	private BidsViewController bidsController;
-	
-	@FXML private BorderPane sellingPane;
-	@FXML private ListView<Lot> yourLots;
 	
 	private ObservableList<Lot> yourRetrivedLots = FXCollections.observableArrayList();
 	
@@ -30,11 +34,13 @@ public class SellingViewController extends ViewController {
 		this.updateLotController = (UpdateLotViewController) this.loadView("updateLot.fxml");
 		this.bidsController = (BidsViewController) this.loadView("bids.fxml");
 		
+		this.bidsController.showSellingFields();
+		
 		this.addLotController.setLotAddedCallback(new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot param) {	
 				SellingViewController.this.yourRetrivedLots.add(param);
-				SellingViewController.this.sellingPane.setCenter(null);
+				SellingViewController.this.lotPane.getChildren().clear();
 				return null;
 			}
 		});
@@ -42,8 +48,25 @@ public class SellingViewController extends ViewController {
 		this.updateLotController.setLotUpdatedCallback(new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot param) {
-				SellingViewController.this.sellingPane.setCenter(null);
-				SellingViewController.this.sellingPane.setRight(null);
+				SellingViewController.this.lotPane.getChildren().clear();
+				SellingViewController.this.bidsPane.getChildren().clear();
+				return null;
+			}
+		});
+		
+		this.bidsController.setLotWithdrawnCallback(new Callback<Void, Void>() {
+			@Override
+			public Void call(Void param) {
+				SellingViewController.this.lotPane.getChildren().clear();
+				SellingViewController.this.bidsPane.getChildren().clear();
+				
+				SellingViewController.this.yourRetrivedLots.clear();
+				try {
+					SellingViewController.this.yourRetrivedLots.addAll(getAuctionController().getUsersLots());
+				} catch (RequiresLoginException e) {
+					MessageBox.show(SellingViewController.this.getWindow(), e.toString(), 
+							"Error Withdrawing Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+				}
 				return null;
 			}
 		});
@@ -67,13 +90,18 @@ public class SellingViewController extends ViewController {
 			this.updateLotController.setLotToUpdate(selected);
 			this.bidsController.setLotForBids(selected);
 			
-			this.sellingPane.setCenter(this.updateLotController.getViewComponent());
-			this.sellingPane.setRight(this.bidsController.getViewComponent());
+			this.lotPane.getChildren().clear();
+			this.lotPane.getChildren().add(this.updateLotController.getViewComponent());
+			
+			this.bidsPane.getChildren().clear();
+			this.bidsPane.getChildren().add(this.bidsController.getViewComponent());
 		}
 	}
 	
 	@FXML protected void handleAddLotAction(ActionEvent event) {
-		this.sellingPane.setCenter(this.addLotController.getViewComponent());
-		this.sellingPane.setRight(null);
+		this.lotPane.getChildren().clear();
+		this.lotPane.getChildren().add(this.addLotController.getViewComponent());
+		
+		this.bidsPane.getChildren().clear();
 	}
 }

@@ -20,6 +20,7 @@ import u1171639.main.java.controller.AuctionController;
 import u1171639.main.java.controller.ConcreteAuctionController;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
@@ -174,17 +175,8 @@ public class DummyView implements AuctionView {
 		// Make sure no one is logged in to start with
 		assertFalse(this.controller.isLoggedIn());
 		
-		try {
-			newUser.id = this.controller.register(newUser);
-		} catch (RegistrationException e) {
-			fail("Unique user - Should have been added.");
-		}
-		
-		try {
-			this.controller.login(newUser);
-		} catch (AuthenticationException e) {
-			fail("Credentials were correct. User should have been able to log in");
-		}
+		this.register(newUser);
+		this.login(newUser);
 		
 		User retrievedCurrentUser = this.controller.getCurrentUser();
 		
@@ -210,12 +202,8 @@ public class DummyView implements AuctionView {
 		user2.email = "test@currentUser2.com";
 		user2.password = "password2";
 		
-		try {
-			user1.id = this.controller.register(user1);
-			user2.id = this.controller.register(user2);
-		} catch (RegistrationException e) {
-			fail("Unique user - Should have been added.");
-		}
+		this.register(user1);
+		this.register(user2);
 		
 		try {
 			// Test logging in with user1 sets user1 as the current user
@@ -254,12 +242,8 @@ public class DummyView implements AuctionView {
 		user2.email = "test@getUserDetails2.com";
 		user2.password = "password2";
 		
-		try {
-			user1.id = this.controller.register(user1);
-			user2.id = this.controller.register(user2);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
+		this.register(user1);
+		this.register(user2);
 		
 		// Test we can retrieve registered users using their ID
 		try {
@@ -374,11 +358,7 @@ public class DummyView implements AuctionView {
 		user.email = "test@addLot.com";
 		user.password = "password";
 		
-		try {
-			user.id = this.controller.register(user);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
+		this.register(user);
 		
 		try {
 			this.controller.addLot(car);
@@ -387,11 +367,7 @@ public class DummyView implements AuctionView {
 			// Pass
 		}
 		
-		try {
-			this.controller.login(user);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
+		this.login(user);
 		
 		try {
 			long carId = this.controller.addLot(car);
@@ -443,17 +419,9 @@ public class DummyView implements AuctionView {
 		user.email = "test@searchLots.com";
 		user.password = "password";
 		
-		try {
-			user.id = this.controller.register(user);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
-		
-		try {
-			this.controller.login(user);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
+		this.register(user);
+		this.login(user);
+
 		
 		try {
 			this.controller.addLot(car1);
@@ -548,17 +516,8 @@ public class DummyView implements AuctionView {
 		user.email = "test@updateLot.com";
 		user.password = "password";
 		
-		try {
-			user.id = this.controller.register(user);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
-		
-		try {
-			this.controller.login(user);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
+		this.register(user);
+		this.login(user);
 		
 		try {
 			car.id = this.controller.addLot(car);
@@ -575,6 +534,9 @@ public class DummyView implements AuctionView {
 			assertTrue(retrievedCar.description.equals(car.description));
 		} catch(RequiresLoginException e) {
 			fail("User should have logged in.");
+		} catch (LotNotFoundException e) {
+			fail("Lot was added. Should have been found.");
+			// TODO test LotNotFound
 		} finally {
 			this.controller.logout();
 		}
@@ -602,12 +564,8 @@ public class DummyView implements AuctionView {
 		user2.email = "test@bidForLot2.com";
 		user2.password = "password2";
 		
-		try {
-			user1.id = this.controller.register(user1);
-			user2.id = this.controller.register(user2);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
+		this.register(user1);
+		this.register(user2);
 		
 		try {
 			this.controller.bidForLot(-1, new BigDecimal(100.00), false);
@@ -616,6 +574,8 @@ public class DummyView implements AuctionView {
 			fail("Bid attempted without being logged in");
 		} catch(RequiresLoginException e) {
 			// Pass
+		} catch (LotNotFoundException e) {
+			fail("Lot exist. Should have been found.");
 		}
 		
 		try {
@@ -637,16 +597,14 @@ public class DummyView implements AuctionView {
 				fail("Should not have been able to bid for own Lot");
 			} catch(UnauthorisedBidException e) {
 				// Pass
+			} catch (LotNotFoundException e) {
+				fail("Lot exists. Should have been found.");
 			} finally {
 				this.controller.logout();
 			}
 			
 			// Log in with a different user
-			try {
-				this.controller.login(user2);
-			} catch (AuthenticationException e) {
-				fail("User was registered. Should be able to login");
-			}
+			this.login(user2);
 			
 			this.controller.bidForLot(car.id, new BigDecimal(1000.00), false);
 			Bid highestBid1 = this.controller.getHighestBid(car.id);
@@ -694,6 +652,8 @@ public class DummyView implements AuctionView {
 			fail("Should have been able to bid on Lot.");
 		} catch(InvalidBidException e) {
 			fail("Bid was valid. Should have been accepted");
+		} catch (LotNotFoundException e1) {
+			fail("Lot exists. Should have been found.");
 		} finally {
 			this.controller.logout();
 		}
@@ -717,19 +677,11 @@ public class DummyView implements AuctionView {
 		user3.email = "test@getVisibleLots3.com";
 		user3.password = "password3";
 		
-		try {
-			user1.id = this.controller.register(user1);
-			user2.id = this.controller.register(user2);
-			user3.id = this.controller.register(user3);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
+		this.register(user1);
+		this.register(user2);
+		this.register(user3);
 		
-		try {
-			this.controller.login(user1);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
+		this.login(user1);
 		
 		try {
 			car.id = this.controller.addLot(car);
@@ -738,25 +690,14 @@ public class DummyView implements AuctionView {
 		}
 		
 		this.controller.logout();
-
-		try {
-			this.controller.login(user2);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
-		
+		this.login(user2);	
 		
 		try {
 			this.controller.bidForLot(car.id, new BigDecimal(100.00), false);
 			this.controller.bidForLot(car.id, new BigDecimal(200.00), true);
 			
 			this.controller.logout();
-			
-			try {
-				this.controller.login(user3);
-			} catch (AuthenticationException e) {
-				fail("User was registered. Should be able to login");
-			}
+			this.login(user3);	
 			
 			this.controller.bidForLot(car.id, new BigDecimal(300.00), true);
 			this.controller.bidForLot(car.id, new BigDecimal(400.00), false);
@@ -765,15 +706,12 @@ public class DummyView implements AuctionView {
 			fail("Bid was valid. Exception should not have been thrown.");
 		} catch(RequiresLoginException e) {
 			fail("User was logged in");
+		} catch (LotNotFoundException e1) {
+			fail("Lots existed. Should have been found.");
 		}
 		
 		this.controller.logout();
-		
-		try {
-			this.controller.login(user2);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
+		this.login(user2);
 		
 		try {
 			List<Bid> visibleBids1 = this.controller.getVisibleBids(car.id);
@@ -807,12 +745,7 @@ public class DummyView implements AuctionView {
 			assertTrue(visibleBids1.get(3).privateBid == false);
 		
 			this.controller.logout();
-			
-			try {
-				this.controller.login(user3);
-			} catch (AuthenticationException e) {
-				fail("User was registered. Should be able to login");
-			}
+			this.login(user3);	
 		
 			List<Bid> visibleBids2 = this.controller.getVisibleBids(car.id);
 			
@@ -846,18 +779,15 @@ public class DummyView implements AuctionView {
 			assertTrue(visibleBids2.get(3).privateBid == false);
 			
 			this.controller.logout();
-			
-			try {
-				this.controller.login(user1);
-			} catch (AuthenticationException e) {
-				fail("User was registered. Should be able to login");
-			}
+			this.login(user1);
 			
 			List<Bid> visibleBids3 = this.controller.getVisibleBids(car.id);
 			assertTrue(visibleBids3.size() == 5);
 			
 		} catch (RequiresLoginException e) {
 			fail("User was logged in.");
+		} catch (LotNotFoundException e) {
+			fail("Lots exist. Should have been found");
 		}
 	}
 	
@@ -871,11 +801,7 @@ public class DummyView implements AuctionView {
 		user.email = "test@subscribeToLot.com";
 		user.password = "password";
 		
-		try {
-			user.id = this.controller.register(user);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
+		this.register(user);
 		
 		final Object finished = new Object();
 		
@@ -902,11 +828,7 @@ public class DummyView implements AuctionView {
 			}
 		}
 		
-		try {
-			this.controller.login(user);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
+		this.login(user);
 		
 		try {		
 			car.id = this.controller.addLot(car);
@@ -944,11 +866,7 @@ public class DummyView implements AuctionView {
 		user.email = "test@subscribeToLot.com";
 		user.password = "password";
 		
-		try {
-			user.id = this.controller.register(user);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		}
+		this.register(user);
 		
 		final Object finished = new Object();
 		
@@ -974,11 +892,7 @@ public class DummyView implements AuctionView {
 			}
 		}
 		
-		try {
-			this.controller.login(user);
-		} catch (AuthenticationException e) {
-			fail("User was registered. Should be able to login");
-		}
+		this.login(user);	
 		
 		try {
 			synchronized(finished) {
@@ -1002,9 +916,30 @@ public class DummyView implements AuctionView {
 			this.controller.logout();
 		}
 	}
+	
+	@Test
+	public void testRemoveLot() {
+		//TODO
+	}
 
 	@Override
 	public void start(AuctionController controller) {
 		this.controller = controller;
+	}
+	
+	private void register(User newUser) {
+		try {
+			newUser.id = this.controller.register(newUser);
+		} catch (RegistrationException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void login(User credentials) {
+		try {
+			this.controller.login(credentials);
+		} catch (AuthenticationException e) {
+			e.printStackTrace();
+		}
 	}
 }

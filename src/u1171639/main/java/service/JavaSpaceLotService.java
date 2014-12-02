@@ -19,7 +19,9 @@ import net.jini.core.transaction.TransactionFactory;
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.UnauthorisedBidException;
+import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
@@ -112,7 +114,7 @@ public class JavaSpaceLotService implements LotService {
 	}
 	
 	@Override
-	public void bidForLot(long lotId, BigDecimal amount, long bidderId, boolean isPrivateBid) throws UnauthorisedBidException, InvalidBidException {
+	public void bidForLot(long lotId, BigDecimal amount, long bidderId, boolean isPrivateBid) throws UnauthorisedBidException, InvalidBidException, LotNotFoundException {
 		if (amount.compareTo(BigDecimal.ZERO) > 0) {
 			Lot lot = getLotDetails(lotId);
 			
@@ -183,10 +185,15 @@ public class JavaSpaceLotService implements LotService {
 	}
 
 	@Override
-	public Lot getLotDetails(long id) {
+	public Lot getLotDetails(long id) throws LotNotFoundException {
 		Lot template = new Lot(id);
 		try {
-			return (Lot) this.space.readIfExists(template, null, 0);
+			Lot lot = (Lot) this.space.readIfExists(template, null, 0);
+			if(lot != null) {
+				return lot;
+			} else {
+				throw new LotNotFoundException("The Lot was not found.");
+			}
 		} catch (UnusableEntryException | TransactionException | InterruptedException | RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -195,7 +202,7 @@ public class JavaSpaceLotService implements LotService {
 	}
 	
 	@Override
-	public List<Bid> getVisibleBids(long lotId, long userId) {
+	public List<Bid> getVisibleBids(long lotId, long userId) throws LotNotFoundException {
 		List<Bid> visibleBids = new ArrayList<Bid>();
 		
 		// If the lot was placed by the user then show all bids
@@ -350,6 +357,35 @@ public class JavaSpaceLotService implements LotService {
 		} catch (TransactionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void removeLot(long lotId, long userId) throws UnauthorisedLotActionException, LotNotFoundException {
+		Lot lot = this.getLotDetails(lotId);
+		
+		if(lot.sellerId.equals(userId)) {
+			try {
+				Lot removedLot = (Lot) this.space.takeIfExists(new Lot(lotId), null, 0);
+				
+				if(removedLot == null) {
+					throw new LotNotFoundException("Lot not found for removal.");
+				}
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnusableEntryException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TransactionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			throw new UnauthorisedLotActionException("Cannot remove another user's lots.");
 		}
 	}
 }

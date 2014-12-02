@@ -10,16 +10,20 @@ import java.util.Date;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
+import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.utilities.Callback;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
@@ -27,9 +31,15 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.util.Callback;
+import javafx.scene.layout.Pane;
+import jfx.messagebox.MessageBox;
 
 public class BidsViewController extends ViewController {
+	@FXML private Parent buyerOptions;
+	@FXML private Parent sellerOptions;
+	
+	@FXML private Pane optionsView;
+	
 	@FXML private TableView<Bid> bidList;
 	
 	@FXML private TextField amountPounds;
@@ -39,6 +49,8 @@ public class BidsViewController extends ViewController {
 	private Lot lotForBids;
 	
 	private ObservableList<Bid> retrievedBids = FXCollections.observableArrayList();
+	
+	private Callback<Void, Void> lotWithdrawnCallback;
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -51,9 +63,9 @@ public class BidsViewController extends ViewController {
 			this.lotForBids = lot;
 			this.retrievedBids.clear();
 			this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
-		} catch (RequiresLoginException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (RequiresLoginException | LotNotFoundException e) {
+			MessageBox.show(getWindow(), e.toString(), 
+					"Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 		}
 	}
 	
@@ -85,12 +97,9 @@ public class BidsViewController extends ViewController {
 			} catch (RequiresLoginException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (UnauthorisedBidException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvalidBidException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (UnauthorisedBidException | InvalidBidException | LotNotFoundException e) {
+				MessageBox.show(getWindow(), e.toString(), 
+						"Error Placing Bid", MessageBox.ICON_ERROR | MessageBox.OK);
 			}
 		} catch (ParseException e1) {
 			// TODO Auto-generated catch block
@@ -98,8 +107,41 @@ public class BidsViewController extends ViewController {
 		}
 	}
 	
-	@FXML protected void handleAcceptHighestBidAction(ActionEvent event) {
+	@FXML protected void handleAcceptBidAction(ActionEvent event) {
 		
+	}
+	
+	@FXML protected void handleWithdrawLotAction(ActionEvent event) {
+		try {
+			getAuctionController().removeLot(this.lotForBids.id);
+			
+			if(this.lotWithdrawnCallback != null) {
+				this.lotWithdrawnCallback.call(null);
+			}
+		} catch (UnauthorisedLotActionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (LotNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RequiresLoginException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void showBuyingFields() {
+		this.optionsView.getChildren().clear();
+		this.optionsView.getChildren().add(this.buyerOptions);
+	}
+	
+	public void showSellingFields() {
+		this.optionsView.getChildren().clear();
+		this.optionsView.getChildren().add(this.sellerOptions);
+	}
+	
+	public void setLotWithdrawnCallback(Callback<Void, Void> lotWithdrawnCallback) {
+		this.lotWithdrawnCallback = lotWithdrawnCallback;
 	}
 	
 	private BigDecimal parseBigDecimal(String decimalString) throws ParseException  {
@@ -117,7 +159,7 @@ public class BidsViewController extends ViewController {
 		ArrayList<TableColumn<Bid, ?>> columns = new ArrayList<>();
 		
 		TableColumn<Bid,String> bidTimeCol = new TableColumn<Bid,String>("Bid Time");
-		bidTimeCol.setCellValueFactory(new Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
+		bidTimeCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
@@ -127,7 +169,7 @@ public class BidsViewController extends ViewController {
 		});
 		
 		TableColumn<Bid,String> bidderEmailCol = new TableColumn<Bid,String>("Bidder Email");
-		bidderEmailCol.setCellValueFactory(new Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
+		bidderEmailCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
@@ -137,24 +179,23 @@ public class BidsViewController extends ViewController {
 		 });
 		
 		TableColumn<Bid,String> bidAmountCol = new TableColumn<Bid,String>("Amount");
-		bidAmountCol.setCellValueFactory(new Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
+		bidAmountCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
-				return new SimpleStringProperty(param.getValue().amount.toString());
+				return new SimpleStringProperty("£" + param.getValue().amount.toString());
 				
 			}
 		});
 		
 		TableColumn<Bid,String> bidTypeCol = new TableColumn<Bid,String>("Bid Type");
-		bidTypeCol.setCellValueFactory(new Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
+		bidTypeCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
 				return new SimpleStringProperty(param.getValue().privateBid ? "Private" : "Public");
 			}
 		});
-		
 		
 		columns.add(bidTimeCol);
 		columns.add(bidderEmailCol);
