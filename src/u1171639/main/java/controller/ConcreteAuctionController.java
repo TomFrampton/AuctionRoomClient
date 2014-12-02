@@ -9,6 +9,7 @@ import net.jini.space.JavaSpace;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
+import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
@@ -20,7 +21,9 @@ import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.AccountService;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
+import u1171639.main.java.service.JavaSpaceNotificationService;
 import u1171639.main.java.service.LotService;
+import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.LotIDCounter;
 import u1171639.main.java.utilities.MediumSecurityHashScheme;
@@ -32,13 +35,16 @@ import u1171639.main.java.view.JavaFXAuctionView;
 
 public class ConcreteAuctionController implements AuctionController {
 	private AuctionView view;
+	
 	private LotService lotService;
 	private AccountService accountService;
+	private NotificationService notificationService;
 	
-	public ConcreteAuctionController(AuctionView view, LotService lotService, AccountService accountService) {
+	public ConcreteAuctionController(AuctionView view, LotService lotService, AccountService accountService, NotificationService notificationService) {
 		this.view = view;
 		this.lotService = lotService;
 		this.accountService = accountService;
+		this.notificationService = notificationService;
 	}
 	
 	@Override
@@ -169,16 +175,16 @@ public class ConcreteAuctionController implements AuctionController {
 	@Override
 	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException {
 		if(this.accountService.isLoggedIn()) {
-			this.lotService.listenForLot(template, callback);
+			this.notificationService.listenForLot(template, this.accountService.getCurrentUser().id, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 
 	@Override
-	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException {
+	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException {
 		if(this.accountService.isLoggedIn()) {
-			this.lotService.subscribeToLot(id, callback);
+			this.notificationService.subscribeToLot(id, this.accountService.getCurrentUser().id, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -219,11 +225,14 @@ public class ConcreteAuctionController implements AuctionController {
 		UserIDCounter.initialiseInSpace(space);
 		
 		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
+		
 		LotService lotService = new JavaSpaceLotService(space, transMgr);
 		AccountService accountService = new JavaSpaceAccountService(space, hashScheme);
+		NotificationService notificationService = new JavaSpaceNotificationService(space, transMgr);
+		
 		AuctionView view = new JavaFXAuctionView();
 		
-		AuctionController controller = new ConcreteAuctionController(view, lotService, accountService);
+		AuctionController controller = new ConcreteAuctionController(view, lotService, accountService, notificationService);
 		
 		controller.launch();
 	}

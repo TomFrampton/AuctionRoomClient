@@ -20,7 +20,5 @@ public interface LotService {
 	public Bid getHighestBid(long lotId);
 	public Lot getLotDetails(long lotId) throws LotNotFoundException;
 	public List<Bid> getVisibleBids(long lotId, long userId) throws LotNotFoundException;
-	public void subscribeToLot(long lotId, Callback<Lot, Void> callback);
-	public void listenForLot(Lot template, Callback<Lot, Void> callback);
 	public void removeLot(long lotId, long userId) throws UnauthorisedLotActionException, LotNotFoundException;
 }

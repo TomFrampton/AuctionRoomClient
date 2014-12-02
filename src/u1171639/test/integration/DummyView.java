@@ -32,7 +32,9 @@ import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.AccountService;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
+import u1171639.main.java.service.JavaSpaceNotificationService;
 import u1171639.main.java.service.LotService;
+import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.HighestBid;
 import u1171639.main.java.utilities.LotIDCounter;
@@ -41,6 +43,7 @@ import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.UserIDCounter;
 import u1171639.main.java.view.AuctionView;
+import u1171639.test.utilities.TestUtils;
 
 public class DummyView implements AuctionView {
 
@@ -63,9 +66,10 @@ public class DummyView implements AuctionView {
 		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
 		
 		LotService lotService = new JavaSpaceLotService(this.space, transMgr);
+		NotificationService notificationService = new JavaSpaceNotificationService(this.space, transMgr);
 		AccountService accountService = new JavaSpaceAccountService(this.space, hashScheme);
 		
-		AuctionController controller = new ConcreteAuctionController(this, lotService, accountService);
+		AuctionController controller = new ConcreteAuctionController(this, lotService, accountService, notificationService);
 		controller.launch();
 		
 		LotIDCounter.initialiseInSpace(this.space);
@@ -74,27 +78,9 @@ public class DummyView implements AuctionView {
 	
 	@After
 	public void tearDown() throws Exception {
-		Lot lotTemplate = new Lot();
-		User userTemplate = new User();
-		Bid bidTemplate = new Bid();
-		
-		for(;;) {
-			if(this.space.takeIfExists(lotTemplate, null, 0) == null) {
-				break;
-			}
-		}
-		
-		for(;;) {
-			if(this.space.takeIfExists(userTemplate, null, 0) == null) {
-				break;
-			}
-		}
-		
-		for(;;) {
-			if(this.space.takeIfExists(bidTemplate, null, 0) == null) {
-				break;
-			}
-		}
+		TestUtils.removeAllFromSpace(new User(), this.space);
+		TestUtils.removeAllFromSpace(new Bid(), this.space);
+		TestUtils.removeAllFromSpace(new Lot(), this.space);
 	}
 	
 	// Account Tests

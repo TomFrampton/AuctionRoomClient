@@ -21,16 +21,19 @@ import u1171639.main.java.utilities.MediumSecurityHashScheme;
 import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.UserIDCounter;
+import u1171639.test.utilities.TestUtils;
 
 public class AccountServiceTest {
 	private JavaSpaceAccountService accountService;
 	private PasswordHashScheme hashScheme;
 	
+	private JavaSpace space;
+	
 	private List<User> usersToRemove = new ArrayList<User>();
 	
 	@Before
 	public void setUp() throws Exception {
-		JavaSpace space = SpaceUtils.getSpace("localhost");
+		this.space = SpaceUtils.getSpace("localhost");
 		if(space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
@@ -41,13 +44,7 @@ public class AccountServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		for(User user : this.usersToRemove) {
-			try {
-				this.accountService.removeUser(user.id);
-			} catch(UserNotFoundException e) {
-				// Keep going
-			}
-		}
+		TestUtils.removeAllFromSpace(new User(), this.space);
 	}
 	
 	@Test

@@ -47,18 +47,6 @@ public class MockLotService implements LotService {
 	}
 
 	@Override
-	public void subscribeToLot(long lotId, Callback<Lot, Void> callback) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void listenForLot(Lot template, Callback<Lot, Void> callback) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public List<Bid> getVisibleBids(long lotId, long userId) {
 		// TODO Auto-generated method stub
 		return null;

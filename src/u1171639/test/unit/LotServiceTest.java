@@ -23,14 +23,13 @@ import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.JavaSpaceLotService;
-import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.HighestBid;
 import u1171639.main.java.utilities.LotIDCounter;
 import u1171639.main.java.utilities.SpaceUtils;
+import u1171639.test.utilities.TestUtils;
 
 public class LotServiceTest {
-	JavaSpaceLotService lotService;
-	JavaSpace space;
+	private JavaSpaceLotService lotService;
+	private JavaSpace space;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -50,42 +49,8 @@ public class LotServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		int objectCounter = 0;
-		boolean somethingToTake = true;
-		
-		while(somethingToTake) {
-			Entry entry = this.space.takeIfExists(new Lot(), null, 0);
-			
-			if(entry != null) {
-				objectCounter++;
-			} else {
-				somethingToTake = false;
-			}
-		}
-		
-		somethingToTake = true;
-		while(somethingToTake) {
-			Entry entry = this.space.takeIfExists(new Bid(), null, 0);
-			
-			if(entry != null) {
-				objectCounter++;
-			} else {
-				somethingToTake = false;
-			}
-		}
-		
-		somethingToTake = true;
-		while(somethingToTake) {
-			Entry entry = this.space.takeIfExists(new HighestBid(), null, 0);
-			
-			if(entry != null) {
-				objectCounter++;
-			} else {
-				somethingToTake = false;
-			}
-		}
-		
-		System.out.println(objectCounter);
+		TestUtils.removeAllFromSpace(new Bid(), this.space);
+		TestUtils.removeAllFromSpace(new Lot(), this.space);
 	}
 
 	@Test
@@ -404,89 +369,6 @@ public class LotServiceTest {
 		}
 		
 		
-	}
-	
-	@Test
-	public void testSubscribeToLot() {
-		Car car = new Car();
-		car.make = "UnitTest"; 
-		car.model = "SubscribeToLot";
-		car.sellerId = 0l;
-		car.id = this.lotService.addLot(car);
-		
-		final Object finished = new Object();
-		
-		// Used for returning the lot in the callback
-		final Lot[] lot = new Lot[1];
-		
-		this.lotService.subscribeToLot(car.id, new Callback<Lot, Void>() {
-			@Override
-			public Void call(Lot changedLot) {
-				lot[0] = changedLot;
-				
-				synchronized(finished) {
-					finished.notify();
-				}
-				return null;
-			}
-		});
-		
-		try {
-			synchronized(finished) {
-				car.description = "Updated!";
-				this.lotService.updateLot(car);
-				finished.wait();
-			}
-			
-			Car retrievedCar = (Car) lot[0];
-			
-			assertTrue(retrievedCar.id.equals(car.id));
-			assertTrue(retrievedCar.make.equals(car.make));
-			assertTrue(retrievedCar.model.equals(car.model));
-			assertTrue(retrievedCar.sellerId.equals(car.sellerId));
-			assertTrue(retrievedCar.description.equals(car.description));
-		} catch(InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	@Test
-	public void testListenForLot() {
-		Car car = new Car();
-		car.make = "UnitTest"; 
-		car.model = "ListenForLot";
-		
-		final Object finished = new Object();
-		
-		// Used for returning the lot in the callback
-		final Lot[] lot = new Lot[1];
-		
-		this.lotService.listenForLot(car, new Callback<Lot, Void>() {
-			@Override
-			public Void call(Lot addedLot) {
-				lot[0] = addedLot;
-				
-				synchronized(finished) {
-					finished.notify();
-				}
-				return null;
-			}
-		});
-		
-		try {
-			synchronized(finished) {
-				car.id = this.lotService.addLot(car);
-				finished.wait();
-			}
-			
-			Car retrievedCar = (Car) lot[0];
-			
-			assertTrue(retrievedCar.id.equals(car.id));
-			assertTrue(retrievedCar.make.equals(car.make));
-			assertTrue(retrievedCar.model.equals(car.model));
-		} catch(InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	@Test
