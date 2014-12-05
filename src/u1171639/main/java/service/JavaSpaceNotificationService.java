@@ -2,8 +2,6 @@ package u1171639.main.java.service;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Hashtable;
-
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
@@ -59,7 +57,6 @@ public class JavaSpaceNotificationService implements NotificationService {
 		final Lot template = new Lot(lotId);
 		
 		RemoteEventListener listener = new RemoteEventListener() {
-			
 			@Override
 			public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
 				try {

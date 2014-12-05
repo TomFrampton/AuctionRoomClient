@@ -1,11 +1,11 @@
 package u1171639.main.java.controller;
 
-import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.util.List;
 
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
@@ -25,11 +25,12 @@ import u1171639.main.java.service.JavaSpaceNotificationService;
 import u1171639.main.java.service.LotService;
 import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.LotIDCounter;
 import u1171639.main.java.utilities.MediumSecurityHashScheme;
 import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceUtils;
-import u1171639.main.java.utilities.UserIDCounter;
+import u1171639.main.java.utilities.counters.BidIDCounter;
+import u1171639.main.java.utilities.counters.LotIDCounter;
+import u1171639.main.java.utilities.counters.UserIDCounter;
 import u1171639.main.java.view.AuctionView;
 import u1171639.main.java.view.JavaFXAuctionView;
 
@@ -98,17 +99,17 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public long addLot(Lot lot) throws RequiresLoginException {
+	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			lot.sellerId = this.accountService.getCurrentUser().id;
-			return this.lotService.addLot(lot);
+			return this.lotService.addLot(lot, bidCallback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 	
 	@Override
-	public List<Lot> searchLots(Lot template) throws RequiresLoginException {
+	public List<Lot> searchLots(Lot template) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			return this.lotService.searchLots(template);
 		} else {
@@ -117,7 +118,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public List<Lot> getUsersLots() throws RequiresLoginException {
+	public List<Lot> getUsersLots() throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			return this.lotService.getUsersLots(this.accountService.getCurrentUser().id);
 		} else {
@@ -126,7 +127,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void updateLot(Lot lot) throws RequiresLoginException {
+	public void updateLot(Lot lot) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			this.lotService.updateLot(lot);
 		} else {
@@ -135,25 +136,26 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void bidForLot(long lotId, BigDecimal amount, boolean isPrivateBid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException {
+	public void bidForLot(Bid bid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
-			this.lotService.bidForLot(lotId, amount, this.accountService.getCurrentUser().id, isPrivateBid);
+			bid.bidderId = this.accountService.getCurrentUser().id;
+			this.lotService.bidForLot(bid);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 	
 	@Override
-	public Bid getHighestBid(long lotId) throws RequiresLoginException {
+	public Bid getHighestBid(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
-			return this.lotService.getHighestBid(lotId);
+			return this.lotService.getHighestBid(lotId, this.accountService.getCurrentUser().id);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 	
 	@Override
-	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException {
+	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			List<Bid> bids = this.lotService.getVisibleBids(lotId, this.accountService.getCurrentUser().id);
 			
@@ -191,7 +193,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public Lot getLotDetails(long lotId) throws RequiresLoginException, LotNotFoundException {
+	public Lot getLotDetails(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			Lot lot = this.lotService.getLotDetails(lotId);
 			lot.bids = this.lotService.getVisibleBids(lotId, this.accountService.getCurrentUser().id);
@@ -202,7 +204,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void removeLot(long lotId) throws UnauthorisedLotActionException, LotNotFoundException, RequiresLoginException {
+	public void removeLot(long lotId) throws UnauthorisedLotActionException, LotNotFoundException, RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			this.lotService.removeLot(lotId, this.accountService.getCurrentUser().id);
 		} else {
@@ -223,6 +225,7 @@ public class ConcreteAuctionController implements AuctionController {
 		
 		LotIDCounter.initialiseInSpace(space);
 		UserIDCounter.initialiseInSpace(space);
+		BidIDCounter.initialiseInSpace(space);
 		
 		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
 		

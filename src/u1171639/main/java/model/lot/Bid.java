@@ -14,6 +14,7 @@ public class Bid implements Entry {
 	public Date bidTime;
 	public Boolean privateBid;
 	
+	public transient Lot lot;
 	public transient User bidder;
 	
 	public Bid() {
@@ -25,14 +26,14 @@ public class Bid implements Entry {
 		this.lotId = lotId;
 	}
 	
-	public Bid(long id, long lotId, long bidderId, BigDecimal amount) {
-		this(id, lotId);
-		this.bidderId = bidderId;
+	public Bid(long lotId, BigDecimal amount, boolean privateBid) {
+		this.lotId = lotId;
 		this.amount = amount;
+		this.privateBid = privateBid;
 	}
 	
-	public Bid(long id, long lotId, long bidderId, BigDecimal amount, boolean privateBid) {
-		this(id, lotId, bidderId, amount);
-		this.privateBid = privateBid;
+	public Bid(long lotId, BigDecimal amount, long bidderId, boolean privateBid) {
+		this(lotId, amount, privateBid);
+		this.bidderId = bidderId;
 	}
 }

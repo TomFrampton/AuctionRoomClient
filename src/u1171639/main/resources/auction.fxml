@@ -6,9 +6,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-
 <TabPane fx:controller="u1171639.main.java.view.fxml.controller.AuctionViewController"
-	xmlns:fx="http://javafx.com/fxml">
+		xmlns:fx="http://javafx.com/fxml">
 	
 	<tabs>
 		<Tab text="Buying" closable="false" fx:id="buyingTab">
@@ -20,4 +19,6 @@
 		<Tab text="Account" closable="false" fx:id="accountTab">
 		</Tab>
 	</tabs>			
+	
+	<!-- <Pane fx:id="notificationsPane"  /> -->
 </TabPane>

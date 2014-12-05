@@ -46,10 +46,10 @@ public class CarFormViewController extends LotFormViewController {
 	@Override
 	public void setLot(Lot lot) {
 		this.car = (Car) lot;
-		this.name.setText(car.name);
-		this.description.setText(car.description);
-		this.make.setText(car.make);
-		this.model.setText(car.model);
+		this.name.setText(this.car.name);
+		this.description.setText(this.car.description);
+		this.make.setText(this.car.make);
+		this.model.setText(this.car.model);
 	}
 
 }

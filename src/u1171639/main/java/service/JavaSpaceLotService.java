@@ -4,205 +4,281 @@ import java.math.BigDecimal;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import net.jini.core.entry.Entry;
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
-import net.jini.core.lease.LeaseDeniedException;
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
-import net.jini.core.transaction.TransactionFactory;
 import net.jini.core.transaction.server.TransactionManager;
+import net.jini.space.AvailabilityEvent;
 import net.jini.space.JavaSpace;
+import net.jini.space.JavaSpace05;
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
+import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.HighestBid;
-import u1171639.main.java.utilities.LotIDCounter;
+import u1171639.main.java.utilities.NotificationSubscription;
+import u1171639.main.java.utilities.TransactionUtils;
+import u1171639.main.java.utilities.counters.BidIDCounter;
+import u1171639.main.java.utilities.counters.LotIDCounter;
 
+/**
+ * A JavaSpace specific implementation of LotService. Provides methods for manipulating
+ * lots and bids in the space.
+ * @author U117169
+ */
 public class JavaSpaceLotService implements LotService {
-	private final JavaSpace space;
+	private final JavaSpace05 space;
 	private final TransactionManager transMgr;
 	
+	/**
+	 * Instantiate this lot service using the JavaSpace and TransactionManager provided.
+	 * @param space The JavaSpace service proxy
+	 * @param transMgr The TransactionManager service proxy
+	 */
 	public JavaSpaceLotService(JavaSpace space, TransactionManager transMgr) {
-		this.space = space;
+		this.space = (JavaSpace05) space;
 		this.transMgr = transMgr;
 	}
 	
+	/**
+	 * Adds a lot to the auction and subscribes to the lot to listens for bids that are made on the lot.
+	 * @param lot The lot to add.
+	 * @param bidCallback The callback that will be called when a bid is made on this lot. Can be null.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 * @return The unique ID that has been assigned to this Lot.
+	 */
 	@Override
-	public long addLot(Lot lot) {
+	public long addLot(Lot lot, final Callback<Bid, Void> bidCallback) throws AuctionCommunicationException {	
+		// Create a transaction
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+		
 		try {
-			// Create a highest bid tracker for this lot
-			HighestBid highestBid = new HighestBid();
-			highestBid.bidId = HighestBid.NO_BID_ID;
+			// Get the lot counter so we can assign a unique ID for this Lot. Take it from the space to enforce
+			// mutual exclusion when incrementing and assigning the ID number.
+			LotIDCounter counter = (LotIDCounter) this.space.takeIfExists(new LotIDCounter(), transaction, 5000);
 			
-			LotIDCounter counter = (LotIDCounter) this.space.take(new LotIDCounter(), null, 5000);
+			if(counter == null) {
+				throw new AuctionCommunicationException();
+			}
 			
 			lot.id = counter.id;
-			highestBid.lotId = lot.id;
 			counter.increment();
 			
-			this.space.write(counter, null, Lease.FOREVER);
-			this.space.write(lot, null, Lease.FOREVER);
-			this.space.write(highestBid, null, Lease.FOREVER);
+			// As we are adding a Lot we would like to be notified when someone bids on it.
+			this.listenForBidsOnLot(lot.id, bidCallback);
 			
-			return lot.id;
+			this.space.write(lot, transaction, LotService.ONE_DAY);
+			this.space.write(counter, transaction, LotService.ONE_DAY);
 			
+			TransactionUtils.commit(transaction);
+			
+			// Something went wrong. Abort the transaction.
 		} catch (RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
-			e.printStackTrace();
-			return -1;
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
 		}
+		
+		return lot.id;
 	}
 	
+	/**
+	 * Search for lots that match a Lot template.
+	 * @param template The lot template to search with.
+	 * @return A list of lots found.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 * @return A list of lots from the auction that match the template.
+	 */
 	@Override
-	public List<Lot> searchLots(Lot template) {
+	public List<Lot> searchLots(Lot template) throws AuctionCommunicationException {
 		List<Lot> retrievedLots = new ArrayList<Lot>();
 		
 		// Create a transaction
-		Transaction.Created trc = null;
+		Transaction transaction = TransactionUtils.create(this.transMgr);
 		
 		try {
-			trc = TransactionFactory.create(this.transMgr, Lease.FOREVER);
-		} catch(RemoteException | LeaseDeniedException e) {
-			// TODO
-		}
-		
-		Transaction transaction = trc.transaction;
-		
-		boolean lotsToTake = true;
-		while(lotsToTake) {
-			try {
-				Lot retrievedLot = (Lot) this.space.takeIfExists(template, transaction, 0);
-				
-				if(retrievedLot != null) {
-					retrievedLots.add(retrievedLot);
-				} else {
-					lotsToTake = false;
-					transaction.abort();
-				}
-			} catch (RemoteException e) {
-				lotsToTake = false;
-			} catch (UnusableEntryException e) {
-				lotsToTake = false;
-			} catch (TransactionException e) {
-				lotsToTake = false;
-			} catch (InterruptedException e) {
-				lotsToTake = false;
-			}	
+			// We will use this template multiple times.
+			Entry snapshot = this.space.snapshot(template);
+			
+			// Keep taking lots out until there are no more that match the template
+			boolean lotsToTake = true;
+			while(lotsToTake) {
+					Lot retrievedLot = (Lot) this.space.takeIfExists(snapshot, transaction, 2000);
+					
+					if(retrievedLot != null) {
+						retrievedLots.add(retrievedLot);
+					} else {
+						// No more lots. Abort the transaction to return the lots to the space.
+						lotsToTake = false;
+						TransactionUtils.abort(transaction);
+					}
+			}
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+			// Something went wrong. Abort transaction to roll back.
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
 		}
 		
 		return retrievedLots;
 	}
 	
+	/**
+	 * Update the lot in the auction with the ID of the lot passed in to the lot passed in.
+	 * @param lot The lot's new details.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
 	@Override
-	public void updateLot(Lot lot) {
+	public void updateLot(Lot lot) throws AuctionCommunicationException {
+		Lot template = new Lot(lot.id);
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+		
 		try {
-			Lot template = new Lot(lot.id);
-			this.space.take(template, null, Lease.FOREVER);
-			this.space.write(lot, null, Lease.FOREVER);
-		} catch(Exception e) {
-			e.printStackTrace();
+			// Remove the old lot and replace with this new one
+			this.space.take(template, transaction, LotService.ONE_DAY);
+			this.space.write(lot, transaction, LotService.ONE_DAY);
+			
+			TransactionUtils.commit(transaction);
+			
+		} catch(RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
 		}
 	}
 	
+	/**
+	 * Place a bid for a lot in the auction.
+	 * @param lotId The ID of the lot to bid for.
+	 * @param amount The amount you would like to bid.
+	 * @param bidderId The ID of the bidder.
+	 * @param isPrivateBid Is this bid a private bid?
+	 * @throws UnauthorisedBidException Thrown if you are not allowed to bid on this lot e.g. it is your lot.
+	 * @throws InvalidBidException Thrown if the bid amount doesn't exceed the current visible highest bid.
+	 * @throws LotNotFoundException Thrown if the lot for which a bid is being placed does not exist in the auction.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
 	@Override
-	public void bidForLot(long lotId, BigDecimal amount, long bidderId, boolean isPrivateBid) throws UnauthorisedBidException, InvalidBidException, LotNotFoundException {
-		if (amount.compareTo(BigDecimal.ZERO) > 0) {
-			Lot lot = getLotDetails(lotId);
-			
-			if(!lot.sellerId.equals(bidderId)) {
-				try {
-					HighestBid template = new HighestBid(lotId);
-					HighestBid highestBidPtr = (HighestBid) this.space.take(template, null, Lease.FOREVER);
-					Bid highestBid = null;
-					
-					if(highestBidPtr.hasBid()) {
-						// A bid is uniquely identified using a combination of bidId and lotId.
-						Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
-						highestBid = (Bid) this.space.take(bidTemplate, null, Lease.FOREVER);
-					}
-						
-					// If the new amount is greater than the old highest bid or there is no previous bid
-					if(highestBid == null || amount.compareTo(highestBid.amount)  == 1) {
-						Bid newBid = new Bid(highestBidPtr.nextBidId(), lotId, bidderId, amount, isPrivateBid);
-						newBid.bidTime = new Date(System.currentTimeMillis());
-						this.space.write(newBid, null, Lease.FOREVER);
-					} else {
-						this.space.write(highestBid, null, Lease.FOREVER);
-						this.space.write(highestBidPtr, null, Lease.FOREVER);
-						throw new InvalidBidException("Bid amount must exceed current highest bid.");
-					}
-					
-					if(highestBid != null) {
-						this.space.write(highestBid, null, Lease.FOREVER);
-					}
-					this.space.write(highestBidPtr, null, Lease.FOREVER);
-				} catch(RemoteException e) {
-					e.printStackTrace();
-				} catch (TransactionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (UnusableEntryException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else {
-				throw new UnauthorisedBidException("You are not allowed to bid on your own Lot.");
-			}
-		} else {
+	public void bidForLot(Bid bid) throws UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException {
+		
+		if (bid.amount.compareTo(BigDecimal.ZERO) < 0) {
 			throw new InvalidBidException("Bid amount must be greater than 0");
 		}
+		
+		Lot lot = getLotDetails(bid.lotId);
+		
+		if(lot.sellerId.equals(bid.bidderId)) {
+			throw new UnauthorisedBidException("You are not allowed to bid on your own Lot.");
+		}
+			
+		Bid highestBid = getHighestBid(bid.lotId, bid.bidderId);
+		
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+		
+		try {			
+			// If the bid being placed does not exceed the current highest bid.
+			if(highestBid != null && !(bid.amount.compareTo(highestBid.amount)  == 1)) {
+				throw new InvalidBidException("Bid amount must exceed current highest bid.");
+			} else {
+				bid.bidTime = new Date(System.currentTimeMillis());
+				
+				// Get the bid counter so we can assign a unique ID for this Bid. Take it from the space to enforce
+				// mutual exclusion when incrementing and assigning the ID number.
+				BidIDCounter counter = (BidIDCounter) this.space.takeIfExists(new BidIDCounter(), transaction, 5000);
+				
+				if(counter == null) {
+					throw new AuctionCommunicationException();
+				}
+				
+				bid.id = counter.id;
+				counter.increment();
+				
+				this.space.write(bid, transaction, LotService.ONE_DAY);
+				this.space.write(counter, transaction, LotService.ONE_DAY);
+				
+				TransactionUtils.commit(transaction);
+			}
+		} catch(RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
+			throw new AuctionCommunicationException();
+		}
 	}
 	
+	/**
+	 * Get the highest bid for a lot that is visible from this user's point of view.
+	 * @throws LotNotFoundException The lot for which the bid was being placed does not exist in the auction.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 * @return The highest bid for this lot that is visible to the user.
+	 */
 	@Override
-	public Bid getHighestBid(long lotId) {
-		try {
-			HighestBid template = new HighestBid(lotId);
-			HighestBid highestBidPtr = (HighestBid) this.space.read(template, null, Lease.FOREVER);
-			
-			if(highestBidPtr.hasBid()) {
-				// A bid is uniquely identified using a combination of bidId and lotId.
-				Bid bidTemplate = new Bid(highestBidPtr.bidId, lotId);
-				return (Bid) this.space.read(bidTemplate, null, Lease.FOREVER);
-			} else {
-				return null;
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
+	public Bid getHighestBid(long lotId, long userId) throws LotNotFoundException, AuctionCommunicationException {
+		// Initially my application kept a HighestBid object in the space for each
+		// lot to keep track of the highest bid to make sure a user didn't bid less that the
+		// highest bid. However, this would allow the user to 'see' a winning private bid
+		// that shouldn't be visible. Therefore, this method gets the highest bid that the
+		// user can see i.e. all public bids, private bids made by the user, or all bids on a user's lot.
+		
+		List<Bid> visibleBids = getVisibleBids(lotId, userId);
+		
+		// Find the bid with the highest value
+		if(visibleBids.isEmpty()) {
 			return null;
+		} else {
+			return Collections.max(visibleBids, new Comparator<Bid>() {
+				@Override
+				public int compare(Bid o1, Bid o2) {
+					return o1.amount.compareTo(o2.amount);
+				}
+			});
 		}
 	}
 
+	/**
+	 * Get all details of a lot.
+	 * @param id The id of the lot to look for.
+	 * @throws LotNotFoundException The lot with this ID was not found.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 * @return The lot object.
+	 */
 	@Override
-	public Lot getLotDetails(long id) throws LotNotFoundException {
+	public Lot getLotDetails(long id) throws LotNotFoundException, AuctionCommunicationException {
 		Lot template = new Lot(id);
+		
 		try {
-			Lot lot = (Lot) this.space.readIfExists(template, null, 0);
+			// No need for a transaction. Using 'read' so nothing to roll back on failure
+			Lot lot = (Lot) this.space.readIfExists(template, null, 5000);
+			
 			if(lot != null) {
 				return lot;
 			} else {
 				throw new LotNotFoundException("The Lot was not found.");
 			}
 		} catch (UnusableEntryException | TransactionException | InterruptedException | RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+			throw new AuctionCommunicationException();
 		}
 	}
 	
+	/**
+	 * Retrieves all bids for a lot that are visible to the user.
+	 * i.e. public bids or private bids made by the user or on one of the user's lots.
+	 * @param lotId The ID of the lot to search for bids for.
+	 * @param userId The ID of the user whose perspective we are searching from.
+	 * @throws LotNotFoundException The lot for which you are searching bids for does not exist in the auction.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 * @return A list of bids visible to this user on this lot.
+	 */
 	@Override
-	public List<Bid> getVisibleBids(long lotId, long userId) throws LotNotFoundException {
+	public List<Bid> getVisibleBids(long lotId, long userId) throws LotNotFoundException, AuctionCommunicationException {
 		List<Bid> visibleBids = new ArrayList<Bid>();
 		
 		// If the lot was placed by the user then show all bids
@@ -216,12 +292,14 @@ public class JavaSpaceLotService implements LotService {
 		} else {
 			// Get all public bids for this lot
 			Bid publicTemplate = new Bid();
+			publicTemplate.lotId = lotId;
 			publicTemplate.privateBid = false;
 			
 			visibleBids.addAll(searchBids(publicTemplate));
 			
 			// Get the private bids that belong to this user
 			Bid userPrivateTemplate = new Bid();
+			userPrivateTemplate.lotId = lotId;
 			userPrivateTemplate.bidderId = userId;
 			userPrivateTemplate.privateBid = true;
 			visibleBids.addAll(searchBids(userPrivateTemplate));
@@ -230,78 +308,221 @@ public class JavaSpaceLotService implements LotService {
 		return visibleBids;
 	}
 	
-	private List<Bid> searchBids(Bid template) {
-		List<Bid> retrievedBids = new ArrayList<Bid>();
-		
-		// Create a transaction
-		Transaction.Created trc = null;
-		
-		try {
-			trc = TransactionFactory.create(this.transMgr, Lease.FOREVER);
-		} catch(RemoteException | LeaseDeniedException e) {
-			// TODO
-		}
-		
-		Transaction transaction = trc.transaction;
-		
-		boolean bidsToTake = true;
-		while(bidsToTake) {
-			try {
-				Bid retrievedBid = (Bid) this.space.takeIfExists(template, transaction, 0);
-				
-				if(retrievedBid != null) {
-					retrievedBids.add(retrievedBid);
-				} else {
-					bidsToTake = false;
-					transaction.abort();
-				}
-			} catch (RemoteException e) {
-				bidsToTake = false;
-			} catch (UnusableEntryException e) {
-				bidsToTake = false;
-			} catch (TransactionException e) {
-				bidsToTake = false;
-			} catch (InterruptedException e) {
-				bidsToTake = false;
-			}	
-		}
-		
-		return retrievedBids;
-	}
 	
+	/**
+	 * Get all lots that have been created by a given user.
+	 * @param userId The user whose lots to search for.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 * @return A list of lots for this user.
+	 */
 	@Override
-	public List<Lot> getUsersLots(long userId) {
+	public List<Lot> getUsersLots(long userId) throws AuctionCommunicationException {
 		Lot template = new Lot();
 		template.sellerId = userId;
 		return searchLots(template);
 	}
 	
+	/**
+	 * Removes a lot from the auction.
+	 * @param lotId The ID of the lot to remove.
+	 * @param userId The ID of the user who requested the removal.
+	 * @throws UnauthorisedLotActionException Thrown if the user does not have permission to remove this lot. i.e. it isn't their lot.
+	 * @throws LotNotFoundException The lot with that ID was not found in the auction.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
 	@Override
-	public void removeLot(long lotId, long userId) throws UnauthorisedLotActionException, LotNotFoundException {
-		Lot lot = this.getLotDetails(lotId);
+	public void removeLot(long lotId, long userId) throws UnauthorisedLotActionException, LotNotFoundException, AuctionCommunicationException {
+		Lot lot = getLotDetails(lotId);
 		
+		// TODO remove notifications
 		if(lot.sellerId.equals(userId)) {
 			try {
-				Lot removedLot = (Lot) this.space.takeIfExists(new Lot(lotId), null, 0);
+				// Try to take the lot from the auction
+				Lot removedLot = (Lot) this.space.takeIfExists(new Lot(lotId), null, 5000);
 				
+				// Lot was not found
 				if(removedLot == null) {
 					throw new LotNotFoundException("Lot not found for removal.");
 				}
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UnusableEntryException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TransactionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				
+			} catch (RemoteException | TransactionException |InterruptedException | UnusableEntryException e) {
+				throw new AuctionCommunicationException();
 			}
+			
 		} else {
 			throw new UnauthorisedLotActionException("Cannot remove another user's lots.");
 		}
+	}
+	
+	/**
+	 * Subscribe to a lot to receive notifications if the lot changes.
+	 * @param lotId The ID of the lot to subscribe to.
+	 * @param userId The ID of the user who is subscribing.
+	 * @param callback A callback that is called when the lot is updated.
+	 * @throws NotificationException Thrown if you are already subscribed to this lot.
+	 * @throws LotNotFoundException If the lot you are subscribing to is not found.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
+	@Override
+	public void subscribeToLotUpdates(long lotId, long userId, final Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException {
+		
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+		try {
+			// Make sure the lot exists.
+			Lot lot = (Lot) this.space.takeIfExists(new Lot(lotId), transaction, 5000);
+			if(lot == null) {
+				// The lot doesn't exist in the space. Cancel the transaction.
+				TransactionUtils.abort(transaction);
+				throw new LotNotFoundException("That Lot was not found.");
+			}
+			
+			// Check if a notification subscription for this lot and user already exists in the space which would
+			// indicate that the user is already subscribed to this lot.
+			NotificationSubscription notificationTemplate = new NotificationSubscription(lotId, userId);
+			NotificationSubscription subscription = (NotificationSubscription) this.space.readIfExists(notificationTemplate, null, 5000);
+			
+			if(subscription != null) {
+				TransactionUtils.abort(transaction);
+				throw new NotificationException("You are already subscribed to notifications on this Lot.");
+			}
+		
+			// Create the listener for this notification
+			final Lot template = new Lot(lotId);
+			RemoteEventListener listener = new RemoteEventListener() {
+				@Override
+				public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
+					try {
+						// Notified or an updated lot. Try to retrieve the lot. Only a read so no need for transaction.
+						Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, 0);
+						
+						// If the lot was found execute the callback.
+						if(lot != null) {
+							callback.call(lot);
+						}
+					} catch(RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+						// Don't execute the callback
+					}
+				}
+			};
+			
+			UnicastRemoteObject.exportObject(listener, 0);
+			// Create a notification subscription to record that this user is subscribe to this lot
+			this.space.write(new NotificationSubscription(lotId, userId), transaction, LotService.ONE_DAY);
+			// Tell the space to notify us of changes to this lot
+			this.space.notify(template, transaction, listener, LotService.ONE_DAY, null);
+			
+		} catch (RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
+			// Something went wrong. Roll back everything.
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
+		}
+	}
+	
+	/**
+	 * Listen to the auction to see if a lot that matches the specified template is added and
+	 * notify us if that happens.
+	 * @param template The template that matches lots that we are interested in.
+	 * @param userId The ID of the user who is listening.
+	 * @param callback The callback that will be called when such a lot is entered in the space.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
+	@Override
+	public void listenForLot(final Lot template, long userId, final Callback<Lot, Void> callback) throws AuctionCommunicationException {
+		// Create a listener
+		RemoteEventListener listener = new RemoteEventListener() {
+			@Override
+			public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
+				try {
+					// Notified that a lot that matches our template has been added. Try to get this lot.
+					Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, 0);
+					
+					// Lot was found.
+					if(lot != null) {
+						callback.call(lot);
+					}
+				} catch(RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+					// Lot not found. Don't call the callback.
+				}
+			}
+		};
+		
+		try {
+			// Export the listener and ask the space to notify us when a lot matching the template is added.
+			UnicastRemoteObject.exportObject(listener, 0);
+			this.space.notify(template, null, listener, LotService.ONE_DAY, null);
+			
+		} catch (RemoteException | TransactionException e) {
+			throw new AuctionCommunicationException();
+		}
+	}
+	
+	/**
+	 * Searches for and retrieves all bids that match a given template.
+	 * @param template The template with which to search for bids.
+	 * @return A list of bid that match the template.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
+	private List<Bid> searchBids(Bid template) throws AuctionCommunicationException {
+		List<Bid> retrievedBids = new ArrayList<Bid>();
+		
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+		
+		try {
+			// We will use this bid template multiple times
+			Entry snapshot = this.space.snapshot(template);
+			
+			// Keep taking bids from the space until no more match our template
+			boolean bidsToTake = true;
+			while(bidsToTake) {
+				Bid retrievedBid = (Bid) this.space.takeIfExists(snapshot, transaction, 0);
+				
+				if(retrievedBid != null) {
+					retrievedBids.add(retrievedBid);
+				} else {
+					bidsToTake = false;
+					// No more bids to find. Return bids to space.
+					TransactionUtils.abort(transaction);
+				}
+			}
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+			// Something went wrong. Abort transaction to roll back.
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
+		}	
+		
+		return retrievedBids;
+	}
+	
+	private void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RemoteException, TransactionException {
+		// registerForAvailabilityEvent requires a list of templates
+		List<Bid> templates = new ArrayList<Bid>();
+		Bid template = new Bid();
+		template.lotId = lotId;
+		
+		templates.add(template);
+				
+		// Set up our listener to call our callback when notified
+		RemoteEventListener listener = new RemoteEventListener() {
+			@Override
+			public void notify(RemoteEvent theEvent) throws UnknownEventException, RemoteException {
+				AvailabilityEvent event = (AvailabilityEvent) theEvent;
+				
+				try {
+					// Retrieve the entry that triggered the notification
+					Bid bid = (Bid) event.getEntry();
+					
+					if(callback != null) {
+						bid.lot = JavaSpaceLotService.this.getLotDetails(bid.lotId);
+						callback.call(bid);
+					}
+					
+				} catch (UnusableEntryException | LotNotFoundException | AuctionCommunicationException e) {
+					// An error occurred - don't call the callback
+				}
+			}
+		};
+				
+		UnicastRemoteObject.exportObject(listener, 0);
+		space.registerForAvailabilityEvent(templates, null, false, listener, LotService.ONE_DAY, null);		
 	}
 }

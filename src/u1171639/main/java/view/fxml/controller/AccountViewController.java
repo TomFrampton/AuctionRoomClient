@@ -3,7 +3,6 @@ package u1171639.main.java.view.fxml.controller;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.account.User;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;

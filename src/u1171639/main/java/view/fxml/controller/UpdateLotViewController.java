@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
@@ -40,13 +41,17 @@ public class UpdateLotViewController extends ViewController {
 				public Void call(Lot param) {
 					try {
 						getAuctionController().updateLot(param);
+						UpdateLotViewController.this.lotUpdatedCallback.call(param);
+						return null;
 					} catch (RequiresLoginException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+						return null;
+					} catch (AuctionCommunicationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return null;
 					}
-					
-					UpdateLotViewController.this.lotUpdatedCallback.call(param);
-					return null;
 				}
 			});
 		}

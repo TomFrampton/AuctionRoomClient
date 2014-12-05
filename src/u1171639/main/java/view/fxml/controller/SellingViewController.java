@@ -3,6 +3,7 @@ package u1171639.main.java.view.fxml.controller;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
@@ -12,7 +13,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import jfx.messagebox.MessageBox;
 
@@ -66,6 +66,9 @@ public class SellingViewController extends ViewController {
 				} catch (RequiresLoginException e) {
 					MessageBox.show(SellingViewController.this.getWindow(), e.toString(), 
 							"Error Withdrawing Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+				} catch (AuctionCommunicationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 				return null;
 			}
@@ -77,6 +80,9 @@ public class SellingViewController extends ViewController {
 			this.yourRetrivedLots.clear();
 			this.yourRetrivedLots.addAll(getAuctionController().getUsersLots());
 		} catch (RequiresLoginException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

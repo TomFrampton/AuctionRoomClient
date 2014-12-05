@@ -10,7 +10,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
+import jfx.messagebox.MessageBox;
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.view.fxml.lot.editor.LotFormViewController;
@@ -45,10 +48,17 @@ public class AddLotViewController extends ViewController {
 				@Override
 				public Void call(Lot param) {
 					try {
-						param.id = getAuctionController().addLot(param);
-					} catch (RequiresLoginException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						param.id = getAuctionController().addLot(param, new Callback<Bid, Void>() {
+
+							@Override
+							public Void call(Bid bid) {
+								MessageBox.show(getWindow(), "A bid of £ " + bid.amount + " has been placed on lot '" 
+										+ bid.lot.name + "!", "Bid Placed!", MessageBox.ICON_INFORMATION | MessageBox.OK);
+								return null;
+							}
+						});
+					} catch (RequiresLoginException | AuctionCommunicationException e) {
+						MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 					}
 					
 					AddLotViewController.this.lotTypeSelect.getSelectionModel().clearSelection();

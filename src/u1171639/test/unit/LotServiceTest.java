@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import net.jini.core.entry.Entry;
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 
@@ -16,6 +15,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.UnauthorisedBidException;
@@ -23,8 +23,10 @@ import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.JavaSpaceLotService;
-import u1171639.main.java.utilities.LotIDCounter;
+import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.SpaceUtils;
+import u1171639.main.java.utilities.counters.BidIDCounter;
+import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.test.utilities.TestUtils;
 
 public class LotServiceTest {
@@ -43,8 +45,10 @@ public class LotServiceTest {
 			throw new ConnectException("Could not connect to TransactionManager");
 		}
 		
-		this.lotService = new JavaSpaceLotService(this.space, transMgr);
 		LotIDCounter.initialiseInSpace(this.space);
+		BidIDCounter.initialiseInSpace(this.space);
+		
+		this.lotService = new JavaSpaceLotService(this.space, transMgr);
 	}
 
 	@After
@@ -66,10 +70,11 @@ public class LotServiceTest {
 		car2.sellerId = 1l;
 		
 		try {
-			car.id = this.lotService.addLot(car);
+			// Just add the lots. Don't test the bid callback just yet.
+			car.id = this.lotService.addLot(car, null);
 			Car retrievedCar = (Car) this.lotService.getLotDetails(car.id);
 			
-			car2.id = this.lotService.addLot(car2);
+			car2.id = this.lotService.addLot(car2, null);
 			Car retrievedCar2 = (Car) this.lotService.getLotDetails(car2.id);
 			
 			assertTrue(retrievedCar.id.equals(car.id));
@@ -84,6 +89,9 @@ public class LotServiceTest {
 			assertTrue(retrievedCar2.sellerId.equals(car2.sellerId));
 		} catch(LotNotFoundException e) {
 			fail("Lots exist. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -113,75 +121,84 @@ public class LotServiceTest {
 		car4.description = "A really nice car!";
 		car4.sellerId = 1l;
 		
-		this.lotService.addLot(car1);
-		this.lotService.addLot(car2);
-		this.lotService.addLot(car3);
-		this.lotService.addLot(car4);
-		
-		// Search 1
-		Car template1 = new Car();
-		template1.make = "Honda";
-		
-		List<Lot> search1 = this.lotService.searchLots(template1);
-		
-		assertTrue(search1.size() == 2);
-		
-		for(Lot lot : search1) {
-			Car car = (Car) lot;
-			assertEquals(car.make, template1.make);
+		try {
+			this.lotService.addLot(car1, null);
+			this.lotService.addLot(car2, null);
+			this.lotService.addLot(car3, null);
+			this.lotService.addLot(car4, null);
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
-		// Search 2
-		Car template2 = new Car();
-		template2.make = "Ford";
-		
-		List<Lot> search2 = this.lotService.searchLots(template2);
-		
-		assertTrue(search2.size() == 2);
-		
-		for(Lot lot : search2) {
-			Car car = (Car) lot;
-			assertEquals(car.make, template2.make);
-		}
-		
-		// Search 3
-		Car template3 = new Car();
-		template3.sellerId = 0l;
-		
-		List<Lot> search3 = this.lotService.searchLots(template3);
-		
-		assertTrue(search3.size() == 3);
-		
-		int fords = 0;
-		int hondas = 0;
-		
-		for(Lot lot : search3) {
-			Car car = (Car) lot;
-			assertTrue(car.sellerId.equals(0l));
+		try {
+			// Search 1
+			Car template1 = new Car();
+			template1.make = "Honda";
 			
-			if(car.make.equals("Honda")) {
-				hondas++;
-			} else if(car.make.equals("Ford")) {
-				fords++;
+			List<Lot> search1 = this.lotService.searchLots(template1);
+			
+			assertTrue(search1.size() == 2);
+			
+			for(Lot lot : search1) {
+				Car car = (Car) lot;
+				assertEquals(car.make, template1.make);
 			}
+			
+			// Search 2
+			Car template2 = new Car();
+			template2.make = "Ford";
+			
+			List<Lot> search2 = this.lotService.searchLots(template2);
+			
+			assertTrue(search2.size() == 2);
+			
+			for(Lot lot : search2) {
+				Car car = (Car) lot;
+				assertEquals(car.make, template2.make);
+			}
+			
+			// Search 3
+			Car template3 = new Car();
+			template3.sellerId = 0l;
+			
+			List<Lot> search3 = this.lotService.searchLots(template3);
+			
+			assertTrue(search3.size() == 3);
+			
+			int fords = 0;
+			int hondas = 0;
+			
+			for(Lot lot : search3) {
+				Car car = (Car) lot;
+				assertTrue(car.sellerId.equals(0l));
+				
+				if(car.make.equals("Honda")) {
+					hondas++;
+				} else if(car.make.equals("Ford")) {
+					fords++;
+				}
+			}
+			
+			assertTrue(fords == 1);
+			assertTrue(hondas == 2);
+			
+			// Search 4
+			Car template4 = new Car();
+			template4.description = "A really nice car!";
+			
+			List<Lot> search4 = this.lotService.searchLots(template4);
+			
+			assertTrue(search4.size() == 3);
+			
+			// Search 5
+			Car template5 = new Car();
+			List<Lot> search5 = this.lotService.searchLots(template5);
+			
+			assertTrue(search5.size() == 4);
+		} catch(AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
-		
-		assertTrue(fords == 1);
-		assertTrue(hondas == 2);
-		
-		// Search 4
-		Car template4 = new Car();
-		template4.description = "A really nice car!";
-		
-		List<Lot> search4 = this.lotService.searchLots(template4);
-		
-		assertTrue(search4.size() == 3);
-		
-		// Search 5
-		Car template5 = new Car();
-		List<Lot> search5 = this.lotService.searchLots(template5);
-		
-		assertTrue(search5.size() == 4);	
 	}
 	
 	@Test
@@ -196,21 +213,25 @@ public class LotServiceTest {
 		car.model = "UpdateLot";
 		car.sellerId = 0l;
 		
-		car.id = this.lotService.addLot(car);
-		
-		car.description = "Updated!";
-		this.lotService.updateLot(car);
-		
 		try {
-			Car retrievedCar = (Car) this.lotService.getLotDetails(car.id);
+			car.id = this.lotService.addLot(car, null);
 			
-			assertTrue(retrievedCar.id.equals(car.id));
-			assertTrue(retrievedCar.make.equals(car.make));
-			assertTrue(retrievedCar.model.equals(car.model));
-			assertTrue(retrievedCar.sellerId.equals(car.sellerId));
-			assertTrue(retrievedCar.description.equals(car.description));
-		} catch(LotNotFoundException e) {
-			fail("Lots exist. Should have been found");
+			car.description = "Updated!";
+			this.lotService.updateLot(car);
+			
+			try {
+				Car retrievedCar = (Car) this.lotService.getLotDetails(car.id);
+				
+				assertTrue(retrievedCar.id.equals(car.id));
+				assertTrue(retrievedCar.make.equals(car.make));
+				assertTrue(retrievedCar.model.equals(car.model));
+				assertTrue(retrievedCar.sellerId.equals(car.sellerId));
+				assertTrue(retrievedCar.description.equals(car.description));
+			} catch(LotNotFoundException e) {
+				fail("Lots exist. Should have been found");
+			}
+		} catch(AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 	}
 	
@@ -220,16 +241,31 @@ public class LotServiceTest {
 		car.make = "UnitTest"; 
 		car.model = "BidForLot";
 		car.sellerId = 0l;
-		car.id = this.lotService.addLot(car);
+		
+		try {
+			car.id = this.lotService.addLot(car, null);
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
 		
 		Car car2 = new Car();
 		car2.make = "UnitTest2"; 
 		car2.model = "BidForLot2";
 		car2.sellerId = 0l;
-		car2.id = this.lotService.addLot(car2);
+		try {
+			car2.id = this.lotService.addLot(car2, null);
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
+		Bid bid1 = new Bid();
+		bid1.lotId = car.id;
+		bid1.amount = new BigDecimal(1000.00);
+		bid1.bidderId = 0l;
+		bid1.privateBid = false;
 		
 		try {
-			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 0l, false);
+			this.lotService.bidForLot(bid1);
 			fail("User should not be able to bid on own Lot");
 		} catch (UnauthorisedBidException e) {
 			// Pass
@@ -237,20 +273,36 @@ public class LotServiceTest {
 			fail("Bid amount is valid.");
 		} catch (LotNotFoundException e) {
 			fail("Lot exists. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
+		Bid bid2 = new Bid();
+		bid2.lotId = car.id;
+		bid2.amount = new BigDecimal(1000.00);
+		bid2.bidderId = 1l;
+		bid2.privateBid = false;
+		
 		try {
-			this.lotService.bidForLot(car.id, new BigDecimal(1000.00), 1l, false);
+			this.lotService.bidForLot(bid2);
 		} catch (UnauthorisedBidException e) {
 			fail("User should be able to bid on other User's Lots.");
 		} catch (InvalidBidException e) {
 			fail("Bid amount is valid.");
 		} catch (LotNotFoundException e) {
 			fail("Lot exists. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
+		Bid bid3 = new Bid();
+		bid3.lotId = car.id;
+		bid3.amount = new BigDecimal(500.00);
+		bid3.bidderId = 1l;
+		bid3.privateBid = false;
+		
 		try {
-			this.lotService.bidForLot(car.id, new BigDecimal(500.00), 1l, false);
+			this.lotService.bidForLot(bid3);
 			fail("Should not be able to bid lower than currrent bid.");
 		} catch (UnauthorisedBidException e) {
 			fail("User should be able to bid on other User's Lots.");
@@ -258,26 +310,96 @@ public class LotServiceTest {
 			// Pass
 		} catch (LotNotFoundException e) {
 			fail("Lot exists. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
+		Bid bid4 = new Bid();
+		bid4.lotId = car2.id;
+		bid4.amount = new BigDecimal(200.00);
+		bid4.bidderId = 1l;
+		bid4.privateBid = false;
+		
 		try {
-			this.lotService.bidForLot(car2.id, new BigDecimal(200.00), 1l, false);
+			this.lotService.bidForLot(bid4);
 		} catch (UnauthorisedBidException e) {
 			fail("User should be able to bid on other User's Lots.");
 		} catch (InvalidBidException e) {
 			fail("Bid amount is valid.");
 		} catch (LotNotFoundException e) {
 			fail("Lot exists. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
-		Bid highestBid = this.lotService.getHighestBid(car.id);
-		Bid highestBid2 = this.lotService.getHighestBid(car2.id);
+		try {
+			Bid highestBid = this.lotService.getHighestBid(car.id, 1l);
+			Bid highestBid2 = this.lotService.getHighestBid(car2.id, 1l);
+			
+			assertTrue(highestBid.amount.compareTo(new BigDecimal(1000.0)) == 0);
+			assertTrue(highestBid.bidderId.equals(1l));
+			
+			assertTrue(highestBid2.amount.compareTo(new BigDecimal(200.0)) == 0);
+			assertTrue(highestBid2.bidderId.equals(1l));
+		} catch(AuctionCommunicationException e) {
+			fail(e.getMessage());
+		} catch (LotNotFoundException e) {
+			fail("Lot was added. Should have been found");
+		}
 		
-		assertTrue(highestBid.amount.compareTo(new BigDecimal(1000.0)) == 0);
-		assertTrue(highestBid.bidderId.equals(1l));
+		try {
+			// Test the bid callback functionality
+			Car car3 = new Car();
+			car3.make = "UnitTest3"; 
+			car3.model = "BidForLot3";
+			car3.sellerId = 3l;
+			
+			final Object lock = new Object();
+			final Bid[] bid = new Bid[1];
+			
+			car3.id = this.lotService.addLot(car3, new Callback<Bid, Void>() {
+				@Override
+				public Void call(Bid param) {
+					bid[0] = param;
+					
+					synchronized (lock) {
+						lock.notify();
+					}
+					
+					return null;
+				}
+			});
+			
+			Bid bid5 = new Bid();
+			bid5.lotId = car3.id;
+			bid5.amount = new BigDecimal(1000.00);
+			bid5.bidderId = 1l;
+			bid5.privateBid = false;
+			
+			this.lotService.bidForLot(bid5);
+			
+			synchronized (lock) {
+				lock.wait();
+			}
+			
+			assertNotNull(bid[0]);
+			
+		} catch(AuctionCommunicationException e) {
+			fail(e.getMessage());
+		} catch (UnauthorisedBidException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidBidException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (LotNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		assertTrue(highestBid2.amount.compareTo(new BigDecimal(200.0)) == 0);
-		assertTrue(highestBid2.bidderId.equals(1l));
 	}
 	
 	@Test
@@ -286,18 +408,37 @@ public class LotServiceTest {
 		car.make = "UnitTest";
 		car.model = "GetVisibleLots";
 		car.sellerId = 0l;
-		car.id = this.lotService.addLot(car);
+		try {
+			car.id = this.lotService.addLot(car, null);
+		} catch (AuctionCommunicationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		try {
-			this.lotService.bidForLot(car.id, new BigDecimal(100.00), 1l, false);
-			this.lotService.bidForLot(car.id, new BigDecimal(200.00), 1l, true);
-			this.lotService.bidForLot(car.id, new BigDecimal(300.00), 2l, true);
-			this.lotService.bidForLot(car.id, new BigDecimal(400.00), 2l, false);
-			this.lotService.bidForLot(car.id, new BigDecimal(500.00), 2l, false);
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(100.00), 1l, false));
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(200.00), 1l, true));
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(300.00), 1l, true));
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(150.00), 2l, false));
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(500.00), 1l, false));
 		} catch (UnauthorisedBidException | InvalidBidException e) {
 			fail("Bid was valid. Exception should not have been thrown.");
 		} catch (LotNotFoundException e) {
 			fail("Lot exists. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
+		try {
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(600.00), 2l, true));
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(700.00), 2l, false));
+			this.lotService.bidForLot(new Bid(car.id, new BigDecimal(800.00), 2l, false));
+		} catch (UnauthorisedBidException | InvalidBidException e) {
+			fail("Bid was valid. Exception should not have been thrown.");
+		} catch (LotNotFoundException e) {
+			fail("Lot exists. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
@@ -309,27 +450,7 @@ public class LotServiceTest {
 				}
 			});
 			
-			assertTrue(visibleBids1.size() == 4);
-			
-			assertTrue(visibleBids1.get(0).lotId.equals(car.id));
-			assertTrue(visibleBids1.get(0).amount.equals(new BigDecimal(100.00)));
-			assertTrue(visibleBids1.get(0).bidderId.equals(1l));
-			assertTrue(visibleBids1.get(0).privateBid == false);
-			
-			assertTrue(visibleBids1.get(1).lotId.equals(car.id));
-			assertTrue(visibleBids1.get(1).amount.equals(new BigDecimal(200.00)));
-			assertTrue(visibleBids1.get(1).bidderId.equals(1l));
-			assertTrue(visibleBids1.get(1).privateBid == true);
-			
-			assertTrue(visibleBids1.get(2).lotId.equals(car.id));
-			assertTrue(visibleBids1.get(2).amount.equals(new BigDecimal(400.00)));
-			assertTrue(visibleBids1.get(2).bidderId.equals(2l));
-			assertTrue(visibleBids1.get(2).privateBid == false);
-			
-			assertTrue(visibleBids1.get(3).lotId.equals(car.id));
-			assertTrue(visibleBids1.get(3).amount.equals(new BigDecimal(500.00)));
-			assertTrue(visibleBids1.get(3).bidderId.equals(2l));
-			assertTrue(visibleBids1.get(3).privateBid == false);
+			assertTrue(visibleBids1.size() == 7);
 			
 			List<Bid> visibleBids2 = this.lotService.getVisibleBids(car.id, 2l);
 			Collections.sort(visibleBids2, new Comparator<Bid>() {
@@ -339,33 +460,14 @@ public class LotServiceTest {
 				}
 			});
 			
-			assertTrue(visibleBids2.size() == 4);
-			
-			assertTrue(visibleBids2.get(0).lotId.equals(car.id));
-			assertTrue(visibleBids2.get(0).amount.equals(new BigDecimal(100.00)));
-			assertTrue(visibleBids2.get(0).bidderId.equals(1l));
-			assertTrue(visibleBids2.get(0).privateBid == false);
-			
-			assertTrue(visibleBids2.get(1).lotId.equals(car.id));
-			assertTrue(visibleBids2.get(1).amount.equals(new BigDecimal(300.00)));
-			assertTrue(visibleBids2.get(1).bidderId.equals(2l));
-			assertTrue(visibleBids2.get(1).privateBid == true);
-			
-			assertTrue(visibleBids2.get(2).lotId.equals(car.id));
-			assertTrue(visibleBids2.get(2).amount.equals(new BigDecimal(400.00)));
-			assertTrue(visibleBids2.get(2).bidderId.equals(2l));
-			assertTrue(visibleBids2.get(2).privateBid == false);
-			
-			assertTrue(visibleBids2.get(3).lotId.equals(car.id));
-			assertTrue(visibleBids2.get(3).amount.equals(new BigDecimal(500.00)));
-			assertTrue(visibleBids2.get(3).bidderId.equals(2l));
-			assertTrue(visibleBids2.get(3).privateBid == false);
-			
+			assertTrue(visibleBids2.size() == 6);
 			
 			List<Bid> visibleBids3 = this.lotService.getVisibleBids(car.id, 0l);
-			assertTrue(visibleBids3.size() == 5);
+			assertTrue(visibleBids3.size() == 8);
 		} catch(LotNotFoundException e) {
 			fail("Lot exists. Should have been found");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		

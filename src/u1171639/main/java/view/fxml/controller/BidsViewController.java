@@ -6,9 +6,9 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.ResourceBundle;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.RequiresLoginException;
@@ -30,7 +30,6 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
 import jfx.messagebox.MessageBox;
 
@@ -54,7 +53,7 @@ public class BidsViewController extends ViewController {
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		this.bidList.getColumns().addAll(BidsViewController.getColumns(bidList));
+		this.bidList.getColumns().addAll(BidsViewController.getColumns(this.bidList));
 		this.bidList.setItems(this.retrievedBids);
 	}
 	
@@ -63,17 +62,16 @@ public class BidsViewController extends ViewController {
 			this.lotForBids = lot;
 			this.retrievedBids.clear();
 			this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
-		} catch (RequiresLoginException | LotNotFoundException e) {
-			MessageBox.show(getWindow(), e.toString(), 
-					"Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+		} catch (RequiresLoginException | LotNotFoundException | AuctionCommunicationException e) {
+			MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 		}
 	}
 	
 	@FXML protected void handlePlaceBidAction(ActionEvent event) {
-		String moneyString = this.amountPounds.getText() + "." + amountPence.getText();
+		String moneyString = this.amountPounds.getText() + "." + this.amountPence.getText();
 		
 		try {
-			BigDecimal amount = this.parseBigDecimal(moneyString);
+			BigDecimal amount = parseBigDecimal(moneyString);
 			boolean privateBid = false;
 			
 			RadioButton selectedPrivacy = (RadioButton) this.bidPrivacyGroup.getSelectedToggle();
@@ -91,7 +89,7 @@ public class BidsViewController extends ViewController {
 			}
 			
 			try {
-				getAuctionController().bidForLot(lotForBids.id, amount, privateBid);
+				getAuctionController().bidForLot(new Bid(this.lotForBids.id, amount, privateBid));
 				this.retrievedBids.clear();
 				this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 			} catch (RequiresLoginException e) {
@@ -100,6 +98,9 @@ public class BidsViewController extends ViewController {
 			} catch (UnauthorisedBidException | InvalidBidException | LotNotFoundException e) {
 				MessageBox.show(getWindow(), e.toString(), 
 						"Error Placing Bid", MessageBox.ICON_ERROR | MessageBox.OK);
+			} catch (AuctionCommunicationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		} catch (ParseException e1) {
 			// TODO Auto-generated catch block
@@ -125,6 +126,9 @@ public class BidsViewController extends ViewController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (RequiresLoginException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

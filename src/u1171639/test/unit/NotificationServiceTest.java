@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.net.ConnectException;
 
-import net.jini.core.entry.Entry;
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 
@@ -12,6 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.model.lot.Bid;
@@ -22,10 +22,9 @@ import u1171639.main.java.service.JavaSpaceNotificationService;
 import u1171639.main.java.service.LotService;
 import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.HighestBid;
-import u1171639.main.java.utilities.LotIDCounter;
 import u1171639.main.java.utilities.NotificationSubscription;
 import u1171639.main.java.utilities.SpaceUtils;
+import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.test.utilities.TestUtils;
 
 public class NotificationServiceTest {
@@ -65,7 +64,11 @@ public class NotificationServiceTest {
 		car.make = "UnitTest"; 
 		car.model = "SubscribeToLot";
 		car.sellerId = 0l;
-		car.id = this.lotService.addLot(car);
+		try {
+			car.id = this.lotService.addLot(car, null);
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
 		
 		final Object finished = new Object();
 		
@@ -104,8 +107,13 @@ public class NotificationServiceTest {
 			fail("Lot was added. Should have been found.");
 		}
 		
-		this.lotService.updateLot(car);
-		this.waitForNotification(finished);
+		try {
+			this.lotService.updateLot(car);
+			waitForNotification(finished);
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
 	}
 	
 	@Test
@@ -133,7 +141,7 @@ public class NotificationServiceTest {
 		
 		try {
 			synchronized(finished) {
-				car.id = this.lotService.addLot(car);
+				car.id = this.lotService.addLot(car, null);
 				finished.wait();
 			}
 			
@@ -144,6 +152,8 @@ public class NotificationServiceTest {
 			assertTrue(retrievedCar.model.equals(car.model));
 		} catch(InterruptedException e) {
 			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 	}
 	

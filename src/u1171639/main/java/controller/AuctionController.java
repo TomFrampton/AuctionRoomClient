@@ -1,8 +1,8 @@
 package u1171639.main.java.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
@@ -28,15 +28,15 @@ public interface AuctionController {
 	public User getUserDetails(String email) throws UserNotFoundException;
 	public void removeUser(long userId) throws UserNotFoundException;
 	public void removeUser(String email) throws UserNotFoundException;
-	public long addLot(Lot lot) throws RequiresLoginException;
-	public List<Lot> searchLots(Lot template) throws RequiresLoginException;
-	public List<Lot> getUsersLots() throws RequiresLoginException;
-	public void updateLot(Lot lot) throws RequiresLoginException;
-	public void bidForLot(long lotId, BigDecimal amount, boolean isPrivateBid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException;
-	public Bid getHighestBid(long lotId) throws RequiresLoginException;
-	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException;
+	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException;
+	public List<Lot> searchLots(Lot template) throws RequiresLoginException, AuctionCommunicationException;
+	public List<Lot> getUsersLots() throws RequiresLoginException, AuctionCommunicationException;
+	public void updateLot(Lot lot) throws RequiresLoginException, AuctionCommunicationException;
+	public void bidForLot(Bid bid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException;
+	public Bid getHighestBid(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
+	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
 	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException;
 	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException;
-	public Lot getLotDetails(long lotId) throws RequiresLoginException, LotNotFoundException;
-	public void removeLot(long lotId) throws UnauthorisedLotActionException, LotNotFoundException, RequiresLoginException;
+	public Lot getLotDetails(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
+	public void removeLot(long lotId) throws UnauthorisedLotActionException, LotNotFoundException, RequiresLoginException, AuctionCommunicationException;
 }

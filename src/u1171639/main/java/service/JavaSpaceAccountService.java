@@ -11,7 +11,7 @@ import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.utilities.PasswordHashScheme;
-import u1171639.main.java.utilities.UserIDCounter;
+import u1171639.main.java.utilities.counters.UserIDCounter;
 
 public class JavaSpaceAccountService implements AccountService {
 	private JavaSpace space;

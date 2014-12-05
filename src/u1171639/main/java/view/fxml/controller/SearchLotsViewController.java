@@ -12,6 +12,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
@@ -50,6 +51,9 @@ public class SearchLotsViewController extends ViewController {
 					try {
 						lotsFound = getAuctionController().searchLots(param);
 					} catch (RequiresLoginException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (AuctionCommunicationException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}

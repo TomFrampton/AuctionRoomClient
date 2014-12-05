@@ -1,4 +1,4 @@
-package u1171639.main.java.utilities;
+package u1171639.main.java.utilities.counters;
 
 import net.jini.core.entry.Entry;
 import net.jini.core.lease.Lease;
