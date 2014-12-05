@@ -1,5 +1,7 @@
 package u1171639.main.java.utilities.counters;
 
+import u1171639.main.java.service.LotService;
+import u1171639.main.java.utilities.SpaceConsts;
 import net.jini.core.entry.Entry;
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
@@ -22,10 +24,10 @@ public class BidIDCounter implements Entry {
 	public static void initialiseInSpace(JavaSpace space) {
 		try {
 			BidIDCounter template = new BidIDCounter();
-			BidIDCounter counter = (BidIDCounter) space.readIfExists(template, null, Lease.FOREVER);
+			BidIDCounter counter = (BidIDCounter) space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
 			
 			if(counter == null) {
-				space.write(new BidIDCounter(0), null, Lease.FOREVER);
+				space.write(new BidIDCounter(0), null, SpaceConsts.WRITE_TIME);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

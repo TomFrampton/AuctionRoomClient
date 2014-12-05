@@ -31,7 +31,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
-import jfx.messagebox.MessageBox;
+//import jfx.messagebox.MessageBox;
 
 public class BidsViewController extends ViewController {
 	@FXML private Parent buyerOptions;
@@ -63,7 +63,7 @@ public class BidsViewController extends ViewController {
 			this.retrievedBids.clear();
 			this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 		} catch (RequiresLoginException | LotNotFoundException | AuctionCommunicationException e) {
-			MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+			//MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 		}
 	}
 	
@@ -96,8 +96,8 @@ public class BidsViewController extends ViewController {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (UnauthorisedBidException | InvalidBidException | LotNotFoundException e) {
-				MessageBox.show(getWindow(), e.toString(), 
-						"Error Placing Bid", MessageBox.ICON_ERROR | MessageBox.OK);
+				//MessageBox.show(getWindow(), e.toString(), 
+						//"Error Placing Bid", MessageBox.ICON_ERROR | MessageBox.OK);
 			} catch (AuctionCommunicationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -187,7 +187,7 @@ public class BidsViewController extends ViewController {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
-				return new SimpleStringProperty("£" + param.getValue().amount.toString());
+				return new SimpleStringProperty("ï¿½" + param.getValue().amount.toString());
 				
 			}
 		});

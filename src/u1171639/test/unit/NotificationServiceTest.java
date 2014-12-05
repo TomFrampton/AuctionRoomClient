@@ -23,6 +23,7 @@ import u1171639.main.java.service.LotService;
 import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.NotificationSubscription;
+import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.test.utilities.TestUtils;
@@ -35,12 +36,12 @@ public class NotificationServiceTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		this.space = SpaceUtils.getSpace("localhost");
+		this.space = SpaceUtils.getSpace(SpaceConsts.HOST);
 		if(this.space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
-		TransactionManager transMgr = SpaceUtils.getManager("localhost");
+		TransactionManager transMgr = SpaceUtils.getManager(SpaceConsts.HOST);
 		if(transMgr == null) {
 			throw new ConnectException("Could not connect to TransactionManager");
 		}

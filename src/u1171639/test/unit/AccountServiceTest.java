@@ -19,6 +19,7 @@ import u1171639.main.java.model.account.User;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.utilities.MediumSecurityHashScheme;
 import u1171639.main.java.utilities.PasswordHashScheme;
+import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.UserIDCounter;
 import u1171639.test.utilities.TestUtils;
@@ -33,10 +34,11 @@ public class AccountServiceTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		this.space = SpaceUtils.getSpace("localhost");
+		this.space = SpaceUtils.getSpace(SpaceConsts.HOST);
 		if(this.space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
+		
 		this.hashScheme = new MediumSecurityHashScheme();
 		this.accountService = new JavaSpaceAccountService(this.space, this.hashScheme);
 		UserIDCounter.initialiseInSpace(this.space);

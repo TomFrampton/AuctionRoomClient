@@ -24,6 +24,7 @@ import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.utilities.Callback;
+import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
@@ -35,12 +36,12 @@ public class LotServiceTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		this.space = SpaceUtils.getSpace("localhost");
+		this.space = SpaceUtils.getSpace(SpaceConsts.HOST);
 		if(this.space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
-		TransactionManager transMgr = SpaceUtils.getManager("localhost");
+		TransactionManager transMgr = SpaceUtils.getManager(SpaceConsts.HOST);
 		if(transMgr == null) {
 			throw new ConnectException("Could not connect to TransactionManager");
 		}
@@ -55,6 +56,8 @@ public class LotServiceTest {
 	public void tearDown() throws Exception {
 		TestUtils.removeAllFromSpace(new Bid(), this.space);
 		TestUtils.removeAllFromSpace(new Lot(), this.space);
+		TestUtils.removeAllFromSpace(new LotIDCounter(), this.space);
+		TestUtils.removeAllFromSpace(new BidIDCounter(), this.space);
 	}
 
 	@Test

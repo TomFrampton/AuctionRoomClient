@@ -13,8 +13,6 @@ import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
 
 public interface LotService {
-	public static final int ONE_DAY = 86400000;
-	
 	public long addLot(Lot lot, Callback<Bid, Void> notificationCallback) throws AuctionCommunicationException;
 	public List<Lot> searchLots(Lot template) throws AuctionCommunicationException;
 	public List<Lot> getUsersLots(long userId) throws AuctionCommunicationException;

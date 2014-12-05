@@ -27,6 +27,7 @@ import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.MediumSecurityHashScheme;
 import u1171639.main.java.utilities.PasswordHashScheme;
+import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
@@ -213,12 +214,12 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	public static void main(String[] args) throws ConnectException {
-		JavaSpace space = SpaceUtils.getSpace("localhost");
+		JavaSpace space = SpaceUtils.getSpace(SpaceConsts.HOST);
 		if(space == null) {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
-		TransactionManager transMgr = SpaceUtils.getManager("localhost");
+		TransactionManager transMgr = SpaceUtils.getManager(SpaceConsts.HOST);
 		if(transMgr == null) {
 			throw new ConnectException("Could not connect to TransactionManager");
 		}

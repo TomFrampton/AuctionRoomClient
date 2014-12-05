@@ -7,7 +7,7 @@ import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
 
 public class SpaceUtils {
-
+	
 	public static JavaSpace getSpace(String hostname) {
 		JavaSpace js = null;
 		try {

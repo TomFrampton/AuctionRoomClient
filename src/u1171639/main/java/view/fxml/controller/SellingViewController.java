@@ -14,7 +14,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import jfx.messagebox.MessageBox;
+//import jfx.messagebox.MessageBox;
 
 public class SellingViewController extends ViewController {
 	@FXML private Pane lotPane;
@@ -64,8 +64,8 @@ public class SellingViewController extends ViewController {
 				try {
 					SellingViewController.this.yourRetrivedLots.addAll(getAuctionController().getUsersLots());
 				} catch (RequiresLoginException e) {
-					MessageBox.show(SellingViewController.this.getWindow(), e.toString(), 
-							"Error Withdrawing Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+					//MessageBox.show(SellingViewController.this.getWindow(), e.toString(), 
+							//"Error Withdrawing Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 				} catch (AuctionCommunicationException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

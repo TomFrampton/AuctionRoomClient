@@ -31,6 +31,7 @@ import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.NotificationSubscription;
+import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.TransactionUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
@@ -81,8 +82,8 @@ public class JavaSpaceLotService implements LotService {
 			// As we are adding a Lot we would like to be notified when someone bids on it.
 			this.listenForBidsOnLot(lot.id, bidCallback);
 			
-			this.space.write(lot, transaction, LotService.ONE_DAY);
-			this.space.write(counter, transaction, LotService.ONE_DAY);
+			this.space.write(lot, transaction, SpaceConsts.WRITE_TIME);
+			this.space.write(counter, transaction, SpaceConsts.WRITE_TIME);
 			
 			TransactionUtils.commit(transaction);
 			
@@ -147,8 +148,8 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			// Remove the old lot and replace with this new one
-			this.space.take(template, transaction, LotService.ONE_DAY);
-			this.space.write(lot, transaction, LotService.ONE_DAY);
+			this.space.take(template, transaction, SpaceConsts.WRITE_TIME);
+			this.space.write(lot, transaction, SpaceConsts.WRITE_TIME);
 			
 			TransactionUtils.commit(transaction);
 			
@@ -204,8 +205,8 @@ public class JavaSpaceLotService implements LotService {
 				bid.id = counter.id;
 				counter.increment();
 				
-				this.space.write(bid, transaction, LotService.ONE_DAY);
-				this.space.write(counter, transaction, LotService.ONE_DAY);
+				this.space.write(bid, transaction, SpaceConsts.WRITE_TIME);
+				this.space.write(counter, transaction, SpaceConsts.WRITE_TIME);
 				
 				TransactionUtils.commit(transaction);
 			}
@@ -407,9 +408,9 @@ public class JavaSpaceLotService implements LotService {
 			
 			UnicastRemoteObject.exportObject(listener, 0);
 			// Create a notification subscription to record that this user is subscribe to this lot
-			this.space.write(new NotificationSubscription(lotId, userId), transaction, LotService.ONE_DAY);
+			this.space.write(new NotificationSubscription(lotId, userId), transaction, SpaceConsts.WRITE_TIME);
 			// Tell the space to notify us of changes to this lot
-			this.space.notify(template, transaction, listener, LotService.ONE_DAY, null);
+			this.space.notify(template, transaction, listener, SpaceConsts.WRITE_TIME, null);
 			
 		} catch (RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
 			// Something went wrong. Roll back everything.
@@ -449,7 +450,7 @@ public class JavaSpaceLotService implements LotService {
 		try {
 			// Export the listener and ask the space to notify us when a lot matching the template is added.
 			UnicastRemoteObject.exportObject(listener, 0);
-			this.space.notify(template, null, listener, LotService.ONE_DAY, null);
+			this.space.notify(template, null, listener, SpaceConsts.WRITE_TIME, null);
 			
 		} catch (RemoteException | TransactionException e) {
 			throw new AuctionCommunicationException();
@@ -523,6 +524,6 @@ public class JavaSpaceLotService implements LotService {
 		};
 				
 		UnicastRemoteObject.exportObject(listener, 0);
-		space.registerForAvailabilityEvent(templates, null, false, listener, LotService.ONE_DAY, null);		
+		space.registerForAvailabilityEvent(templates, null, false, listener, SpaceConsts.WRITE_TIME, null);		
 	}
 }
