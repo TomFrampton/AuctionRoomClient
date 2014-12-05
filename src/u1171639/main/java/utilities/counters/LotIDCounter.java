@@ -27,7 +27,7 @@ public class LotIDCounter implements Entry {
 			LotIDCounter counter = (LotIDCounter) space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
 			
 			if(counter == null) {
-				space.write(new LotIDCounter(0), null, SpaceConsts.WRITE_TIME);
+				space.write(new LotIDCounter(0), null, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

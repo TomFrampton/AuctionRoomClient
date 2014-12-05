@@ -17,7 +17,7 @@ public class TransactionUtils {
 		Transaction.Created trc = null;
 		
 		try {
-			trc = TransactionFactory.create(transMgr, Lease.FOREVER);
+			trc = TransactionFactory.create(transMgr, SpaceConsts.TRANSACTION_TIME);
 		} catch(RemoteException | LeaseDeniedException e) {
 			// TODO
 			return null;

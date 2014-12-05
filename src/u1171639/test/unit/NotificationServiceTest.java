@@ -17,12 +17,13 @@ import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.service.JavaSpaceNotificationService;
 import u1171639.main.java.service.LotService;
 import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.NotificationSubscription;
+import u1171639.main.java.utilities.LotSubscription;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.LotIDCounter;
@@ -54,108 +55,7 @@ public class NotificationServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		TestUtils.removeAllFromSpace(new Bid(), this.space);
-		TestUtils.removeAllFromSpace(new Lot(), this.space);
-		TestUtils.removeAllFromSpace(new NotificationSubscription(), this.space);
-	}
-
-	@Test
-	public void testSubscribeToLot() {
-		Car car = new Car();
-		car.make = "UnitTest"; 
-		car.model = "SubscribeToLot";
-		car.sellerId = 0l;
-		try {
-			car.id = this.lotService.addLot(car, null);
-		} catch (AuctionCommunicationException e) {
-			fail(e.getMessage());
-		}
-		
-		final Object finished = new Object();
-		
-		// Used for returning the lot in the callback
-		final Lot[] lot = new Lot[1];
-		
-		try {
-			this.notificationService.subscribeToLot(car.id, 0l, new Callback<Lot, Void>() {
-				@Override
-				public Void call(Lot changedLot) {
-					lot[0] = changedLot;
-					
-					synchronized(finished) {
-						finished.notify();
-					}
-					return null;
-				}
-			});
-		} catch (NotificationException e) {
-			fail("Was not already subscribed to Lot.");
-		} catch (LotNotFoundException e) {
-			fail("Lot was added. Should have been found.");
-		}
-		
-		try {
-			this.notificationService.subscribeToLot(car.id, 0l, new Callback<Lot, Void>() {
-				@Override
-				public Void call(Lot changedLot) {
-					return null;
-				}
-			});
-			fail("Lot already subscribed to. Exception should have been thrown.");
-		} catch (NotificationException e) {
-			// Pass
-		} catch (LotNotFoundException e) {
-			fail("Lot was added. Should have been found.");
-		}
-		
-		try {
-			this.lotService.updateLot(car);
-			waitForNotification(finished);
-		} catch (AuctionCommunicationException e) {
-			fail(e.getMessage());
-		}
-		
-	}
-	
-	@Test
-	public void testListenForLot() {
-		Car car = new Car();
-		car.make = "UnitTest"; 
-		car.model = "ListenForLot";
-		
-		final Object finished = new Object();
-		
-		// Used for returning the lot in the callback
-		final Lot[] lot = new Lot[1];
-		
-		this.notificationService.listenForLot(car, 0l, new Callback<Lot, Void>() {
-			@Override
-			public Void call(Lot addedLot) {
-				lot[0] = addedLot;
-				
-				synchronized(finished) {
-					finished.notify();
-				}
-				return null;
-			}
-		});
-		
-		try {
-			synchronized(finished) {
-				car.id = this.lotService.addLot(car, null);
-				finished.wait();
-			}
-			
-			Car retrievedCar = (Car) lot[0];
-			
-			assertTrue(retrievedCar.id.equals(car.id));
-			assertTrue(retrievedCar.make.equals(car.make));
-			assertTrue(retrievedCar.model.equals(car.model));
-		} catch(InterruptedException e) {
-			e.printStackTrace();
-		} catch (AuctionCommunicationException e) {
-			fail(e.getMessage());
-		}
+		TestUtils.removeAllFromSpace(new Notification(), this.space);
 	}
 	
 	private void waitForNotification(Object lock) {

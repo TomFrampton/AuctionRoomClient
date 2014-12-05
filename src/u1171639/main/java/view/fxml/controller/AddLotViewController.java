@@ -4,14 +4,14 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.layout.Pane;
-//import jfx.messagebox.MessageBox;
+import jfx.messagebox.MessageBox;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Bid;
@@ -53,13 +53,21 @@ public class AddLotViewController extends ViewController {
 
 							@Override
 							public Void call(Bid bid) {
-								//MessageBox.show(getWindow(), "A bid of � " + bid.amount + " has been placed on lot '" 
-								//		+ bid.lot.name + "!", "Bid Placed!", MessageBox.ICON_INFORMATION | MessageBox.OK);
+								System.out.println("Bid " + bid.id + " Added!!");
+//								Platform.runLater(new Runnable() {
+//									
+//									@Override
+//									public void run() {
+//										
+//										//MessageBox.show(getWindow(), "", "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+//										//MessageBox.show(getWindow(), "Bid Added!", "Bid Placed!", MessageBox.ICON_INFORMATION | MessageBox.OK);
+//									}
+//								});
 								return null;
 							}
 						});
 					} catch (RequiresLoginException | AuctionCommunicationException e) {
-						//MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+						MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 					}
 					
 					AddLotViewController.this.lotTypeSelect.getSelectionModel().clearSelection();

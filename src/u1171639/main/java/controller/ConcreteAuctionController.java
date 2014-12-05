@@ -176,18 +176,18 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException {
+	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
-			this.notificationService.listenForLot(template, this.accountService.getCurrentUser().id, callback);
+			this.lotService.listenForLot(template, this.accountService.getCurrentUser().id, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 
 	@Override
-	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException {
+	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
-			this.notificationService.subscribeToLot(id, this.accountService.getCurrentUser().id, callback);
+			this.lotService.subscribeToLotUpdates(id, this.accountService.getCurrentUser().id, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}

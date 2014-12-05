@@ -32,6 +32,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
 //import jfx.messagebox.MessageBox;
+import jfx.messagebox.MessageBox;
 
 public class BidsViewController extends ViewController {
 	@FXML private Parent buyerOptions;
@@ -63,7 +64,7 @@ public class BidsViewController extends ViewController {
 			this.retrievedBids.clear();
 			this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 		} catch (RequiresLoginException | LotNotFoundException | AuctionCommunicationException e) {
-			//MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+			MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 		}
 	}
 	
@@ -149,7 +150,6 @@ public class BidsViewController extends ViewController {
 	}
 	
 	private BigDecimal parseBigDecimal(String decimalString) throws ParseException  {
-		System.out.println(decimalString);
 		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');
 		String pattern = "####.##";

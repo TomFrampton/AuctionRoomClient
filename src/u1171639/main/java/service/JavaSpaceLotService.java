@@ -22,6 +22,7 @@ import net.jini.space.AvailabilityEvent;
 import net.jini.space.JavaSpace;
 import net.jini.space.JavaSpace05;
 import u1171639.main.java.exception.AuctionCommunicationException;
+import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
@@ -30,11 +31,14 @@ import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.NotificationSubscription;
+import u1171639.main.java.utilities.LotSubscription;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.TransactionUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
+import u1171639.main.java.utilities.flags.BidPlacedFlag;
+import u1171639.main.java.utilities.flags.LotAddedFlag;
+import u1171639.main.java.utilities.flags.LotUpdatedFlag;
 
 /**
  * A JavaSpace specific implementation of LotService. Provides methods for manipulating
@@ -70,7 +74,7 @@ public class JavaSpaceLotService implements LotService {
 		try {
 			// Get the lot counter so we can assign a unique ID for this Lot. Take it from the space to enforce
 			// mutual exclusion when incrementing and assigning the ID number.
-			LotIDCounter counter = (LotIDCounter) this.space.takeIfExists(new LotIDCounter(), transaction, 5000);
+			LotIDCounter counter = (LotIDCounter) this.space.takeIfExists(new LotIDCounter(), transaction, SpaceConsts.WAIT_TIME);
 			
 			if(counter == null) {
 				throw new AuctionCommunicationException();
@@ -82,8 +86,14 @@ public class JavaSpaceLotService implements LotService {
 			// As we are adding a Lot we would like to be notified when someone bids on it.
 			this.listenForBidsOnLot(lot.id, bidCallback);
 			
-			this.space.write(lot, transaction, SpaceConsts.WRITE_TIME);
-			this.space.write(counter, transaction, SpaceConsts.WRITE_TIME);
+			// Add the flag to announce that we have added a Lot in the space
+			LotAddedFlag lotAddedFlag = new LotAddedFlag();
+			lotAddedFlag.lotId = lot.id;
+			
+			this.space.write(lot, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			this.space.write(counter, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			
+			this.space.write(lotAddedFlag, transaction, SpaceConsts.FLAG_WRITE_TIME);
 			
 			TransactionUtils.commit(transaction);
 			
@@ -117,7 +127,7 @@ public class JavaSpaceLotService implements LotService {
 			// Keep taking lots out until there are no more that match the template
 			boolean lotsToTake = true;
 			while(lotsToTake) {
-					Lot retrievedLot = (Lot) this.space.takeIfExists(snapshot, transaction, 2000);
+					Lot retrievedLot = (Lot) this.space.takeIfExists(snapshot, transaction, SpaceConsts.WAIT_TIME);
 					
 					if(retrievedLot != null) {
 						retrievedLots.add(retrievedLot);
@@ -147,9 +157,14 @@ public class JavaSpaceLotService implements LotService {
 		Transaction transaction = TransactionUtils.create(this.transMgr);
 		
 		try {
+			LotUpdatedFlag lotUpdatedFlag = new LotUpdatedFlag();
+			lotUpdatedFlag.lotId = lot.id;
+			
+			space.write(lotUpdatedFlag, transaction, SpaceConsts.FLAG_WRITE_TIME);
+			
 			// Remove the old lot and replace with this new one
-			this.space.take(template, transaction, SpaceConsts.WRITE_TIME);
-			this.space.write(lot, transaction, SpaceConsts.WRITE_TIME);
+			this.space.take(template, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			this.space.write(lot, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
 			
 			TransactionUtils.commit(transaction);
 			
@@ -196,7 +211,7 @@ public class JavaSpaceLotService implements LotService {
 				
 				// Get the bid counter so we can assign a unique ID for this Bid. Take it from the space to enforce
 				// mutual exclusion when incrementing and assigning the ID number.
-				BidIDCounter counter = (BidIDCounter) this.space.takeIfExists(new BidIDCounter(), transaction, 5000);
+				BidIDCounter counter = (BidIDCounter) this.space.takeIfExists(new BidIDCounter(), transaction, SpaceConsts.TRANSACTION_TIME);
 				
 				if(counter == null) {
 					throw new AuctionCommunicationException();
@@ -205,12 +220,21 @@ public class JavaSpaceLotService implements LotService {
 				bid.id = counter.id;
 				counter.increment();
 				
-				this.space.write(bid, transaction, SpaceConsts.WRITE_TIME);
-				this.space.write(counter, transaction, SpaceConsts.WRITE_TIME);
+				// Set a flag in the space to announce to listeners that a new bid has been made and
+				// give the information required to find the new bid.
+				BidPlacedFlag bidPlacedFlag = new BidPlacedFlag();
+				bidPlacedFlag.lotId = bid.lotId;
+				bidPlacedFlag.bidId = bid.id;
+				
+				this.space.write(bid, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+				this.space.write(counter, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+				
+				this.space.write(bidPlacedFlag, transaction, SpaceConsts.FLAG_WRITE_TIME);
 				
 				TransactionUtils.commit(transaction);
 			}
 		} catch(RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
+			TransactionUtils.abort(transaction);
 			throw new AuctionCommunicationException();
 		}
 	}
@@ -257,12 +281,30 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			// No need for a transaction. Using 'read' so nothing to roll back on failure
-			Lot lot = (Lot) this.space.readIfExists(template, null, 5000);
+			Lot lot = (Lot) this.space.readIfExists(template, null, SpaceConsts.TRANSACTION_TIME);
 			
 			if(lot != null) {
 				return lot;
 			} else {
 				throw new LotNotFoundException("The Lot was not found.");
+			}
+		} catch (UnusableEntryException | TransactionException | InterruptedException | RemoteException e) {
+			throw new AuctionCommunicationException();
+		}
+	}
+	
+	@Override
+	public Bid getBidDetails(long id) throws AuctionCommunicationException, BidNotFoundException {
+		Bid template = new Bid(id);
+		
+		try {
+			// No need for a transaction. Using 'read' so nothing to roll back on failure
+			Bid bid = (Bid) this.space.readIfExists(template, null, SpaceConsts.TRANSACTION_TIME);
+			
+			if(bid != null) {
+				return bid;
+			} else {
+				throw new BidNotFoundException("The Bid was not found.");
 			}
 		} catch (UnusableEntryException | TransactionException | InterruptedException | RemoteException e) {
 			throw new AuctionCommunicationException();
@@ -339,7 +381,7 @@ public class JavaSpaceLotService implements LotService {
 		if(lot.sellerId.equals(userId)) {
 			try {
 				// Try to take the lot from the auction
-				Lot removedLot = (Lot) this.space.takeIfExists(new Lot(lotId), null, 5000);
+				Lot removedLot = (Lot) this.space.takeIfExists(new Lot(lotId), null, SpaceConsts.WAIT_TIME);
 				
 				// Lot was not found
 				if(removedLot == null) {
@@ -352,108 +394,6 @@ public class JavaSpaceLotService implements LotService {
 			
 		} else {
 			throw new UnauthorisedLotActionException("Cannot remove another user's lots.");
-		}
-	}
-	
-	/**
-	 * Subscribe to a lot to receive notifications if the lot changes.
-	 * @param lotId The ID of the lot to subscribe to.
-	 * @param userId The ID of the user who is subscribing.
-	 * @param callback A callback that is called when the lot is updated.
-	 * @throws NotificationException Thrown if you are already subscribed to this lot.
-	 * @throws LotNotFoundException If the lot you are subscribing to is not found.
-	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
-	 */
-	@Override
-	public void subscribeToLotUpdates(long lotId, long userId, final Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException {
-		
-		Transaction transaction = TransactionUtils.create(this.transMgr);
-		try {
-			// Make sure the lot exists.
-			Lot lot = (Lot) this.space.takeIfExists(new Lot(lotId), transaction, 5000);
-			if(lot == null) {
-				// The lot doesn't exist in the space. Cancel the transaction.
-				TransactionUtils.abort(transaction);
-				throw new LotNotFoundException("That Lot was not found.");
-			}
-			
-			// Check if a notification subscription for this lot and user already exists in the space which would
-			// indicate that the user is already subscribed to this lot.
-			NotificationSubscription notificationTemplate = new NotificationSubscription(lotId, userId);
-			NotificationSubscription subscription = (NotificationSubscription) this.space.readIfExists(notificationTemplate, null, 5000);
-			
-			if(subscription != null) {
-				TransactionUtils.abort(transaction);
-				throw new NotificationException("You are already subscribed to notifications on this Lot.");
-			}
-		
-			// Create the listener for this notification
-			final Lot template = new Lot(lotId);
-			RemoteEventListener listener = new RemoteEventListener() {
-				@Override
-				public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
-					try {
-						// Notified or an updated lot. Try to retrieve the lot. Only a read so no need for transaction.
-						Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, 0);
-						
-						// If the lot was found execute the callback.
-						if(lot != null) {
-							callback.call(lot);
-						}
-					} catch(RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
-						// Don't execute the callback
-					}
-				}
-			};
-			
-			UnicastRemoteObject.exportObject(listener, 0);
-			// Create a notification subscription to record that this user is subscribe to this lot
-			this.space.write(new NotificationSubscription(lotId, userId), transaction, SpaceConsts.WRITE_TIME);
-			// Tell the space to notify us of changes to this lot
-			this.space.notify(template, transaction, listener, SpaceConsts.WRITE_TIME, null);
-			
-		} catch (RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
-			// Something went wrong. Roll back everything.
-			TransactionUtils.abort(transaction);
-			throw new AuctionCommunicationException();
-		}
-	}
-	
-	/**
-	 * Listen to the auction to see if a lot that matches the specified template is added and
-	 * notify us if that happens.
-	 * @param template The template that matches lots that we are interested in.
-	 * @param userId The ID of the user who is listening.
-	 * @param callback The callback that will be called when such a lot is entered in the space.
-	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
-	 */
-	@Override
-	public void listenForLot(final Lot template, long userId, final Callback<Lot, Void> callback) throws AuctionCommunicationException {
-		// Create a listener
-		RemoteEventListener listener = new RemoteEventListener() {
-			@Override
-			public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
-				try {
-					// Notified that a lot that matches our template has been added. Try to get this lot.
-					Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, 0);
-					
-					// Lot was found.
-					if(lot != null) {
-						callback.call(lot);
-					}
-				} catch(RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
-					// Lot not found. Don't call the callback.
-				}
-			}
-		};
-		
-		try {
-			// Export the listener and ask the space to notify us when a lot matching the template is added.
-			UnicastRemoteObject.exportObject(listener, 0);
-			this.space.notify(template, null, listener, SpaceConsts.WRITE_TIME, null);
-			
-		} catch (RemoteException | TransactionException e) {
-			throw new AuctionCommunicationException();
 		}
 	}
 	
@@ -494,10 +434,135 @@ public class JavaSpaceLotService implements LotService {
 		return retrievedBids;
 	}
 	
-	private void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RemoteException, TransactionException {
+	
+	
+	/** ------------------------------------------------ NOTIFICATION METHODS ---------------------------------------------------------------------------- **/
+	
+	/**
+	 * Subscribe to a lot to receive notifications if the lot changes.
+	 * @param lotId The ID of the lot to subscribe to.
+	 * @param userId The ID of the user who is subscribing.
+	 * @param callback A callback that is called when the lot is updated.
+	 * @throws NotificationException Thrown if you are already subscribed to this lot.
+	 * @throws LotNotFoundException If the lot you are subscribing to is not found.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
+	@Override
+	public void subscribeToLotUpdates(final long lotId, long userId, final Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException {
+		
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+		try {
+			// Make sure the lot exists.
+			Lot lot = (Lot) this.space.readIfExists(new Lot(lotId), transaction, SpaceConsts.WAIT_TIME);
+			if(lot == null) {
+				// The lot doesn't exist in the space. Cancel the transaction.
+				TransactionUtils.abort(transaction);
+				throw new LotNotFoundException("That Lot was not found.");
+			}
+			
+			// Check if a notification subscription for this lot and user already exists in the space which would
+			// indicate that the user is already subscribed to this lot.
+			LotSubscription notificationTemplate = new LotSubscription(userId, lotId);
+			LotSubscription subscription = (LotSubscription) this.space.readIfExists(notificationTemplate, null, SpaceConsts.WAIT_TIME);
+			
+			if(subscription != null) {
+				TransactionUtils.abort(transaction);
+				throw new NotificationException("You are already subscribed to notifications on this Lot.");
+			}
+		
+			// Create a  template to listen for an 'Updated' flag for this Lot. No need to use registerForAvailabiltyEvent
+			// because we don't need to get the LotUpdatedFlag to be able to do ahead and get the Lot. (We already know the Lot ID).
+			LotUpdatedFlag flagTemplate = new LotUpdatedFlag();
+			flagTemplate.lotId = lot.id;
+			
+			// Create the listener
+			RemoteEventListener listener = new RemoteEventListener() {
+				@Override
+				public void notify(RemoteEvent theEvent) throws UnknownEventException, RemoteException {
+					try {
+						// We know that the Lot has been updated. Get the updated Lot.
+						Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(new Lot(lotId), null, SpaceConsts.WAIT_TIME);
+						
+						// If the lot was found execute the callback.
+						if(lot != null) {
+							callback.call(lot);
+						}
+					} catch(RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+						// Don't execute the callback
+					}
+				}
+			};
+			
+			UnicastRemoteObject.exportObject(listener, 0);
+			// Create a notification subscription to record that this user is subscribe to this lot
+			this.space.write(new LotSubscription(userId, lotId), transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			// Tell the space to notify us of changes to this lot
+			this.space.notify(flagTemplate, null, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
+			
+			TransactionUtils.commit(transaction);
+			
+		} catch (RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
+			// Something went wrong. Roll back everything.
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
+		}
+	}
+	
+	/**
+	 * Listen to the auction to see if a lot that matches the specified template is added and
+	 * notify us if that happens.
+	 * @param template The template that matches lots that we are interested in.
+	 * @param userId The ID of the user who is listening.
+	 * @param callback The callback that will be called when such a lot is entered in the space.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
+	@Override
+	public void listenForLot(final Lot template, long userId, final Callback<Lot, Void> callback) throws AuctionCommunicationException {
 		// registerForAvailabilityEvent requires a list of templates
-		List<Bid> templates = new ArrayList<Bid>();
-		Bid template = new Bid();
+		List<LotAddedFlag> templates = new ArrayList<LotAddedFlag>();
+		LotAddedFlag flagTemplate = new LotAddedFlag();
+		
+		templates.add(flagTemplate);
+				
+		RemoteEventListener listener = new RemoteEventListener() {
+			@Override
+			public void notify(RemoteEvent theEvent) throws UnknownEventException, RemoteException {
+				AvailabilityEvent event = (AvailabilityEvent) theEvent;
+				
+				try {
+					// We know that a Lot has been added. See if the Lot that was added matches our template.
+					LotAddedFlag addedLotFlag = (LotAddedFlag) event.getEntry();
+					template.id = addedLotFlag.lotId;
+					
+					// Try to get the Lot that was added using our template + the ID of the Lot that was added.
+					Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
+					
+					// Lot was found.
+					if(lot != null) {
+						callback.call(lot);
+					}
+					
+				} catch(RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+					// Lot not found. Don't call the callback.
+				}
+			}
+		};
+		
+		try {
+			// Export the listener and ask the space to notify us when a lot matching the template is added.
+			UnicastRemoteObject.exportObject(listener, 0);
+			this.space.registerForAvailabilityEvent(templates, null, false, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
+			
+		} catch (RemoteException | TransactionException e) {
+			throw new AuctionCommunicationException();
+		}
+	}
+	
+	@Override
+	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RemoteException, TransactionException {
+		// registerForAvailabilityEvent requires a list of templates
+		List<BidPlacedFlag> templates = new ArrayList<BidPlacedFlag>();
+		BidPlacedFlag template = new BidPlacedFlag();
 		template.lotId = lotId;
 		
 		templates.add(template);
@@ -510,20 +575,23 @@ public class JavaSpaceLotService implements LotService {
 				
 				try {
 					// Retrieve the entry that triggered the notification
-					Bid bid = (Bid) event.getEntry();
+					BidPlacedFlag bidPlacedFlag = (BidPlacedFlag) event.getEntry();
+					
+					// Get the details of the bid that was just placed
+					Bid bid = JavaSpaceLotService.this.getBidDetails(bidPlacedFlag.bidId);
 					
 					if(callback != null) {
 						bid.lot = JavaSpaceLotService.this.getLotDetails(bid.lotId);
 						callback.call(bid);
 					}
 					
-				} catch (UnusableEntryException | LotNotFoundException | AuctionCommunicationException e) {
-					// An error occurred - don't call the callback
+				} catch (UnusableEntryException | LotNotFoundException | AuctionCommunicationException | BidNotFoundException e) {
+					// An error occurred. Do not call the callback.
 				}
 			}
 		};
 				
 		UnicastRemoteObject.exportObject(listener, 0);
-		space.registerForAvailabilityEvent(templates, null, false, listener, SpaceConsts.WRITE_TIME, null);		
+		space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);		
 	}
 }

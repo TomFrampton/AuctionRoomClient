@@ -18,12 +18,14 @@ import org.junit.Test;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
+import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.utilities.Callback;
+import u1171639.main.java.utilities.LotSubscription;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
@@ -56,6 +58,7 @@ public class LotServiceTest {
 	public void tearDown() throws Exception {
 		TestUtils.removeAllFromSpace(new Bid(), this.space);
 		TestUtils.removeAllFromSpace(new Lot(), this.space);
+		TestUtils.removeAllFromSpace(new LotSubscription(), this.space);
 		TestUtils.removeAllFromSpace(new LotIDCounter(), this.space);
 		TestUtils.removeAllFromSpace(new BidIDCounter(), this.space);
 	}
@@ -471,13 +474,133 @@ public class LotServiceTest {
 			fail("Lot exists. Should have been found");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
-		}
-		
-		
+		}	
 	}
 	
 	@Test
 	public void testRemoveLot() {
 		//TODO
+	}
+	
+	@Test
+	public void testSubscribeToLot() {
+		Car car = new Car();
+		car.make = "UnitTest"; 
+		car.model = "SubscribeToLot";
+		car.sellerId = 0l;
+		try {
+			car.id = this.lotService.addLot(car, null);
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
+		final Object finished = new Object();
+		
+		// Used for returning the lot in the callback
+		final Lot[] lot = new Lot[1];
+		
+		try {
+			this.lotService.subscribeToLotUpdates(car.id, 0l, new Callback<Lot, Void>() {
+				@Override
+				public Void call(Lot changedLot) {
+					lot[0] = changedLot;
+					
+					synchronized(finished) {
+						finished.notify();
+					}
+					return null;
+				}
+			});
+		} catch (NotificationException e) {
+			fail("Was not already subscribed to Lot.");
+		} catch (LotNotFoundException e) {
+			fail("Lot was added. Should have been found.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
+		try {
+			this.lotService.subscribeToLotUpdates(car.id, 0l, new Callback<Lot, Void>() {
+				@Override
+				public Void call(Lot changedLot) {
+					lot[0] = changedLot;
+					
+					synchronized(finished) {
+						finished.notify();
+					}
+					return null;
+				}
+			});
+			fail("Lot already subscribed to. Exception should have been thrown.");
+		} catch (NotificationException e) {
+			// Pass
+		} catch (LotNotFoundException e) {
+			fail("Lot was added. Should have been found.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
+		try {
+			this.lotService.updateLot(car);
+			waitForNotification(finished);
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
+	}
+	
+	@Test
+	public void testListenForLot() {
+		Car car = new Car();
+		car.make = "UnitTest"; 
+		car.model = "ListenForLot";
+		
+		final Object finished = new Object();
+		
+		// Used for returning the lot in the callback
+		final Lot[] lot = new Lot[1];
+		
+		try {
+			this.lotService.listenForLot(car, 0l, new Callback<Lot, Void>() {
+				@Override
+				public Void call(Lot addedLot) {
+					lot[0] = addedLot;
+					
+					synchronized(finished) {
+						finished.notify();
+					}
+					return null;
+				}
+			});
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+		
+		try {
+			synchronized(finished) {
+				car.id = this.lotService.addLot(car, null);
+				finished.wait();
+			}
+			
+			Car retrievedCar = (Car) lot[0];
+			
+			assertTrue(retrievedCar.id.equals(car.id));
+			assertTrue(retrievedCar.make.equals(car.make));
+			assertTrue(retrievedCar.model.equals(car.model));
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	private void waitForNotification(Object lock) {
+		try {
+			synchronized(lock) {
+				lock.wait();
+			}
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 }

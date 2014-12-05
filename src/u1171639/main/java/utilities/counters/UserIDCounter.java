@@ -27,7 +27,7 @@ public class UserIDCounter implements Entry {
 			UserIDCounter counter = (UserIDCounter) space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
 			
 			if(counter == null) {
-				space.write(new UserIDCounter(0), null, SpaceConsts.WRITE_TIME);
+				space.write(new UserIDCounter(0), null, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

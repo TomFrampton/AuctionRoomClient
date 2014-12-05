@@ -18,7 +18,8 @@
 		
 		<Tab text="Account" closable="false" fx:id="accountTab">
 		</Tab>
+		
+		<Tab text="Notifications (0)" closable="false" fx:id="notificationsTab">
+		</Tab>
 	</tabs>			
-	
-	<!-- <Pane fx:id="notificationsPane"  /> -->
 </TabPane>
