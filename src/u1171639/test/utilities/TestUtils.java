@@ -2,6 +2,7 @@ package u1171639.test.utilities;
 
 import java.rmi.RemoteException;
 
+import u1171639.main.java.utilities.SpaceConsts;
 import net.jini.core.entry.Entry;
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.transaction.TransactionException;
@@ -16,7 +17,7 @@ public class TestUtils {
 		while(somethingToTake) {
 			Entry entry;
 			try {
-				entry = space.takeIfExists(template, null, 0);
+				entry = space.takeIfExists(template, null, SpaceConsts.WAIT_TIME);
 				
 				if(entry != null) {
 					objectCounter++;

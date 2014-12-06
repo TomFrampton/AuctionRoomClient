@@ -3,6 +3,7 @@ package u1171639.main.java.service;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import net.jini.core.entry.Entry;
@@ -20,6 +21,7 @@ import net.jini.space.JavaSpace05;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
+import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.Notification;
@@ -79,7 +81,7 @@ public class JavaSpaceNotificationService implements NotificationService {
 	}
 	
 	@Override
-	public void listenForNotifications(long userId, final Callback<Notification, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException {
+	public void listenForNotifications(long userId, final Callback<Notification, Void> callback) throws AuctionCommunicationException {
 		List<NotificationAddedFlag> templates = new ArrayList<NotificationAddedFlag>();
 		
 		// Create template to match any notification flags for this user
@@ -139,6 +141,9 @@ public class JavaSpaceNotificationService implements NotificationService {
 			notification.id = counter.id;
 			counter.increment();
 			
+			notification.timeReceived = new Date(System.currentTimeMillis());
+			notification.read = false;
+			
 			// Add the flag to announce that we have added a Notification in the space
 			NotificationAddedFlag notificationAddedFlag = new NotificationAddedFlag();
 			notificationAddedFlag.notificationId = notification.id;
@@ -153,6 +158,32 @@ public class JavaSpaceNotificationService implements NotificationService {
 			
 			// Something went wrong. Abort the transaction.
 		} catch (RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
+		}
+	}
+
+	@Override
+	public void markNotificationRead(long id) throws NotificationNotFoundException, AuctionCommunicationException {
+		// Take the notification that we need to update
+		Notification template = new Notification(id);
+		
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+			
+		try {
+			Notification notification = (Notification) this.space.takeIfExists(template, transaction, SpaceConsts.WAIT_TIME);
+			if(notification == null) {
+				TransactionUtils.abort(transaction);
+				throw new NotificationNotFoundException("Notification with that ID could not be found.");
+			}
+			
+			notification.read = true;
+			
+			this.space.write(notification, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			
+			TransactionUtils.commit(transaction);
+			
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
 			TransactionUtils.abort(transaction);
 			throw new AuctionCommunicationException();
 		}

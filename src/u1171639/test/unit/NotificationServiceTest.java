@@ -17,6 +17,7 @@ import org.junit.Test;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
+import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
@@ -32,6 +33,7 @@ import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.main.java.utilities.counters.NotificationIDCounter;
+import u1171639.main.java.utilities.flags.NotificationAddedFlag;
 import u1171639.test.utilities.TestUtils;
 
 public class NotificationServiceTest {
@@ -59,6 +61,7 @@ public class NotificationServiceTest {
 	@After
 	public void tearDown() throws Exception {
 		TestUtils.removeAllFromSpace(new Notification(), this.space);
+		TestUtils.removeAllFromSpace(new NotificationAddedFlag(), this.space);
 		TestUtils.removeAllFromSpace(new NotificationIDCounter(), this.space);
 	}
 	
@@ -140,10 +143,31 @@ public class NotificationServiceTest {
 			
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
-		} catch (NotificationException e) {
+		}
+	}
+	
+	@Test
+	public void testMarkNotificationRead() {
+		Notification notification = new Notification();
+		notification.recipientId = 0l;
+		notification.title = "Testing Title";
+		notification.message = "Testing Message";
+		
+		try {
+			this.notificationService.addNotification(notification);
+			
+			Notification retrieved = this.notificationService.retrieveAllNotifications(0l).get(0);
+			assertTrue(retrieved.read == false);
+			
+			this.notificationService.markNotificationRead(retrieved.id);
+			
+			retrieved = this.notificationService.retrieveAllNotifications(0l).get(0);
+			assertTrue(retrieved.read == true);
+			
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (LotNotFoundException e) {
+		} catch (NotificationNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

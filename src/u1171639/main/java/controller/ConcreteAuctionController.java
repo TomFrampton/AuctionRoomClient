@@ -18,6 +18,7 @@ import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.service.AccountService;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
@@ -211,6 +212,36 @@ public class ConcreteAuctionController implements AuctionController {
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
+	}
+	
+	@Override
+	public List<Notification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException {
+		if(this.accountService.isLoggedIn()) {
+			return this.notificationService.retrieveAllNotifications(this.accountService.getCurrentUser().id);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+
+	@Override
+	public void listenForNotifications(Callback<Notification, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
+		if(this.accountService.isLoggedIn()) {
+			this.notificationService.listenForNotifications(this.accountService.getCurrentUser().id, callback);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+		
+	}
+	
+	@Override
+	public void addNotification(Notification notification) throws RequiresLoginException, AuctionCommunicationException {
+		if(this.accountService.isLoggedIn()) {
+			notification.recipientId = this.accountService.getCurrentUser().id;
+			this.notificationService.addNotification(notification);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+		
 	}
 	
 	public static void main(String[] args) throws ConnectException {

@@ -30,6 +30,7 @@ import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.service.AccountService;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
@@ -43,6 +44,7 @@ import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
+import u1171639.main.java.utilities.counters.NotificationIDCounter;
 import u1171639.main.java.utilities.counters.UserIDCounter;
 import u1171639.main.java.view.AuctionView;
 import u1171639.test.utilities.TestUtils;
@@ -77,6 +79,7 @@ public class DummyView implements AuctionView {
 		LotIDCounter.initialiseInSpace(this.space);
 		UserIDCounter.initialiseInSpace(this.space);
 		BidIDCounter.initialiseInSpace(this.space);
+		NotificationIDCounter.initialiseInSpace(this.space);
 	}
 	
 	@After
@@ -918,6 +921,114 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testRemoveLot() {
 		//TODO
+	}
+	
+	@Test
+	public void retrieveAllNotifications() {
+		Notification notification1 = new Notification();
+		notification1.title = "Testing Title 1";
+		notification1.message = "Testing Message 1";
+		
+		Notification notification2 = new Notification();
+		notification2.title = "Testing Title 2";
+		notification2.message = "Testing Message 2";
+		
+		Notification notification3 = new Notification();
+		notification3.title = "Testing Title 3";
+		notification3.message = "Testing Message 3";
+		
+		User user1 = new User();
+		user1.email = "test@retrieveAllNotifications1.com";
+		user1.password = "password1";
+		
+		User user2 = new User();
+		user2.email = "test@retrieveAllNotifications2.com";
+		user2.password = "password2";
+		
+		register(user1);
+		login(user1);
+		
+		try {
+			this.controller.addNotification(notification1);
+			this.controller.addNotification(notification2);
+			
+			List<Notification> retrievedNotifications1 = this.controller.retrieveAllNotifications();
+			
+			assertTrue(retrievedNotifications1.size() == 2);
+			
+			Collections.sort(retrievedNotifications1, new Comparator<Notification>() {
+				@Override
+				public int compare(Notification o1, Notification o2) {
+					return Long.compare(o1.id, o2.id);
+				}
+			});
+			
+			assertEquals(retrievedNotifications1.get(0).title, "Testing Title 1");
+			assertEquals(retrievedNotifications1.get(1).title, "Testing Title 2");
+			
+			
+			register(user2);
+			login(user2);
+			
+			this.controller.addNotification(notification3);
+			
+			List<Notification> retrievedNotifications2 = this.controller.retrieveAllNotifications();
+			
+			assertTrue(retrievedNotifications2.size() == 1);
+					
+			assertEquals(retrievedNotifications2.get(0).title, "Testing Title 3");
+			
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		} catch (RequiresLoginException e) {
+			fail("User logged in. Should have worked.");
+		}
+	}
+	
+	@Test
+	public void testListenForNotifications() {
+		final Notification notification1 = new Notification();
+		notification1.title = "Testing Title 1";
+		notification1.message = "Testing Message 1";
+		
+		User user = new User();
+		user.email = "test@retrieveAllNotifications.com";
+		user.password = "password";
+		
+		register(user);
+		login(user);
+		
+		final Object lock = new Object();
+		
+		try {
+			this.controller.listenForNotifications(new Callback<Notification, Void>() {
+
+				@Override
+				public Void call(Notification notification) {
+					assertEquals(notification.title, notification1.title);
+					assertEquals(notification.message, notification1.message);
+					
+					synchronized (lock) {
+						lock.notify();
+					}
+					
+					return null;
+				}
+			});
+			
+			this.controller.addNotification(notification1);
+			synchronized (lock) {
+				lock.wait();
+			}
+			
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
+		} catch (RequiresLoginException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			fail("Interruption Exception");
+		}
 	}
 
 	@Override
