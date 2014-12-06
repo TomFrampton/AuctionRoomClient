@@ -559,7 +559,7 @@ public class JavaSpaceLotService implements LotService {
 	}
 	
 	@Override
-	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RemoteException, TransactionException {
+	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException {
 		// registerForAvailabilityEvent requires a list of templates
 		List<BidPlacedFlag> templates = new ArrayList<BidPlacedFlag>();
 		BidPlacedFlag template = new BidPlacedFlag();
@@ -590,8 +590,12 @@ public class JavaSpaceLotService implements LotService {
 				}
 			}
 		};
-				
-		UnicastRemoteObject.exportObject(listener, 0);
-		space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);		
+		
+		try {
+			UnicastRemoteObject.exportObject(listener, 0);
+			space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
+		} catch(RemoteException | TransactionException e) {
+			throw new AuctionCommunicationException();
+		}
 	}
 }

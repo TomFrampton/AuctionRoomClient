@@ -40,5 +40,5 @@ public interface LotService {
 	
 	public void listenForLot(final Lot template, long userId, final Callback<Lot, Void> callback) throws AuctionCommunicationException;
 	
-	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RemoteException, TransactionException;
+	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException;
 }
