@@ -20,8 +20,7 @@
 	<Text text="Don't have an account with us?"
 		GridPane.rowIndex="0"
 		GridPane.columnIndex="0"
-		GridPane.columnSpan="2" />
-		
+		GridPane.columnSpan="2" />	
 		
 		
 	<Label text="Forename"
@@ -44,11 +43,11 @@
 		
 		
 		
-	<Label text="Email"
+	<Label text="Username"
 		GridPane.rowIndex="3"
 		GridPane.columnIndex="0" />
 		
-	<TextField fx:id="email" 
+	<TextField fx:id="username" 
 		GridPane.rowIndex="3"
 		GridPane.columnIndex="1" />
 		

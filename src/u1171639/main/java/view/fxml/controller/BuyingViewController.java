@@ -43,7 +43,7 @@ public class BuyingViewController extends ViewController {
 		this.bidsController = (BidsViewController) this.loadView("bids.fxml");
 		this.bidsController.showBuyingFields();
 		
-		this.lotList.getColumns().addAll(SellingViewController.getColumns(this.lotList));
+		this.lotList.getColumns().addAll(BuyingViewController.getColumns(this.lotList));
 		this.lotList.setItems(this.retrievedLots);
 		this.lotList.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 		
@@ -51,8 +51,8 @@ public class BuyingViewController extends ViewController {
 			
 			@Override
 			public Void call(List<Lot> lotsFound) {
-				BuyingViewController.this.retrievedLots.clear();
-				BuyingViewController.this.retrievedLots.addAll(lotsFound);
+				retrievedLots.clear();
+				retrievedLots.addAll(lotsFound);
 				
 				if(lotsFound.isEmpty()) {
 					Alert alert = new Alert(AlertType.INFORMATION);
@@ -118,18 +118,19 @@ public class BuyingViewController extends ViewController {
 			}
 		 });
 		
-//		TableColumn<Lot,String> sellerName = new TableColumn<Lot,String>("Seller");
-//		sellerName.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Lot, String>, ObservableValue<String>>() {
-//
-//			@Override
-//			public ObservableValue<String> call(CellDataFeatures<Lot, String> param) {
-//				return new SimpleStringProperty(param.getValue().seller.email);
-//				
-//			}
-//		 });
+		TableColumn<Lot,String> sellerName = new TableColumn<Lot,String>("Seller");
+		sellerName.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Lot, String>, ObservableValue<String>>() {
+
+			@Override
+			public ObservableValue<String> call(CellDataFeatures<Lot, String> param) {
+				return new SimpleStringProperty(param.getValue().seller.username);
+				
+			}
+		 });
 		
 		columns.add(lotAddedTime);
 		columns.add(lotName);
+		columns.add(sellerName);
 		
 		return columns;
 

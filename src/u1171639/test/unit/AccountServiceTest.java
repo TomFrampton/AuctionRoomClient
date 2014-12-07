@@ -70,11 +70,11 @@ public class AccountServiceTest {
 			fail("User was registed. They should be able to be found.");
 		}
 		
-		// Test that trying to add a user with a email that is already in use throws an exception
+		// Test that trying to add a user with a username that is already in use throws an exception
 		try {
 			User newUser2 = new User(this.accountService.register(newUser));
 			this.usersToRemove.add(newUser2);
-			fail("Added two users with same email.");
+			fail("Added two users with same username.");
 		} catch (RegistrationException e) {
 			// Pass
 		}
@@ -108,18 +108,18 @@ public class AccountServiceTest {
 			fail("Unique user - Should have been added.");
 		}
 		
-		// Test that incorrect email stops login
+		// Test that incorrect username stops login
 		try {
 			User credentials = new User();
 			credentials.username = "test@incorrect.com";
 			credentials.username = "password";
 			this.accountService.login(credentials);
-			fail("Incorrect email. User should not have been able to log in");
+			fail("Incorrect username. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
 		}
 		
-		// Test that a correct email but incorrect password stops login
+		// Test that a correct username but incorrect password stops login
 		try {
 			User credentials = new User();
 			credentials.username = "test@login.com";
@@ -130,7 +130,7 @@ public class AccountServiceTest {
 			// Pass
 		}
 		
-		// Test that a correct email and password allows login
+		// Test that a correct username and password allows login
 		try {
 			User credentials = new User();
 			credentials.username = "test@login.com";
@@ -260,7 +260,7 @@ public class AccountServiceTest {
 			fail("Users were registered so should be able to retrieve details.");
 		}
 		
-		// Test that we can get registered users using their email
+		// Test that we can get registered users using their username
 		try {
 			User retrievedUserId1 = this.accountService.getUserDetails(user1.username);
 			User retrievedUserId2 = this.accountService.getUserDetails(user2.username);
@@ -276,7 +276,7 @@ public class AccountServiceTest {
 		
 		// Test that trying to retrieve unregistered users results in an exception
 		try {
-			this.accountService.getUserDetails("madeup@email.com");
+			this.accountService.getUserDetails("madeup@username.com");
 			fail("User doesn't exist. UserNotFoundException should have been thrown.");
 		} catch(UserNotFoundException e) {
 			// Pass
@@ -323,7 +323,7 @@ public class AccountServiceTest {
 			// Pass
 		}
 		
-		// Test that we can removed a user using their email
+		// Test that we can removed a user using their username
 		try {
 			user2.id = this.accountService.register(user2);
 			this.accountService.getUserDetails(user2.username);

@@ -14,7 +14,7 @@ public class AccountViewController extends ViewController {
 	
 	@FXML private TextField forename;
 	@FXML private TextField surname;
-	@FXML private Text email;
+	@FXML private Text username;
 	
 	private User user;
 	
@@ -24,6 +24,6 @@ public class AccountViewController extends ViewController {
 		
 		this.forename.setText(this.user.forename);
 		this.surname.setText(this.user.surname);
-		this.email.setText(this.user.username);
+		this.username.setText(this.user.username);
 	}
 }

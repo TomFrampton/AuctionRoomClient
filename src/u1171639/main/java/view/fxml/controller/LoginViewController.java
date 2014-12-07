@@ -14,13 +14,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 
 public class LoginViewController extends ViewController {
-	@FXML private TextField email;
+	@FXML private TextField username;
 	@FXML private PasswordField password;
 	
 	private Callback<Object, Void> loginSuccessCallback;
 	
 	@FXML protected void handleLoginButtonAction(ActionEvent event) {
-		User credentials = new User(this.email.getText(), this.password.getText());
+		User credentials = new User(this.username.getText(), this.password.getText());
 		
 		try {
 			getAuctionController().login(credentials);

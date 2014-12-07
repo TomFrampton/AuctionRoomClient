@@ -54,7 +54,7 @@ public class BidsViewController extends ViewController {
 	
 	private ObservableList<Bid> retrievedBids = FXCollections.observableArrayList();
 	
-	private Callback<Void, Void> lotWithdrawnCallback;
+	private Callback<Lot, Void> lotWithdrawnCallback;
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -98,7 +98,7 @@ public class BidsViewController extends ViewController {
 			try {
 				// Make a bid for the lot and subscribe to lot updates
 				getAuctionController().bidForLot(new Bid(this.lotForBids.id, amount, privateBid));
-				getAuctionController().subscribeToLotUpdates(this.lotForBids.id, new Callback<Lot, Void>() {
+				getAuctionController().listenForLotUpdates(this.lotForBids.id, new Callback<Lot, Void>() {
 
 					@Override
 					public Void call(Lot lot) {
@@ -134,12 +134,13 @@ public class BidsViewController extends ViewController {
 					}
 				});
 				
-				// And listen for the accepted bid
+				// Listen for the accepted bid
 				getAuctionController().listenForAcceptedBidOnLot(this.lotForBids.id, new Callback<Bid, Void>() {
 
 					@Override
 					public Void call(final Bid bid) {
 						Platform.runLater(new Runnable() {
+							
 							@Override
 							public void run() {
 								Notification notification = new Notification();
@@ -148,22 +149,9 @@ public class BidsViewController extends ViewController {
 									notification.title = "Lot Won!";
 									notification.message = "The bid of £" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
 											bid.bidTime.toString() + " has been accepted!";
-									
-//									Alert alert = new Alert(AlertType.INFORMATION);
-//									alert.setTitle("Lot Won!");
-//									alert.setHeaderText("Lot Won!");
-//									alert.setContentText("The bid of £" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
-//											bid.bidTime.toString() + " has been accepted!");
-//									alert.show();
 								} else {
 									notification.title = "Lot Not Won";
 									notification.message = "The lot '" + bid.lot.name + "' has ended with a winning bid of " + bid.amount.toString() + ".";
-									
-									//Alert alert = new Alert(AlertType.INFORMATION);
-//									alert.setTitle("Lot Not Won");
-//									alert.setHeaderText("Lot Not Won");
-//									alert.setContentText("The lot '" + bid.lot.name + "' has ended with a winning bid of " + bid.amount.toString() + ".");
-//									alert.show();
 								}
 								
 								try {
@@ -178,8 +166,28 @@ public class BidsViewController extends ViewController {
 							}
 						});
 						
+						return null;
+					}
+				});
+				
+				// And listen for the removal of the lot
+				getAuctionController().listenForLotRemoval(this.lotForBids.id, new Callback<Lot, Void>() {
+
+					@Override
+					public Void call(Lot removedLot) {
+						Notification notification = new Notification();
+						notification.title = "Lot Removed";
+						notification.message =  "The lot '" + removedLot.name + "' has been removed from the auction by the seller.";
 						
-						System.out.println("Bid accepted");
+						try {
+							getAuctionController().addNotification(notification);
+						} catch (RequiresLoginException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (AuctionCommunicationException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						
 						return null;
 					}
@@ -234,7 +242,7 @@ public class BidsViewController extends ViewController {
 			getAuctionController().removeLot(this.lotForBids.id);
 			
 			if(this.lotWithdrawnCallback != null) {
-				this.lotWithdrawnCallback.call(null);
+				this.lotWithdrawnCallback.call(this.lotForBids);
 			}
 		} catch (UnauthorisedLotActionException e) {
 			// TODO Auto-generated catch block
@@ -261,7 +269,7 @@ public class BidsViewController extends ViewController {
 		this.optionsView.getChildren().add(this.sellerOptions);
 	}
 	
-	public void setLotWithdrawnCallback(Callback<Void, Void> lotWithdrawnCallback) {
+	public void setLotWithdrawnCallback(Callback<Lot, Void> lotWithdrawnCallback) {
 		this.lotWithdrawnCallback = lotWithdrawnCallback;
 	}
 	
@@ -288,8 +296,8 @@ public class BidsViewController extends ViewController {
 			}
 		});
 		
-		TableColumn<Bid,String> bidderEmailCol = new TableColumn<Bid,String>("Bidder");
-		bidderEmailCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
+		TableColumn<Bid,String> bidderCol = new TableColumn<Bid,String>("Bidder");
+		bidderCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
@@ -318,7 +326,7 @@ public class BidsViewController extends ViewController {
 		});
 		
 		columns.add(bidTimeCol);
-		columns.add(bidderEmailCol);
+		columns.add(bidderCol);
 		columns.add(bidAmountCol);
 		columns.add(bidTypeCol);
 		

@@ -37,16 +37,16 @@ public interface AuctionController {
 	
 	public User getUserDetails(long userId) throws UserNotFoundException;
 	
-	public User getUserDetails(String email) throws UserNotFoundException;
+	public User getUserDetails(String username) throws UserNotFoundException;
 	
 	public void removeUser(long userId) throws UserNotFoundException;
 	
-	public void removeUser(String email) throws UserNotFoundException;
+	public void removeUser(String username) throws UserNotFoundException;
 	
 	/* Lot methods */
 	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException;
 	
-	public List<Lot> searchLots(Lot template) throws RequiresLoginException, AuctionCommunicationException;
+	public List<Lot> searchLots(Lot template) throws RequiresLoginException, AuctionCommunicationException, UserNotFoundException;
 	
 	public List<Lot> getUsersLots() throws RequiresLoginException, AuctionCommunicationException;
 	
@@ -60,9 +60,11 @@ public interface AuctionController {
 	
 	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
 	
-	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
+	public void listenForLotAddition(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void subscribeToLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException;
+	public void listenForLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException;
+	
+	public void listenForLotRemoval(long lotId, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
 	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	

@@ -16,12 +16,12 @@ public class User extends Person implements Entry {
 		this.id = id;
 	}
 	
-	public User(String email) {
-		this.username = email;
+	public User(String username) {
+		this.username = username;
 	}
 	
-	public User(String email, String password) {
-		this.username = email;
+	public User(String username, String password) {
+		this.username = username;
 		this.password = password;
 	}
 }

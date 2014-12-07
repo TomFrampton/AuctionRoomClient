@@ -106,7 +106,7 @@ public class DummyView implements AuctionView {
 		
 		try {
 			this.controller.register(user);
-			fail("User with non-unique email added.");
+			fail("User with non-unique username added.");
 		} catch(RegistrationException e) {
 			// Passed
 		}
@@ -124,18 +124,18 @@ public class DummyView implements AuctionView {
 			fail("Unique user - Should have been added.");
 		}
 		
-		// Test that incorrect email stops login
+		// Test that incorrect username stops login
 		try {
 			User credentials = new User();
 			credentials.username = "test@incorrect.com";
 			credentials.username = "password";
 			this.controller.login(credentials);
-			fail("Incorrect email. User should not have been able to log in");
+			fail("Incorrect username. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
 		}
 		
-		// Test that a correct email but incorrect password stops login
+		// Test that a correct username but incorrect password stops login
 		try {
 			User credentials = new User();
 			credentials.username = "test@login.com";
@@ -146,7 +146,7 @@ public class DummyView implements AuctionView {
 			// Pass
 		}
 		
-		// Test that a correct email and password allows login
+		// Test that a correct username and password allows login
 		try {
 			User credentials = new User();
 			credentials.username = "test@login.com";
@@ -252,7 +252,7 @@ public class DummyView implements AuctionView {
 			fail("Users were registered so should be able to retrieve details.");
 		}
 		
-		// Test that we can get registered users using their email
+		// Test that we can get registered users using their username
 		try {
 			User retrievedUserId1 = this.controller.getUserDetails(user1.username);
 			User retrievedUserId2 = this.controller.getUserDetails(user2.username);
@@ -268,7 +268,7 @@ public class DummyView implements AuctionView {
 		
 		// Test that trying to retrieve unregistered users results in an exception
 		try {
-			this.controller.getUserDetails("madeup@email.com");
+			this.controller.getUserDetails("madeup@username.com");
 			fail("User doesn't exist. UserNotFoundException should have been thrown.");
 		} catch(UserNotFoundException e) {
 			// Pass
@@ -315,7 +315,7 @@ public class DummyView implements AuctionView {
 			// Pass
 		}
 		
-		// Test that we can removed a user using their email
+		// Test that we can removed a user using their username
 		try {
 			user2.id = this.controller.register(user2);
 			this.controller.getUserDetails(user2.username);
@@ -488,6 +488,9 @@ public class DummyView implements AuctionView {
 			fail("User should have logged in.");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (UserNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			this.controller.logout();
 		}
@@ -820,7 +823,7 @@ public class DummyView implements AuctionView {
 		};
 		
 		try {
-			this.controller.subscribeToLotUpdates(0, callback);
+			this.controller.listenForLotUpdates(0, callback);
 			fail("Lot subscribed to without being logged in");
 		} catch(RequiresLoginException e) {
 			// Pass
@@ -834,7 +837,7 @@ public class DummyView implements AuctionView {
 		
 		try {		
 			car.id = this.controller.addLot(car, null);
-			this.controller.subscribeToLotUpdates(car.id, callback);
+			this.controller.listenForLotUpdates(car.id, callback);
 			this.controller.updateLot(car);
 			
 			synchronized(finished) {
@@ -884,7 +887,7 @@ public class DummyView implements AuctionView {
 		};
 				
 		try {
-			this.controller.listenForLot(car, callback);
+			this.controller.listenForLotAddition(car, callback);
 			fail("Listened for lot without being logged in");
 		} catch(RequiresLoginException e) {
 			// Pass
@@ -898,7 +901,7 @@ public class DummyView implements AuctionView {
 		
 		try {
 			synchronized(finished) {
-				this.controller.listenForLot(car, callback);
+				this.controller.listenForLotAddition(car, callback);
 				this.controller.addLot(car, null);
 				finished.wait();
 			}

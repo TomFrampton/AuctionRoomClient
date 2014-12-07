@@ -14,6 +14,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.view.fxml.lot.editor.LotFormViewController;
@@ -56,9 +57,12 @@ public class SearchLotsViewController extends ViewController {
 					} catch (AuctionCommunicationException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} catch (UserNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 					
-					SearchLotsViewController.this.searchReturnedCallback.call(lotsFound);
+					searchReturnedCallback.call(lotsFound);
 					return null;
 				}
 			});

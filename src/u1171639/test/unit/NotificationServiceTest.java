@@ -28,7 +28,6 @@ import u1171639.main.java.service.JavaSpaceNotificationService;
 import u1171639.main.java.service.LotService;
 import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.LotSubscription;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.LotIDCounter;

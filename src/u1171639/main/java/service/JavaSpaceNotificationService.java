@@ -26,7 +26,6 @@ import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.LotSubscription;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.TransactionUtils;
 import u1171639.main.java.utilities.counters.LotIDCounter;

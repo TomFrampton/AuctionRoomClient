@@ -15,7 +15,7 @@ import javafx.scene.control.Alert.AlertType;
 public class RegisterViewController extends ViewController {
 	@FXML private TextField forename;
 	@FXML private TextField surname;
-	@FXML private TextField email;
+	@FXML private TextField username;
 	@FXML private PasswordField password;
 	
 	@Override
@@ -27,7 +27,7 @@ public class RegisterViewController extends ViewController {
 		User newUser = new User();
 		newUser.forename = this.forename.getText();
 		newUser.surname = this.surname.getText();
-		newUser.username = this.email.getText();
+		newUser.username = this.username.getText();
 		newUser.password = this.password.getText();
 		
 		try {

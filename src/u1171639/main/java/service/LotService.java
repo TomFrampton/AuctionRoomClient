@@ -38,11 +38,13 @@ public interface LotService {
 	
 	public void removeLot(long lotId, long userId) throws UnauthorisedLotActionException, LotNotFoundException, AuctionCommunicationException;
 	
-	public void subscribeToLotUpdates(long lotId, long userId, final Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException;
+	public void listenForLotUpdates(long lotId, Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException;
 	
-	public void listenForLot(final Lot template, long userId, final Callback<Lot, Void> callback) throws AuctionCommunicationException;
+	public void listenForLotAddition(final Lot template, Callback<Lot, Void> callback) throws AuctionCommunicationException;
 	
-	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException;
+	public void listenForLotRemoval(long lotId, Callback<Lot, Void> callback) throws AuctionCommunicationException;
 	
-	public void listenForAcceptedBidOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException;
+	public void listenForBidsOnLot(long lotId, Callback<Bid, Void> callback) throws AuctionCommunicationException;
+	
+	public void listenForAcceptedBidOnLot(long lotId, Callback<Bid, Void> callback) throws AuctionCommunicationException;
 }

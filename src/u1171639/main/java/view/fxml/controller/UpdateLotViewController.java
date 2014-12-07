@@ -41,7 +41,7 @@ public class UpdateLotViewController extends ViewController {
 				public Void call(Lot param) {
 					try {
 						getAuctionController().updateLot(param);
-						UpdateLotViewController.this.lotUpdatedCallback.call(param);
+						lotUpdatedCallback.call(param);
 						return null;
 					} catch (RequiresLoginException e) {
 						// TODO Auto-generated catch block

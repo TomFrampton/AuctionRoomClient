@@ -21,12 +21,12 @@ import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.UnauthorisedBidException;
+import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.utilities.Callback;
-import u1171639.main.java.utilities.LotSubscription;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
@@ -59,7 +59,6 @@ public class LotServiceTest {
 	public void tearDown() throws Exception {
 		TestUtils.removeAllFromSpace(new Bid(), this.space);
 		TestUtils.removeAllFromSpace(new Lot(), this.space);
-		TestUtils.removeAllFromSpace(new LotSubscription(), this.space);
 		TestUtils.removeAllFromSpace(new LotIDCounter(), this.space);
 		TestUtils.removeAllFromSpace(new BidIDCounter(), this.space);
 	}
@@ -484,7 +483,7 @@ public class LotServiceTest {
 	}
 	
 	@Test
-	public void testSubscribeToLot() {
+	public void testListenForLotUpdates() {
 		Car car = new Car();
 		car.make = "UnitTest"; 
 		car.model = "SubscribeToLot";
@@ -501,7 +500,7 @@ public class LotServiceTest {
 		final Lot[] lot = new Lot[1];
 		
 		try {
-			this.lotService.subscribeToLotUpdates(car.id, 0l, new Callback<Lot, Void>() {
+			this.lotService.listenForLotUpdates(car.id, new Callback<Lot, Void>() {
 				@Override
 				public Void call(Lot changedLot) {
 					lot[0] = changedLot;
@@ -521,27 +520,6 @@ public class LotServiceTest {
 		}
 		
 		try {
-			this.lotService.subscribeToLotUpdates(car.id, 0l, new Callback<Lot, Void>() {
-				@Override
-				public Void call(Lot changedLot) {
-					lot[0] = changedLot;
-					
-					synchronized(finished) {
-						finished.notify();
-					}
-					return null;
-				}
-			});
-			fail("Lot already subscribed to. Exception should have been thrown.");
-		} catch (NotificationException e) {
-			// Pass
-		} catch (LotNotFoundException e) {
-			fail("Lot was added. Should have been found.");
-		} catch (AuctionCommunicationException e) {
-			fail(e.getMessage());
-		}
-		
-		try {
 			this.lotService.updateLot(car);
 			waitForNotification(finished);
 		} catch (AuctionCommunicationException e) {
@@ -551,7 +529,7 @@ public class LotServiceTest {
 	}
 	
 	@Test
-	public void testListenForLot() {
+	public void testListenForLotAddition() {
 		Car car = new Car();
 		car.make = "UnitTest"; 
 		car.model = "ListenForLot";
@@ -562,7 +540,7 @@ public class LotServiceTest {
 		final Lot[] lot = new Lot[1];
 		
 		try {
-			this.lotService.listenForLot(car, 0l, new Callback<Lot, Void>() {
+			this.lotService.listenForLotAddition(car, new Callback<Lot, Void>() {
 				@Override
 				public Void call(Lot addedLot) {
 					lot[0] = addedLot;
@@ -592,6 +570,52 @@ public class LotServiceTest {
 			e.printStackTrace();
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testListenForLotRemoval() {
+		Lot lot = new Lot();
+		lot.name = "UnitTest";
+		lot.description = "TestListenForLotRemoval";
+		lot.sellerId = 0l;
+		
+		final Object lock = new Object();
+		final Lot[] lotHolder = new Lot[1];
+		
+		try {
+			lot.id = this.lotService.addLot(lot, null);
+			
+			this.lotService.listenForLotRemoval(lot.id, new Callback<Lot, Void>() {
+
+				@Override
+				public Void call(Lot removedLot) {
+					lotHolder[0] = removedLot;
+					
+					synchronized (lock) {
+						lock.notify();
+					}
+					
+					return null;
+				}
+			});
+			
+			this.lotService.removeLot(lot.id, 0l);
+			this.waitForNotification(lock);
+			
+			Lot removedLot = lotHolder[0];
+			
+			assertTrue(removedLot.id.equals(lot.id));
+			
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnauthorisedLotActionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (LotNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	

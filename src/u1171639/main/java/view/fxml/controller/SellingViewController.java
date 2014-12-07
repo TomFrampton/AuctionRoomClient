@@ -52,8 +52,8 @@ public class SellingViewController extends ViewController {
 		this.addLotController.setLotAddedCallback(new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot param) {	
-				SellingViewController.this.yourRetrivedLots.add(param);
-				SellingViewController.this.lotPane.getChildren().clear();
+				yourRetrivedLots.add(param);
+				lotPane.getChildren().clear();
 				return null;
 			}
 		});
@@ -71,22 +71,25 @@ public class SellingViewController extends ViewController {
 			}
 		});
 		
-		this.bidsController.setLotWithdrawnCallback(new Callback<Void, Void>() {
+		this.bidsController.setLotWithdrawnCallback(new Callback<Lot, Void>() {
 			@Override
-			public Void call(Void param) {
-				SellingViewController.this.lotPane.getChildren().clear();
-				SellingViewController.this.bidsPane.getChildren().clear();
+			public Void call(Lot withdrawnLot) {
+				lotPane.getChildren().clear();
+				bidsPane.getChildren().clear();
 				
-				SellingViewController.this.yourRetrivedLots.clear();
-				try {
-					SellingViewController.this.yourRetrivedLots.addAll(getAuctionController().getUsersLots());
-				} catch (RequiresLoginException e) {
-					//MessageBox.show(SellingViewController.this.getWindow(), e.toString(), 
-							//"Error Withdrawing Lot", MessageBox.ICON_ERROR | MessageBox.OK);
-				} catch (AuctionCommunicationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				Lot lotToRemove = null;
+				
+				for(Lot lot : yourRetrivedLots) {
+					if(lot.id.equals(withdrawnLot.id)) {
+						lotToRemove = lot;
+						break;
+					}
 				}
+				
+				if(lotToRemove != null) {
+					yourRetrivedLots.remove(lotToRemove);
+				}
+				
 				return null;
 			}
 		});
@@ -148,8 +151,6 @@ public class SellingViewController extends ViewController {
 				
 			}
 		 });
-		
-
 		
 		columns.add(lotAddedTime);
 		columns.add(lotName);

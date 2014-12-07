@@ -30,12 +30,12 @@ public class JavaSpaceAccountService implements AccountService {
 		try {
 			User registeredUser = (User) this.space.readIfExists(new User(credentials.username), null, 0);
 			if(registeredUser == null) {
-				throw new AuthenticationException("Invalid email or password.");
+				throw new AuthenticationException("Invalid username or password.");
 			}
 			
 			String hashedPass = this.hashScheme.hashPassword(credentials.password, registeredUser.salt);
 			if(!hashedPass.equals(registeredUser.password)) {
-				throw new AuthenticationException("Invalid email or password.");
+				throw new AuthenticationException("Invalid username or password.");
 			}
 			
 			// User logged in
@@ -72,9 +72,9 @@ public class JavaSpaceAccountService implements AccountService {
 		
 		try {
 			// TODO improve this in case user exists but is temporarily taken from space
-			User sameEmailUser = (User) this.space.readIfExists(template, null, 0);
-			if(sameEmailUser != null) {
-				throw new RegistrationException("Email already in use.");
+			User sameusernameUser = (User) this.space.readIfExists(template, null, 0);
+			if(sameusernameUser != null) {
+				throw new RegistrationException("username already in use.");
 			}
 		} catch (RemoteException e1) {
 			// TODO Auto-generated catch block
@@ -133,8 +133,8 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public User getUserDetails(String email) throws UserNotFoundException {
-		return this.getUserDetails(new User(email));
+	public User getUserDetails(String username) throws UserNotFoundException {
+		return this.getUserDetails(new User(username));
 	}
 	
 	private User getUserDetails(User template) throws UserNotFoundException {
@@ -169,8 +169,8 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public void removeUser(String email) throws UserNotFoundException {
-		this.removeUser(new User(email));
+	public void removeUser(String username) throws UserNotFoundException {
+		this.removeUser(new User(username));
 	}
 	
 	private void removeUser(User template) throws UserNotFoundException {

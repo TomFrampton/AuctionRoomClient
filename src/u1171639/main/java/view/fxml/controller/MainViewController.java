@@ -34,8 +34,8 @@ public class MainViewController extends ViewController {
 			
 			@Override
 			public Void call(Object param) {
-				MainViewController.this.auctionController = (AuctionViewController) loadView("auction.fxml");
-				MainViewController.this.mainLayout.setCenter(MainViewController.this.auctionController.getViewComponent());
+				auctionController = (AuctionViewController) loadView("auction.fxml");
+				mainLayout.setCenter(MainViewController.this.auctionController.getViewComponent());
 				return null;
 			}
 		});

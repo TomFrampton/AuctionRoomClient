@@ -71,12 +71,12 @@ public class AddLotViewController extends ViewController {
 						//MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 					}
 					
-					AddLotViewController.this.lotTypeSelect.getSelectionModel().clearSelection();
-					AddLotViewController.this.lotForm.getChildren().clear();
+					lotTypeSelect.getSelectionModel().clearSelection();
+					lotForm.getChildren().clear();
 					
 					controller.clearFields();
 					
-					AddLotViewController.this.lotAddedCallback.call(param);
+					lotAddedCallback.call(param);
 					return null;
 				}
 			});

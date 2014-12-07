@@ -96,8 +96,8 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public User getUserDetails(String email) throws UserNotFoundException {
-		return this.accountService.getUserDetails(email);
+	public User getUserDetails(String username) throws UserNotFoundException {
+		return this.accountService.getUserDetails(username);
 	}
 	
 	@Override
@@ -106,8 +106,8 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void removeUser(String email) throws UserNotFoundException {
-		this.accountService.removeUser(email);
+	public void removeUser(String username) throws UserNotFoundException {
+		this.accountService.removeUser(username);
 	}
 	
 	@Override
@@ -121,9 +121,13 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public List<Lot> searchLots(Lot template) throws RequiresLoginException, AuctionCommunicationException {
+	public List<Lot> searchLots(Lot template) throws RequiresLoginException, AuctionCommunicationException, UserNotFoundException {
 		if(this.accountService.isLoggedIn()) {
-			return this.lotService.searchLots(template);
+			List<Lot> lots = this.lotService.searchLots(template);
+			for(Lot lot : lots) {
+				lot.seller = this.accountService.getUserDetails(lot.sellerId);
+			}
+			return lots;
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -196,18 +200,27 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
+	public void listenForLotAddition(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
-			this.lotService.listenForLot(template, this.accountService.getCurrentUser().id, callback);
+			this.lotService.listenForLotAddition(template, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
 	}
 
 	@Override
-	public void subscribeToLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException {
+	public void listenForLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
-			this.lotService.subscribeToLotUpdates(id, this.accountService.getCurrentUser().id, callback);
+			this.lotService.listenForLotUpdates(id, callback);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	@Override
+	public void listenForLotRemoval(long lotId, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
+		if(this.accountService.isLoggedIn()) {
+			this.lotService.listenForLotRemoval(lotId, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -293,13 +306,13 @@ public class ConcreteAuctionController implements AuctionController {
 	public static void main(String[] args) {
 		JavaSpace space = SpaceUtils.getSpace(SpaceConsts.HOST);
 		if(space == null) {
-			FXApplicationStart.showError();
+			FXApplicationStart.connectionError();
 			System.exit(1);
 		}
 		
 		TransactionManager transMgr = SpaceUtils.getManager(SpaceConsts.HOST);
 		if(transMgr == null) {
-			FXApplicationStart.showError();
+			FXApplicationStart.connectionError();
 			System.exit(1);
 		}
 		

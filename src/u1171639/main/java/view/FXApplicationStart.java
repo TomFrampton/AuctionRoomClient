@@ -41,7 +41,7 @@ public class FXApplicationStart extends Application {
 		
 	}
 	
-	public static void showError() {
+	public static void connectionError() {
 		FXApplicationStart.connectError = true;
 		Application.launch();
 	}
