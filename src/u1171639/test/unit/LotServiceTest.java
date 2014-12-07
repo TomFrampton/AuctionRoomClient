@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
+import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
@@ -591,6 +592,58 @@ public class LotServiceTest {
 			e.printStackTrace();
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testListenForAcceptedBidOnLot() {
+		Lot lot = new Lot();
+		lot.name = "UnitTest";
+		lot.description = "ListenForAcceptedBid";
+		lot.sellerId = 0l;
+		
+		final Object lock = new Object();
+		final Bid[] bid = new Bid[1];
+		
+		try {
+			lot.id = this.lotService.addLot(lot, null);			
+			long bidId = this.lotService.bidForLot(new Bid(lot.id, new BigDecimal("1000.00"), 1l, false));	
+			
+			this.lotService.listenForAcceptedBidOnLot(lot.id, new Callback<Bid,Void>() {
+				@Override
+				public Void call(Bid acceptedBid) {
+					bid[0] = acceptedBid;
+					
+					synchronized (lock) {
+						lock.notify();
+					}
+					
+					return null;
+				}
+			});
+			
+			this.lotService.acceptBid(bidId);
+			this.waitForNotification(lock);
+			
+			assertNotNull(bid[0]);
+			assertTrue(bid[0].id.equals(bidId));
+			assertTrue(bid[0].amount.equals(new BigDecimal("1000.00")));
+			
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnauthorisedBidException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidBidException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (LotNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BidNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	

@@ -24,7 +24,7 @@ public interface LotService {
 	
 	public void updateLot(Lot lot) throws AuctionCommunicationException;
 	
-	public void bidForLot(Bid bid) throws UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException;
+	public long bidForLot(Bid bid) throws UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException;
 	
 	public Bid getHighestBid(long lotId, long userId) throws LotNotFoundException, AuctionCommunicationException;
 	
@@ -34,6 +34,8 @@ public interface LotService {
 	
 	public List<Bid> getVisibleBids(long lotId, long userId) throws LotNotFoundException, AuctionCommunicationException;
 	
+	public void acceptBid(long bidId) throws BidNotFoundException, AuctionCommunicationException;
+	
 	public void removeLot(long lotId, long userId) throws UnauthorisedLotActionException, LotNotFoundException, AuctionCommunicationException;
 	
 	public void subscribeToLotUpdates(long lotId, long userId, final Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException;
@@ -41,4 +43,6 @@ public interface LotService {
 	public void listenForLot(final Lot template, long userId, final Callback<Lot, Void> callback) throws AuctionCommunicationException;
 	
 	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException;
+	
+	public void listenForAcceptedBidOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException;
 }

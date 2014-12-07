@@ -14,7 +14,7 @@
 		<Insets top="25" right="25" bottom="10" left="25" />	
 	</padding>
 	
-	<Text text="Update You Lot Listing" />
+	<Text text="Update Your Lot Listing" />
 	<ComboBox fx:id="lotTypeSelect" disable="true"/>
 	
 	<Pane fx:id="lotForm" />

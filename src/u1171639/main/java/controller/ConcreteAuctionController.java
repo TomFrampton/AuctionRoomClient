@@ -12,6 +12,7 @@ import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.AuthenticationException;
+import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
@@ -157,6 +158,15 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
+	public void acceptBid(long bidId) throws RequiresLoginException, BidNotFoundException, AuctionCommunicationException {
+		if(this.accountService.isLoggedIn()) {
+			this.lotService.acceptBid(bidId);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	@Override
 	public Bid getHighestBid(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			return this.lotService.getHighestBid(lotId, this.accountService.getCurrentUser().id);
@@ -207,6 +217,15 @@ public class ConcreteAuctionController implements AuctionController {
 	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			this.lotService.listenForBidsOnLot(lotId, callback);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	@Override
+	public void listenForAcceptedBidOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
+		if(this.accountService.isLoggedIn()) {
+			this.lotService.listenForAcceptedBidOnLot(lotId, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}

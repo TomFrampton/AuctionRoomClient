@@ -12,38 +12,46 @@
 	hgap="10"
 	vgap="10">
 	
-	<Label text="Lot Type"
+	<Label text="Lot Name"
 		GridPane.rowIndex="0"
 		GridPane.columnIndex="0" />
 		
-	<Text fx:id="lotType" 
+	<Text fx:id="lotName" 
 		GridPane.rowIndex="0"
+		GridPane.columnIndex="1" />
+		
+	<Label text="Lot Type"
+		GridPane.rowIndex="1"
+		GridPane.columnIndex="0" />
+		
+	<Text fx:id="lotType" 
+		GridPane.rowIndex="1"
 		GridPane.columnIndex="1" />
 		
 		
 	<Label text="Description"
-		GridPane.rowIndex="1"
+		GridPane.rowIndex="2"
 		GridPane.columnIndex="0" />
 		
 	<Text fx:id="description" 
-		GridPane.rowIndex="1"
+		GridPane.rowIndex="2"
 		GridPane.columnIndex="1" />
 	
 	
 	<Label text="Make"
-		GridPane.rowIndex="2"
+		GridPane.rowIndex="3"
 		GridPane.columnIndex="0" />
 		
 	<Text fx:id="make" 
-		GridPane.rowIndex="2"
+		GridPane.rowIndex="3"
 		GridPane.columnIndex="1" />
 		
 	<Label text="Model"
-		GridPane.rowIndex="3"
+		GridPane.rowIndex="4"
 		GridPane.columnIndex="0" />
 		
 	<Text fx:id="model"
-		GridPane.rowIndex="3"
+		GridPane.rowIndex="4"
 		GridPane.columnIndex="1" />
 
 </GridPane>

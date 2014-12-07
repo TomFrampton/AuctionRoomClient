@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
+import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
@@ -19,6 +20,7 @@ import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -119,7 +121,7 @@ public class BidsViewController extends ViewController {
 					@Override
 					public Void call(Bid bid) {
 						Notification notification = new Notification();
-						notification.title = "Bid Received!";
+						notification.title = "Bid Placed!";
 						notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
 								bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
 						
@@ -128,6 +130,57 @@ public class BidsViewController extends ViewController {
 						} catch (RequiresLoginException | AuctionCommunicationException e) {
 							// Something went wrong.
 						}
+						return null;
+					}
+				});
+				
+				// And listen for the accepted bid
+				getAuctionController().listenForAcceptedBidOnLot(this.lotForBids.id, new Callback<Bid, Void>() {
+
+					@Override
+					public Void call(final Bid bid) {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								Notification notification = new Notification();
+								// Test if the accepted bid was on one of our lots.
+								if(bid.bidderId.equals(getAuctionController().getCurrentUser().id)) {
+									notification.title = "Lot Won!";
+									notification.message = "The bid of £" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
+											bid.bidTime.toString() + " has been accepted!";
+									
+//									Alert alert = new Alert(AlertType.INFORMATION);
+//									alert.setTitle("Lot Won!");
+//									alert.setHeaderText("Lot Won!");
+//									alert.setContentText("The bid of £" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
+//											bid.bidTime.toString() + " has been accepted!");
+//									alert.show();
+								} else {
+									notification.title = "Lot Not Won";
+									notification.message = "The lot '" + bid.lot.name + "' has ended with a winning bid of " + bid.amount.toString() + ".";
+									
+									//Alert alert = new Alert(AlertType.INFORMATION);
+//									alert.setTitle("Lot Not Won");
+//									alert.setHeaderText("Lot Not Won");
+//									alert.setContentText("The lot '" + bid.lot.name + "' has ended with a winning bid of " + bid.amount.toString() + ".");
+//									alert.show();
+								}
+								
+								try {
+									getAuctionController().addNotification(notification);
+								} catch (RequiresLoginException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								} catch (AuctionCommunicationException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+						});
+						
+						
+						System.out.println("Bid accepted");
+						
 						return null;
 					}
 				});
@@ -157,7 +210,23 @@ public class BidsViewController extends ViewController {
 	}
 	
 	@FXML protected void handleAcceptBidAction(ActionEvent event) {
-		
+		if(this.bidList.getSelectionModel().getSelectedIndex() >= 0) {
+			Bid selected = this.bidList.getSelectionModel().getSelectedItem();
+			
+			try {
+				getAuctionController().acceptBid(selected.id);
+			} catch (RequiresLoginException | BidNotFoundException | AuctionCommunicationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		} else {
+			Alert alert = new Alert(AlertType.WARNING);
+			alert.setTitle("Select a Bid");
+			alert.setHeaderText("Select a Bid");
+			alert.setContentText("You must select a bid to accept.");
+			alert.show();
+		}
 	}
 	
 	@FXML protected void handleWithdrawLotAction(ActionEvent event) {

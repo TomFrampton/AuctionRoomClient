@@ -36,6 +36,7 @@ import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.TransactionUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
+import u1171639.main.java.utilities.flags.BidAcceptedFlag;
 import u1171639.main.java.utilities.flags.BidPlacedFlag;
 import u1171639.main.java.utilities.flags.LotAddedFlag;
 import u1171639.main.java.utilities.flags.LotUpdatedFlag;
@@ -186,9 +187,10 @@ public class JavaSpaceLotService implements LotService {
 	 * @throws InvalidBidException Thrown if the bid amount doesn't exceed the current visible highest bid.
 	 * @throws LotNotFoundException Thrown if the lot for which a bid is being placed does not exist in the auction.
 	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 * @return The ID of the Bid that was added.
 	 */
 	@Override
-	public void bidForLot(Bid bid) throws UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException {
+	public long bidForLot(Bid bid) throws UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException {
 		
 		if (bid.amount.compareTo(BigDecimal.ZERO) < 0) {
 			throw new InvalidBidException("Bid amount must be greater than 0");
@@ -234,6 +236,8 @@ public class JavaSpaceLotService implements LotService {
 				this.space.write(bidPlacedFlag, transaction, SpaceConsts.FLAG_WRITE_TIME);
 				
 				TransactionUtils.commit(transaction);
+				
+				return bid.id;
 			}
 		} catch(RemoteException | TransactionException | UnusableEntryException | InterruptedException e) {
 			TransactionUtils.abort(transaction);
@@ -351,6 +355,32 @@ public class JavaSpaceLotService implements LotService {
 		}
 		
 		return visibleBids;
+	}
+	
+	/**
+	 * Accept a bid for a lot.
+	 * @param bidId The ID of the bid to accept
+	 * @throws BidNotFoundException If a Bid with the ID supplied does not exist.
+	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
+	 */
+	@Override
+	public void acceptBid(long bidId) throws BidNotFoundException, AuctionCommunicationException {
+		// Make sure the bid exists
+		Bid bid = this.getBidDetails(bidId);
+		if(bid == null) {
+			throw new BidNotFoundException("Bid was not found.");
+		}
+		
+		// Announce that this bid has been accepted
+		BidAcceptedFlag bidAccepted = new BidAcceptedFlag();
+		bidAccepted.lotId = bid.lotId;
+		bidAccepted.bidId = bid.id;
+		
+		try {
+			this.space.write(bidAccepted, null, SpaceConsts.FLAG_WRITE_TIME);
+		} catch (RemoteException | TransactionException e) {
+			throw new AuctionCommunicationException();
+		}
 	}
 	
 	
@@ -580,6 +610,47 @@ public class JavaSpaceLotService implements LotService {
 					BidPlacedFlag bidPlacedFlag = (BidPlacedFlag) event.getEntry();
 					
 					// Get the details of the bid that was just placed
+					Bid bid = JavaSpaceLotService.this.getBidDetails(bidPlacedFlag.bidId);
+					
+					if(callback != null) {
+						bid.lot = JavaSpaceLotService.this.getLotDetails(bid.lotId);
+						callback.call(bid);
+					}
+					
+				} catch (UnusableEntryException | LotNotFoundException | AuctionCommunicationException | BidNotFoundException e) {
+					// An error occurred. Do not call the callback.
+				}
+			}
+		};
+		
+		try {
+			UnicastRemoteObject.exportObject(listener, 0);
+			space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
+		} catch(RemoteException | TransactionException e) {
+			throw new AuctionCommunicationException();
+		}
+	}
+	
+	@Override
+	public void listenForAcceptedBidOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException {
+		// registerForAvailabilityEvent requires a list of templates
+		List<BidAcceptedFlag> templates = new ArrayList<BidAcceptedFlag>();
+		BidAcceptedFlag template = new BidAcceptedFlag();
+		template.lotId = lotId;
+		
+		templates.add(template);
+				
+		// Set up our listener to call our callback when notified
+		RemoteEventListener listener = new RemoteEventListener() {
+			@Override
+			public void notify(RemoteEvent theEvent) throws UnknownEventException, RemoteException {
+				AvailabilityEvent event = (AvailabilityEvent) theEvent;
+				
+				try {
+					// Retrieve the entry that triggered the notification
+					BidAcceptedFlag bidPlacedFlag = (BidAcceptedFlag) event.getEntry();
+					
+					// Get the details of the bid that was accepted
 					Bid bid = JavaSpaceLotService.this.getBidDetails(bidPlacedFlag.bidId);
 					
 					if(callback != null) {

@@ -16,7 +16,6 @@ public class ViewLotViewController extends ViewController {
 	private Hashtable<String, LotInfoViewController> lotForms = new Hashtable<String, LotInfoViewController>();
 	
 	@FXML private Pane lotForm;
-	@FXML private Text lotName;
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -29,8 +28,6 @@ public class ViewLotViewController extends ViewController {
 	}
 	
 	public void setLotToView(Lot lot) {
-		this.lotName.setText(lot.name);
-		
 		String lotType = lot.getClass().getSimpleName();
 	
 		LotInfoViewController lotFormController = this.lotForms.get(lotType);

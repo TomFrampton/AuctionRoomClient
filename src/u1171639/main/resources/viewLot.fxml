@@ -14,6 +14,5 @@
 		<Insets top="25" right="25" bottom="10" left="25" />	
 	</padding>
 	
-	<Text fx:id="lotName" />
 	<Pane fx:id="lotForm" />
 </VBox>

@@ -114,8 +114,6 @@ public class NotificationsViewController extends ViewController {
 		
 		final int counter = notificationCounter;
 		
-		System.out.println("Notfiications " + notificationCounter);
-		
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {

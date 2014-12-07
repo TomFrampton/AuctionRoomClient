@@ -4,6 +4,7 @@ import java.util.List;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.AuthenticationException;
+import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
@@ -53,6 +54,8 @@ public interface AuctionController {
 	
 	public void bidForLot(Bid bid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException;
 	
+	public void acceptBid(long bidId) throws RequiresLoginException, BidNotFoundException, AuctionCommunicationException;
+	
 	public Bid getHighestBid(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
 	
 	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
@@ -62,6 +65,8 @@ public interface AuctionController {
 	public void subscribeToLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException;
 	
 	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
+	
+	public void listenForAcceptedBidOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
 	public Lot getLotDetails(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
 	

@@ -33,10 +33,10 @@ public class RegisterViewController extends ViewController {
 		try {
 			getAuctionController().register(newUser);
 			
-			Alert alert = new Alert(AlertType.CONFIRMATION);
+			Alert alert = new Alert(AlertType.INFORMATION);
 			alert.setTitle("Registration Complete");
-			alert.setHeaderText("Username Already in Use");
-			alert.setContentText("Please choose another username. The one you entered is already being used by another user.");
+			alert.setHeaderText("Registration Complete");
+			alert.setContentText("You can now log in using your username and password.");
 			alert.show();
 		} catch (RegistrationException e) {
 			Alert alert = new Alert(AlertType.ERROR);

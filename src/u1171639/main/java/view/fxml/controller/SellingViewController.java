@@ -15,9 +15,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -58,9 +60,13 @@ public class SellingViewController extends ViewController {
 		
 		this.updateLotController.setLotUpdatedCallback(new Callback<Lot, Void>() {
 			@Override
-			public Void call(Lot param) {
-				SellingViewController.this.lotPane.getChildren().clear();
-				SellingViewController.this.bidsPane.getChildren().clear();
+			public Void call(Lot lot) {
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setTitle("Lot Updated");
+				alert.setHeaderText("Lot Updated");
+				alert.setContentText("Lot '" + lot.name + "' has been updated successfully.");
+				alert.show();
+				
 				return null;
 			}
 		});
