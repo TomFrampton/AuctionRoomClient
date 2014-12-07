@@ -15,8 +15,7 @@
 		</padding>
 		
 		<Text text="Your Lots" />
-		<ListView fx:id="yourLots" 
-			onMouseClicked="#handleLotSelected" />
+		<TableView fx:id="yourLots" onMouseClicked="#handleLotSelected"  prefHeight="628" prefWidth="450"/>
 			
 		<HBox>
 			<Button text="Add Lot For Sale" onAction="#handleAddLotAction"/>

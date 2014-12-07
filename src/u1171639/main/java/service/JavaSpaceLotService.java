@@ -83,6 +83,8 @@ public class JavaSpaceLotService implements LotService {
 			lot.id = counter.id;
 			counter.increment();
 			
+			lot.timeAdded = new Date(System.currentTimeMillis());
+			
 			// As we are adding a Lot we would like to be notified when someone bids on it.
 			this.listenForBidsOnLot(lot.id, bidCallback);
 			

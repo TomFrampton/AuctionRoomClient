@@ -24,6 +24,6 @@ public class AccountViewController extends ViewController {
 		
 		this.forename.setText(this.user.forename);
 		this.surname.setText(this.user.surname);
-		this.email.setText(this.user.email);
+		this.email.setText(this.user.username);
 	}
 }

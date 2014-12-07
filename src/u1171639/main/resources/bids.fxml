@@ -14,7 +14,7 @@
 	</padding>
 	
 	<Text text="Bids For This Lot" />
-	<TableView fx:id="bidList" maxHeight="200" prefWidth="430"/>
+	<TableView fx:id="bidList" maxHeight="400" prefWidth="600" />
 	
 	<Pane fx:id="optionsView" />
 	

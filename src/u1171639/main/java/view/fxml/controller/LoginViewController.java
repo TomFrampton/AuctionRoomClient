@@ -8,8 +8,10 @@ import u1171639.main.java.model.account.User;
 import u1171639.main.java.utilities.Callback;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 
 public class LoginViewController extends ViewController {
 	@FXML private TextField email;
@@ -27,8 +29,11 @@ public class LoginViewController extends ViewController {
 				this.loginSuccessCallback.call(new Object());
 			}
 		} catch (AuthenticationException e) {
-			// TODO invalid login
-			e.printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Invalid Username or Password");
+			alert.setHeaderText("Invalid Username or Password");
+			alert.setContentText("The username and password combination you entered could not be verified.");
+			alert.show();
 		}
 	}
 

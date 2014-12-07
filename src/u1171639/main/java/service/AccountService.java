@@ -12,7 +12,7 @@ public interface AccountService {
 	public User getCurrentUser();
 	public long register(User newUser) throws RegistrationException;
 	public void removeUser(long userId) throws UserNotFoundException;
-	public void removeUser(String email) throws UserNotFoundException;
+	public void removeUser(String username) throws UserNotFoundException;
 	public User getUserDetails(long userId) throws UserNotFoundException;
-	public User getUserDetails(String email) throws UserNotFoundException;
+	public User getUserDetails(String username) throws UserNotFoundException;
 }

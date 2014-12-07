@@ -3,6 +3,11 @@ package u1171639.main.java.controller;
 import java.net.ConnectException;
 import java.util.List;
 
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.stage.Stage;
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 import u1171639.main.java.exception.AuctionCommunicationException;
@@ -10,10 +15,12 @@ import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
+import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
+import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
@@ -32,8 +39,10 @@ import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
+import u1171639.main.java.utilities.counters.NotificationIDCounter;
 import u1171639.main.java.utilities.counters.UserIDCounter;
 import u1171639.main.java.view.AuctionView;
+import u1171639.main.java.view.FXApplicationStart;
 import u1171639.main.java.view.JavaFXAuctionView;
 
 public class ConcreteAuctionController implements AuctionController {
@@ -186,9 +195,18 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 
 	@Override
-	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException {
+	public void subscribeToLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			this.lotService.subscribeToLotUpdates(id, this.accountService.getCurrentUser().id, callback);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	@Override
+	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
+		if(this.accountService.isLoggedIn()) {
+			this.lotService.listenForBidsOnLot(lotId, callback);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -244,20 +262,32 @@ public class ConcreteAuctionController implements AuctionController {
 		
 	}
 	
-	public static void main(String[] args) throws ConnectException {
+	@Override
+	public void markNotificationRead(long notificationId) throws RequiresLoginException, UnauthorisedNotificationActionException, AuctionCommunicationException, NotificationNotFoundException {
+		if(this.accountService.isLoggedIn()) {
+			this.notificationService.markNotificationRead(notificationId);
+		} else {
+			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	public static void main(String[] args) {
 		JavaSpace space = SpaceUtils.getSpace(SpaceConsts.HOST);
 		if(space == null) {
-			throw new ConnectException("Could not connect to JavaSpace");
+			FXApplicationStart.showError();
+			System.exit(1);
 		}
 		
 		TransactionManager transMgr = SpaceUtils.getManager(SpaceConsts.HOST);
 		if(transMgr == null) {
-			throw new ConnectException("Could not connect to TransactionManager");
+			FXApplicationStart.showError();
+			System.exit(1);
 		}
 		
 		LotIDCounter.initialiseInSpace(space);
 		UserIDCounter.initialiseInSpace(space);
 		BidIDCounter.initialiseInSpace(space);
+		NotificationIDCounter.initialiseInSpace(space);
 		
 		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
 		

@@ -52,7 +52,7 @@ public class AccountServiceTest {
 	@Test
 	public void testRegister() {
 		User newUser = new User();
-		newUser.email = "test@register.com";
+		newUser.username = "test@register.com";
 		newUser.password = "password";
 		
 		// Test that we can add a new user
@@ -60,7 +60,7 @@ public class AccountServiceTest {
 			newUser.id = this.accountService.register(newUser);
 			this.usersToRemove.add(newUser);
 			
-			assertTrue(newUser.email.equals("test@register.com"));
+			assertTrue(newUser.username.equals("test@register.com"));
 			
 			User retrievedUser = this.accountService.getUserDetails(newUser.id);
 			assertTrue(retrievedUser.password.equals(this.hashScheme.hashPassword(newUser.password, retrievedUser.salt)));
@@ -81,7 +81,7 @@ public class AccountServiceTest {
 		
 		// Test that IDs are incremented correctly
 		User newUser2 = new User();
-		newUser2.email = "test2@register.com";
+		newUser2.username = "test2@register.com";
 		newUser2.password = "password2";
 		
 		try {
@@ -98,7 +98,7 @@ public class AccountServiceTest {
 	@Test
 	public void testLogin() {
 		User newUser = new User();
-		newUser.email = "test@login.com";
+		newUser.username = "test@login.com";
 		newUser.password = "password";
 		
 		try {
@@ -111,8 +111,8 @@ public class AccountServiceTest {
 		// Test that incorrect email stops login
 		try {
 			User credentials = new User();
-			credentials.email = "test@incorrect.com";
-			credentials.email = "password";
+			credentials.username = "test@incorrect.com";
+			credentials.username = "password";
 			this.accountService.login(credentials);
 			fail("Incorrect email. User should not have been able to log in");
 		} catch(AuthenticationException e) {
@@ -122,8 +122,8 @@ public class AccountServiceTest {
 		// Test that a correct email but incorrect password stops login
 		try {
 			User credentials = new User();
-			credentials.email = "test@login.com";
-			credentials.email = "incorrectPass";
+			credentials.username = "test@login.com";
+			credentials.username = "incorrectPass";
 			this.accountService.login(credentials);
 			fail("Incorrect password. User should not have been able to log in");
 		} catch(AuthenticationException e) {
@@ -133,7 +133,7 @@ public class AccountServiceTest {
 		// Test that a correct email and password allows login
 		try {
 			User credentials = new User();
-			credentials.email = "test@login.com";
+			credentials.username = "test@login.com";
 			credentials.password = "password";
 			this.accountService.login(credentials);
 		} catch(AuthenticationException e) {
@@ -146,7 +146,7 @@ public class AccountServiceTest {
 	@Test
 	public void testLogout() {
 		User newUser = new User();
-		newUser.email = "test@logout.com";
+		newUser.username = "test@logout.com";
 		newUser.password = "password";
 		
 		// Make sure no one is logged in to start with
@@ -170,7 +170,7 @@ public class AccountServiceTest {
 		// Test we can get the current user and that we are logged in
 		assertNotNull(retrievedCurrentUser);
 		assertTrue(newUser.id.equals(retrievedCurrentUser.id));
-		assertTrue(newUser.email.equals(retrievedCurrentUser.email));
+		assertTrue(newUser.username.equals(retrievedCurrentUser.username));
 		assertTrue(this.accountService.isLoggedIn());
 		
 		this.accountService.logout();
@@ -182,11 +182,11 @@ public class AccountServiceTest {
 	@Test 
 	public void testGetCurrentUser() {
 		User user1 = new User();
-		user1.email = "test@currentUser1.com";
+		user1.username = "test@currentUser1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@currentUser2.com";
+		user2.username = "test@currentUser2.com";
 		user2.password = "password2";
 		
 		try {
@@ -206,7 +206,7 @@ public class AccountServiceTest {
 						
 			assertNotNull(retrievedCurrentUser);
 			assertTrue(retrievedCurrentUser.id.equals(user1.id));
-			assertTrue(retrievedCurrentUser.email.equals(user1.email));
+			assertTrue(retrievedCurrentUser.username.equals(user1.username));
 			assertTrue(this.accountService.isLoggedIn());
 			
 			this.accountService.logout();
@@ -217,7 +217,7 @@ public class AccountServiceTest {
 			
 			assertNotNull(retrievedCurrentUser);
 			assertTrue(retrievedCurrentUser.id.equals(user2.id));
-			assertTrue(retrievedCurrentUser.email.equals(user2.email));
+			assertTrue(retrievedCurrentUser.username.equals(user2.username));
 			assertTrue(this.accountService.isLoggedIn());
 		} catch (AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
@@ -229,11 +229,11 @@ public class AccountServiceTest {
 	@Test
 	public void testGetUserDetails() {
 		User user1 = new User();
-		user1.email = "test@getUserDetails1.com";
+		user1.username = "test@getUserDetails1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@getUserDetails2.com";
+		user2.username = "test@getUserDetails2.com";
 		user2.password = "password2";
 		
 		try {
@@ -252,24 +252,24 @@ public class AccountServiceTest {
 			User retrievedUserId2 = this.accountService.getUserDetails(user2.id);
 			
 			assertEquals(user1.id, retrievedUserId1.id);
-			assertEquals(user1.email, retrievedUserId1.email);
+			assertEquals(user1.username, retrievedUserId1.username);
 			
 			assertEquals(user2.id, retrievedUserId2.id);
-			assertEquals(user2.email, retrievedUserId2.email);
+			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
 		}
 		
 		// Test that we can get registered users using their email
 		try {
-			User retrievedUserId1 = this.accountService.getUserDetails(user1.email);
-			User retrievedUserId2 = this.accountService.getUserDetails(user2.email);
+			User retrievedUserId1 = this.accountService.getUserDetails(user1.username);
+			User retrievedUserId2 = this.accountService.getUserDetails(user2.username);
 			
 			assertEquals(user1.id, retrievedUserId1.id);
-			assertEquals(user1.email, retrievedUserId1.email);
+			assertEquals(user1.username, retrievedUserId1.username);
 			
 			assertEquals(user2.id, retrievedUserId2.id);
-			assertEquals(user2.email, retrievedUserId2.email);
+			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
 		}
@@ -293,11 +293,11 @@ public class AccountServiceTest {
 	@Test
 	public void testRemoveUser() {
 		User user1 = new User();
-		user1.email = "test@removeUser1.com";
+		user1.username = "test@removeUser1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@removeUser2.com";
+		user2.username = "test@removeUser2.com";
 		user2.password = "password2";
 		
 		// Test we can remove user using their ID
@@ -326,7 +326,7 @@ public class AccountServiceTest {
 		// Test that we can removed a user using their email
 		try {
 			user2.id = this.accountService.register(user2);
-			this.accountService.getUserDetails(user2.email);
+			this.accountService.getUserDetails(user2.username);
 		} catch (RegistrationException e) {
 			fail("Unique users - should have been registered.");
 		} catch (UserNotFoundException e) {
@@ -334,13 +334,13 @@ public class AccountServiceTest {
 		}
 		
 		try {
-			this.accountService.removeUser(user2.email);
+			this.accountService.removeUser(user2.username);
 		} catch(UserNotFoundException e) {
 			fail("User was registered so should be able to be removed.");
 		}
 		
 		try {
-			this.accountService.getUserDetails(user2.email);
+			this.accountService.getUserDetails(user2.username);
 			fail("User was removed so details should not be found");
 		} catch(UserNotFoundException e) {
 			// Pass

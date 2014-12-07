@@ -10,6 +10,7 @@ import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -28,15 +29,16 @@ public class NotificationsViewController extends ViewController {
 	private ObservableList<Notification> retrievedNotifications = FXCollections.observableArrayList();
 	
 	private Tab notificationTab;
-	private int notificationCounter = 0;
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		this.notificationList.getColumns().addAll(NotificationsViewController.getColumns(this.notificationList));
+		this.notificationList.setItems(this.retrievedNotifications);
+		this.notificationList.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+		
 		try {
 			// Starting up so gather all the notifications for this user
 			this.retrievedNotifications.addAll(getAuctionController().retrieveAllNotifications());
-			
-			// 
 			
 			//.. and register for future notifications
 			getAuctionController().listenForNotifications(new Callback<Notification, Void>() {
@@ -44,6 +46,7 @@ public class NotificationsViewController extends ViewController {
 				@Override
 				public Void call(Notification notification) {
 					retrievedNotifications.add(notification);
+					setTabText();
 					return null;
 				}
 			});
@@ -56,6 +59,7 @@ public class NotificationsViewController extends ViewController {
 	
 	public void setNotificationTab(Tab notificationTab) {
 		this.notificationTab = notificationTab;
+		this.setTabText();
 	}
 	
 	public static ArrayList<TableColumn<Notification, ?>> getColumns(TableView<Notification> table) {
@@ -97,5 +101,26 @@ public class NotificationsViewController extends ViewController {
 	
 		return columns;
 		
+	}
+	
+	private void setTabText() {
+		int notificationCounter = 0;
+		
+		for(Notification notification : this.retrievedNotifications) {
+			if(!notification.read) {
+				notificationCounter++;
+			}
+		}
+		
+		final int counter = notificationCounter;
+		
+		System.out.println("Notfiications " + notificationCounter);
+		
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				notificationTab.setText("Notifications (" + counter + ")");
+			}
+		});
 	}
 }

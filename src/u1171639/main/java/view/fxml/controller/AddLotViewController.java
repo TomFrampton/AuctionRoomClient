@@ -11,11 +11,11 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
-import jfx.messagebox.MessageBox;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.view.fxml.lot.editor.LotFormViewController;
 
@@ -53,21 +53,22 @@ public class AddLotViewController extends ViewController {
 
 							@Override
 							public Void call(Bid bid) {
-								System.out.println("Bid " + bid.id + " Added!!");
-//								Platform.runLater(new Runnable() {
-//									
-//									@Override
-//									public void run() {
-//										
-//										//MessageBox.show(getWindow(), "", "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
-//										//MessageBox.show(getWindow(), "Bid Added!", "Bid Placed!", MessageBox.ICON_INFORMATION | MessageBox.OK);
-//									}
-//								});
+								Notification notification = new Notification();
+								notification.title = "Bid Received!";
+								notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
+										bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
+								
+								try {
+									getAuctionController().addNotification(notification);
+								} catch (RequiresLoginException | AuctionCommunicationException e) {
+									// Something went wrong.
+								}
 								return null;
 							}
 						});
 					} catch (RequiresLoginException | AuctionCommunicationException e) {
-						MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+						System.out.println("Error addign lot");
+						//MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 					}
 					
 					AddLotViewController.this.lotTypeSelect.getSelectionModel().clearSelection();

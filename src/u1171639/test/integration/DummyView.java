@@ -87,6 +87,7 @@ public class DummyView implements AuctionView {
 		TestUtils.removeAllFromSpace(new User(), this.space);
 		TestUtils.removeAllFromSpace(new Bid(), this.space);
 		TestUtils.removeAllFromSpace(new Lot(), this.space);
+		TestUtils.removeAllFromSpace(new Notification(), this.space);
 	}
 	
 	// Account Tests
@@ -94,7 +95,7 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testRegister() {
 		User user = new User();
-		user.email = "registration@testing.com";
+		user.username = "registration@testing.com";
 		user.password = "password";
 		
 		try {
@@ -114,7 +115,7 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testLogin() {
 		User newUser = new User();
-		newUser.email = "test@login.com";
+		newUser.username = "test@login.com";
 		newUser.password = "password";
 		
 		try {
@@ -126,8 +127,8 @@ public class DummyView implements AuctionView {
 		// Test that incorrect email stops login
 		try {
 			User credentials = new User();
-			credentials.email = "test@incorrect.com";
-			credentials.email = "password";
+			credentials.username = "test@incorrect.com";
+			credentials.username = "password";
 			this.controller.login(credentials);
 			fail("Incorrect email. User should not have been able to log in");
 		} catch(AuthenticationException e) {
@@ -137,8 +138,8 @@ public class DummyView implements AuctionView {
 		// Test that a correct email but incorrect password stops login
 		try {
 			User credentials = new User();
-			credentials.email = "test@login.com";
-			credentials.email = "incorrectPass";
+			credentials.username = "test@login.com";
+			credentials.username = "incorrectPass";
 			this.controller.login(credentials);
 			fail("Incorrect password. User should not have been able to log in");
 		} catch(AuthenticationException e) {
@@ -148,7 +149,7 @@ public class DummyView implements AuctionView {
 		// Test that a correct email and password allows login
 		try {
 			User credentials = new User();
-			credentials.email = "test@login.com";
+			credentials.username = "test@login.com";
 			credentials.password = "password";
 			this.controller.login(credentials);
 		} catch(AuthenticationException e) {
@@ -161,7 +162,7 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testLogout() {
 		User newUser = new User();
-		newUser.email = "test@logout.com";
+		newUser.username = "test@logout.com";
 		newUser.password = "password";
 		
 		// Make sure no one is logged in to start with
@@ -175,7 +176,7 @@ public class DummyView implements AuctionView {
 		// Test we can get the current user and that we are logged in
 		assertNotNull(retrievedCurrentUser);
 		assertTrue(newUser.id.equals(retrievedCurrentUser.id));
-		assertTrue(newUser.email.equals(retrievedCurrentUser.email));
+		assertTrue(newUser.username.equals(retrievedCurrentUser.username));
 		assertTrue(this.controller.isLoggedIn());
 		
 		this.controller.logout();
@@ -187,11 +188,11 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testGetCurrentUser() {
 		User user1 = new User();
-		user1.email = "test@currentUser1.com";
+		user1.username = "test@currentUser1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@currentUser2.com";
+		user2.username = "test@currentUser2.com";
 		user2.password = "password2";
 		
 		register(user1);
@@ -204,7 +205,7 @@ public class DummyView implements AuctionView {
 						
 			assertNotNull(retrievedCurrentUser);
 			assertTrue(retrievedCurrentUser.id.equals(user1.id));
-			assertTrue(retrievedCurrentUser.email.equals(user1.email));
+			assertTrue(retrievedCurrentUser.username.equals(user1.username));
 			assertTrue(this.controller.isLoggedIn());
 			
 			this.controller.logout();
@@ -215,7 +216,7 @@ public class DummyView implements AuctionView {
 			
 			assertNotNull(retrievedCurrentUser);
 			assertTrue(retrievedCurrentUser.id.equals(user2.id));
-			assertTrue(retrievedCurrentUser.email.equals(user2.email));
+			assertTrue(retrievedCurrentUser.username.equals(user2.username));
 			assertTrue(this.controller.isLoggedIn());
 		} catch (AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
@@ -227,11 +228,11 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testGetUserDetails() {
 		User user1 = new User();
-		user1.email = "test@getUserDetails1.com";
+		user1.username = "test@getUserDetails1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@getUserDetails2.com";
+		user2.username = "test@getUserDetails2.com";
 		user2.password = "password2";
 		
 		register(user1);
@@ -243,24 +244,24 @@ public class DummyView implements AuctionView {
 			User retrievedUserId2 = this.controller.getUserDetails(user2.id);
 			
 			assertEquals(user1.id, retrievedUserId1.id);
-			assertEquals(user1.email, retrievedUserId1.email);
+			assertEquals(user1.username, retrievedUserId1.username);
 			
 			assertEquals(user2.id, retrievedUserId2.id);
-			assertEquals(user2.email, retrievedUserId2.email);
+			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
 		}
 		
 		// Test that we can get registered users using their email
 		try {
-			User retrievedUserId1 = this.controller.getUserDetails(user1.email);
-			User retrievedUserId2 = this.controller.getUserDetails(user2.email);
+			User retrievedUserId1 = this.controller.getUserDetails(user1.username);
+			User retrievedUserId2 = this.controller.getUserDetails(user2.username);
 			
 			assertEquals(user1.id, retrievedUserId1.id);
-			assertEquals(user1.email, retrievedUserId1.email);
+			assertEquals(user1.username, retrievedUserId1.username);
 			
 			assertEquals(user2.id, retrievedUserId2.id);
-			assertEquals(user2.email, retrievedUserId2.email);
+			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
 		}
@@ -284,11 +285,11 @@ public class DummyView implements AuctionView {
 	@Test
 	public void removeUser() {
 		User user1 = new User();
-		user1.email = "test@removeUser1.com";
+		user1.username = "test@removeUser1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@removeUser2.com";
+		user2.username = "test@removeUser2.com";
 		user2.password = "password2";
 		
 		// Test we can remove user using their ID
@@ -317,7 +318,7 @@ public class DummyView implements AuctionView {
 		// Test that we can removed a user using their email
 		try {
 			user2.id = this.controller.register(user2);
-			this.controller.getUserDetails(user2.email);
+			this.controller.getUserDetails(user2.username);
 		} catch (RegistrationException e) {
 			fail("Unique users - should have been registered.");
 		} catch (UserNotFoundException e) {
@@ -325,13 +326,13 @@ public class DummyView implements AuctionView {
 		}
 		
 		try {
-			this.controller.removeUser(user2.email);
+			this.controller.removeUser(user2.username);
 		} catch(UserNotFoundException e) {
 			fail("User was registered so should be able to be removed.");
 		}
 		
 		try {
-			this.controller.getUserDetails(user2.email);
+			this.controller.getUserDetails(user2.username);
 			fail("User was removed so details should not be found");
 		} catch(UserNotFoundException e) {
 			// Pass
@@ -347,7 +348,7 @@ public class DummyView implements AuctionView {
 		car.model = "Focus";
 		
 		User user = new User();
-		user.email = "test@addLot.com";
+		user.username = "test@addLot.com";
 		user.password = "password";
 		
 		register(user);
@@ -406,7 +407,7 @@ public class DummyView implements AuctionView {
 		car4.description = "A really nice car!";
 		
 		User user = new User();
-		user.email = "test@searchLots.com";
+		user.username = "test@searchLots.com";
 		user.password = "password";
 		
 		register(user);
@@ -505,7 +506,7 @@ public class DummyView implements AuctionView {
 		car.sellerId = 0l;
 		
 		User user = new User();
-		user.email = "test@updateLot.com";
+		user.username = "test@updateLot.com";
 		user.password = "password";
 		
 		register(user);
@@ -550,11 +551,11 @@ public class DummyView implements AuctionView {
 		car3.model = "BidForLot3";
 		
 		User user1 = new User();
-		user1.email = "test@bidForLot1.com";
+		user1.username = "test@bidForLot1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@bidForLot2.com";
+		user2.username = "test@bidForLot2.com";
 		user2.password = "password2";
 		
 		register(user1);
@@ -661,15 +662,15 @@ public class DummyView implements AuctionView {
 		car.model = "GetVisibleLots";
 		
 		User user1 = new User();
-		user1.email = "test@getVisibleLots1.com";
+		user1.username = "test@getVisibleLots1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@getVisibleLots2.com";
+		user2.username = "test@getVisibleLots2.com";
 		user2.password = "password2";
 		
 		User user3 = new User();
-		user3.email = "test@getVisibleLots3.com";
+		user3.username = "test@getVisibleLots3.com";
 		user3.password = "password3";
 		
 		register(user1);
@@ -799,7 +800,7 @@ public class DummyView implements AuctionView {
 		car.model = "RX8";
 		
 		User user = new User();
-		user.email = "test@subscribeToLot.com";
+		user.username = "test@subscribeToLot.com";
 		user.password = "password";
 		
 		register(user);
@@ -819,7 +820,7 @@ public class DummyView implements AuctionView {
 		};
 		
 		try {
-			this.controller.subscribeToLot(0, callback);
+			this.controller.subscribeToLotUpdates(0, callback);
 			fail("Lot subscribed to without being logged in");
 		} catch(RequiresLoginException e) {
 			// Pass
@@ -833,7 +834,7 @@ public class DummyView implements AuctionView {
 		
 		try {		
 			car.id = this.controller.addLot(car, null);
-			this.controller.subscribeToLot(car.id, callback);
+			this.controller.subscribeToLotUpdates(car.id, callback);
 			this.controller.updateLot(car);
 			
 			synchronized(finished) {
@@ -864,7 +865,7 @@ public class DummyView implements AuctionView {
 		car.model = "Civic";
 		
 		User user = new User();
-		user.email = "test@subscribeToLot.com";
+		user.username = "test@subscribeToLot.com";
 		user.password = "password";
 		
 		register(user);
@@ -938,11 +939,11 @@ public class DummyView implements AuctionView {
 		notification3.message = "Testing Message 3";
 		
 		User user1 = new User();
-		user1.email = "test@retrieveAllNotifications1.com";
+		user1.username = "test@retrieveAllNotifications1.com";
 		user1.password = "password1";
 		
 		User user2 = new User();
-		user2.email = "test@retrieveAllNotifications2.com";
+		user2.username = "test@retrieveAllNotifications2.com";
 		user2.password = "password2";
 		
 		register(user1);
@@ -992,7 +993,7 @@ public class DummyView implements AuctionView {
 		notification1.message = "Testing Message 1";
 		
 		User user = new User();
-		user.email = "test@retrieveAllNotifications.com";
+		user.username = "test@retrieveAllNotifications.com";
 		user.password = "password";
 		
 		register(user);

@@ -15,8 +15,8 @@ public class MockAccountService implements AccountService {
 	
 	@Override
 	public void login(User credentials) throws AuthenticationException {
-		if(this.registeredUsers.containsKey(credentials.email)) {
-			User identifiedUser = this.registeredUsers.get(credentials.email);
+		if(this.registeredUsers.containsKey(credentials.username)) {
+			User identifiedUser = this.registeredUsers.get(credentials.username);
 			
 			if(identifiedUser.password.equals(credentials.password)) {
 				this.currentUser = identifiedUser;
@@ -39,9 +39,9 @@ public class MockAccountService implements AccountService {
 
 	@Override
 	public long register(User newUser) throws RegistrationException {
-		if(!this.registeredUsers.containsKey(newUser.email)) {
+		if(!this.registeredUsers.containsKey(newUser.username)) {
 			newUser.id = this.idCounter++;
-			this.registeredUsers.put(newUser.email, newUser);
+			this.registeredUsers.put(newUser.username, newUser);
 		} else {
 			throw new RegistrationException("Email already in use.");
 		}

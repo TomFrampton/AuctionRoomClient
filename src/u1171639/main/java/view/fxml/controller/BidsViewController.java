@@ -11,11 +11,13 @@ import java.util.ResourceBundle;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
+import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
@@ -26,13 +28,13 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
-//import jfx.messagebox.MessageBox;
-import jfx.messagebox.MessageBox;
 
 public class BidsViewController extends ViewController {
 	@FXML private Parent buyerOptions;
@@ -56,6 +58,7 @@ public class BidsViewController extends ViewController {
 	public void initialize(URL location, ResourceBundle resources) {
 		this.bidList.getColumns().addAll(BidsViewController.getColumns(this.bidList));
 		this.bidList.setItems(this.retrievedBids);
+		this.bidList.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
 	
 	public void setLotForBids(Lot lot) {
@@ -64,7 +67,8 @@ public class BidsViewController extends ViewController {
 			this.retrievedBids.clear();
 			this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 		} catch (RequiresLoginException | LotNotFoundException | AuctionCommunicationException e) {
-			MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+			System.out.println("Error loading lot");
+			//MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
 		}
 	}
 	
@@ -90,22 +94,65 @@ public class BidsViewController extends ViewController {
 			}
 			
 			try {
+				// Make a bid for the lot and subscribe to lot updates
 				getAuctionController().bidForLot(new Bid(this.lotForBids.id, amount, privateBid));
+				getAuctionController().subscribeToLotUpdates(this.lotForBids.id, new Callback<Lot, Void>() {
+
+					@Override
+					public Void call(Lot lot) {
+						Notification notification = new Notification();
+						notification.title = "Lot Updated!";
+						notification.message = "Lot '" + lot.name + "' has been updated.";
+						
+						try {
+							getAuctionController().addNotification(notification);
+						} catch (RequiresLoginException | AuctionCommunicationException e) {
+							// Something went wrong.
+						}
+						return null;
+					}
+				});
+				
+				// Also listen for bids on this lot
+				getAuctionController().listenForBidsOnLot(this.lotForBids.id, new Callback<Bid, Void>() {
+
+					@Override
+					public Void call(Bid bid) {
+						Notification notification = new Notification();
+						notification.title = "Bid Received!";
+						notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
+								bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
+						
+						try {
+							getAuctionController().addNotification(notification);
+						} catch (RequiresLoginException | AuctionCommunicationException e) {
+							// Something went wrong.
+						}
+						return null;
+					}
+				});
+				
 				this.retrievedBids.clear();
 				this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 			} catch (RequiresLoginException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// TODO
 			} catch (UnauthorisedBidException | InvalidBidException | LotNotFoundException e) {
-				//MessageBox.show(getWindow(), e.toString(), 
-						//"Error Placing Bid", MessageBox.ICON_ERROR | MessageBox.OK);
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Invalid Bid");
+				alert.setHeaderText("Invalid Bid");
+				alert.setContentText("You cannot bid on your own Lot.");
+				alert.show();
 			} catch (AuctionCommunicationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// TODO
+			} catch (NotificationException e) {
+				// TODO
 			}
 		} catch (ParseException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Invalid Number Format");
+			alert.setHeaderText("Invalid Number Format");
+			alert.setContentText("The amount you entered was not in correct number format.");
+			alert.show();
 		}
 	}
 	
@@ -172,12 +219,12 @@ public class BidsViewController extends ViewController {
 			}
 		});
 		
-		TableColumn<Bid,String> bidderEmailCol = new TableColumn<Bid,String>("Bidder Email");
+		TableColumn<Bid,String> bidderEmailCol = new TableColumn<Bid,String>("Bidder");
 		bidderEmailCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Bid, String>, ObservableValue<String>>() {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
-				return new SimpleStringProperty(param.getValue().bidder.email);
+				return new SimpleStringProperty(param.getValue().bidder.username);
 				
 			}
 		 });

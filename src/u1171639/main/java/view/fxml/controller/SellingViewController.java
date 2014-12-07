@@ -1,17 +1,24 @@
 package u1171639.main.java.view.fxml.controller;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 //import jfx.messagebox.MessageBox;
@@ -20,7 +27,7 @@ public class SellingViewController extends ViewController {
 	@FXML private Pane lotPane;
 	@FXML private Pane bidsPane; 
 	
-	@FXML private ListView<Lot> yourLots;
+	@FXML private TableView<Lot> yourLots;
 	
 	private AddLotViewController addLotController;
 	private UpdateLotViewController updateLotController;
@@ -35,6 +42,10 @@ public class SellingViewController extends ViewController {
 		this.bidsController = (BidsViewController) this.loadView("bids.fxml");
 		
 		this.bidsController.showSellingFields();
+		
+		this.yourLots.getColumns().addAll(SellingViewController.getColumns(this.yourLots));
+		this.yourLots.setItems(this.yourRetrivedLots);
+		this.yourLots.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 		
 		this.addLotController.setLotAddedCallback(new Callback<Lot, Void>() {
 			@Override
@@ -74,8 +85,6 @@ public class SellingViewController extends ViewController {
 			}
 		});
 		
-		this.yourLots.setItems(this.yourRetrivedLots);
-		
 		try {
 			this.yourRetrivedLots.clear();
 			this.yourRetrivedLots.addAll(getAuctionController().getUsersLots());
@@ -109,5 +118,37 @@ public class SellingViewController extends ViewController {
 		this.lotPane.getChildren().add(this.addLotController.getViewComponent());
 		
 		this.bidsPane.getChildren().clear();
+	}
+	
+	public static ArrayList<TableColumn<Lot, ?>> getColumns(TableView<Lot> table) {
+		ArrayList<TableColumn<Lot, ?>> columns = new ArrayList<>();
+		
+		TableColumn<Lot,String> lotAddedTime = new TableColumn<Lot,String>("Time Added");
+		lotAddedTime.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Lot, String>, ObservableValue<String>>() {
+
+			@Override
+			public ObservableValue<String> call(CellDataFeatures<Lot, String> param) {
+				return new SimpleStringProperty(param.getValue().timeAdded.toString());
+				
+			}
+		});
+		
+		TableColumn<Lot,String> lotName = new TableColumn<Lot,String>("Lot Name");
+		lotName.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Lot, String>, ObservableValue<String>>() {
+
+			@Override
+			public ObservableValue<String> call(CellDataFeatures<Lot, String> param) {
+				return new SimpleStringProperty(param.getValue().name);
+				
+			}
+		 });
+		
+
+		
+		columns.add(lotAddedTime);
+		columns.add(lotName);
+		
+		return columns;
+
 	}
 }

@@ -7,10 +7,12 @@ import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationException;
+import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
+import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
@@ -57,7 +59,9 @@ public interface AuctionController {
 	
 	public void listenForLot(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void subscribeToLot(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException;
+	public void subscribeToLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException;
+	
+	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
 	public Lot getLotDetails(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
 	
@@ -69,4 +73,6 @@ public interface AuctionController {
 	public void listenForNotifications(Callback<Notification, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
 	public void addNotification(Notification notification) throws RequiresLoginException, AuctionCommunicationException;
+	
+	public void markNotificationRead(long notificationId) throws RequiresLoginException, UnauthorisedNotificationActionException, AuctionCommunicationException, NotificationNotFoundException;
 }

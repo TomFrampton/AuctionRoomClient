@@ -16,8 +16,7 @@
 	
 			<Text text="Lot Search" />
 			
-			<ListView fx:id="lotList" 
-				onMouseClicked="#handleLotSelected" />
+			<TableView fx:id="lotList" onMouseClicked="#handleLotSelected"  prefHeight="628" prefWidth="450"/>
 				
 			<HBox>
 				<Button text="Edit Search" onMouseClicked="#handleEditSearch"/>

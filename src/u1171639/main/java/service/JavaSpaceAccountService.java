@@ -28,7 +28,7 @@ public class JavaSpaceAccountService implements AccountService {
 	@Override
 	public void login(User credentials) throws AuthenticationException {
 		try {
-			User registeredUser = (User) this.space.readIfExists(new User(credentials.email), null, 0);
+			User registeredUser = (User) this.space.readIfExists(new User(credentials.username), null, 0);
 			if(registeredUser == null) {
 				throw new AuthenticationException("Invalid email or password.");
 			}
@@ -68,7 +68,7 @@ public class JavaSpaceAccountService implements AccountService {
 	@Override
 	public long register(User newUser) throws RegistrationException {
 		User template = new User();
-		template.email = newUser.email;
+		template.username = newUser.username;
 		
 		try {
 			// TODO improve this in case user exists but is temporarily taken from space
