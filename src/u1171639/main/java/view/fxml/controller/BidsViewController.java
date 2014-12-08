@@ -16,6 +16,7 @@ import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
+import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.Notification;
@@ -79,20 +80,23 @@ public class BidsViewController extends ViewController {
 		
 		try {
 			BigDecimal amount = parseBigDecimal(moneyString);
-			boolean privateBid = false;
+			Boolean privateBid = null;
 			
 			RadioButton selectedPrivacy = (RadioButton) this.bidPrivacyGroup.getSelectedToggle();
-			switch(selectedPrivacy.getId()) {
-				case "publicBid" :
-					privateBid = false;
-					break;
-					
-				case "privateBid" :
-					privateBid = true;
-					break;
-					
-				default :
-					break;
+			
+			if(selectedPrivacy != null) {
+				switch(selectedPrivacy.getId()) {
+					case "publicBid" :
+						privateBid = false;
+						break;
+						
+					case "privateBid" :
+						privateBid = true;
+						break;
+						
+					default :
+						break;
+				}
 			}
 			
 			try {
@@ -120,15 +124,17 @@ public class BidsViewController extends ViewController {
 
 					@Override
 					public Void call(Bid bid) {
-						Notification notification = new Notification();
-						notification.title = "Bid Placed!";
-						notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
-								bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
-						
-						try {
-							getAuctionController().addNotification(notification);
-						} catch (RequiresLoginException | AuctionCommunicationException e) {
-							// Something went wrong.
+						if(!bid.bidderId.equals(getAuctionController().getCurrentUser().id)) {
+							Notification notification = new Notification();
+							notification.title = "Bid Placed!";
+							notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
+									bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
+							
+							try {
+								getAuctionController().addNotification(notification);
+							} catch (RequiresLoginException | AuctionCommunicationException e) {
+								// Something went wrong.
+							}
 						}
 						return null;
 					}
@@ -197,16 +203,22 @@ public class BidsViewController extends ViewController {
 				this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 			} catch (RequiresLoginException e) {
 				// TODO
-			} catch (UnauthorisedBidException | InvalidBidException | LotNotFoundException e) {
+			} catch (UnauthorisedBidException e) {
 				Alert alert = new Alert(AlertType.ERROR);
 				alert.setTitle("Invalid Bid");
 				alert.setHeaderText("Invalid Bid");
 				alert.setContentText("You cannot bid on your own Lot.");
 				alert.show();
+			} catch(InvalidBidException e) {
+				// TODO
 			} catch (AuctionCommunicationException e) {
 				// TODO
 			} catch (NotificationException e) {
 				// TODO
+			} catch (LotNotFoundException e) {
+				// TODO
+			} catch (ValidationException e) {
+				showValidationAlert(e.getViolations());
 			}
 		} catch (ParseException e1) {
 			Alert alert = new Alert(AlertType.ERROR);

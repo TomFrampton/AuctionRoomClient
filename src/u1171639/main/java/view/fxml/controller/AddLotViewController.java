@@ -13,6 +13,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.Notification;
@@ -63,21 +64,27 @@ public class AddLotViewController extends ViewController {
 								} catch (RequiresLoginException | AuctionCommunicationException e) {
 									// Something went wrong.
 								}
+								
 								return null;
 							}
 						});
+						
+						lotTypeSelect.getSelectionModel().clearSelection();
+						lotForm.getChildren().clear();
+						
+						controller.clearFields();
+						
+						lotAddedCallback.call(param);
+						return null;
+						
 					} catch (RequiresLoginException | AuctionCommunicationException e) {
 						System.out.println("Error addign lot");
 						//MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+						return null;
+					} catch (ValidationException e) {
+						showValidationAlert(e.getViolations());
+						return null;
 					}
-					
-					lotTypeSelect.getSelectionModel().clearSelection();
-					lotForm.getChildren().clear();
-					
-					controller.clearFields();
-					
-					lotAddedCallback.call(param);
-					return null;
 				}
 			});
 			

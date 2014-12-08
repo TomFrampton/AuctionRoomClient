@@ -10,6 +10,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
+import net.sf.oval.ConstraintViolation;
+import net.sf.oval.Validator;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.BidNotFoundException;
@@ -23,6 +25,7 @@ import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.exception.UserNotFoundException;
+import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
@@ -66,12 +69,17 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public long register(User newUser) throws RegistrationException {
+	public long register(User newUser) throws RegistrationException, ValidationException {
+		validate(newUser);
 		return this.accountService.register(newUser);
 	}
 	
 	@Override
-	public void login(User credentials) throws AuthenticationException {
+	public void login(User credentials) throws AuthenticationException, ValidationException {
+		credentials.forename = " ";
+		credentials.surname = " ";
+		
+		validate(credentials);
 		this.accountService.login(credentials);
 	}
 	
@@ -111,8 +119,9 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException {
+	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException, ValidationException {
 		if(this.accountService.isLoggedIn()) {
+			validate(lot);
 			lot.sellerId = this.accountService.getCurrentUser().id;
 			return this.lotService.addLot(lot, bidCallback);
 		} else {
@@ -143,8 +152,9 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void updateLot(Lot lot) throws RequiresLoginException, AuctionCommunicationException {
+	public void updateLot(Lot lot) throws RequiresLoginException, AuctionCommunicationException, ValidationException {
 		if(this.accountService.isLoggedIn()) {
+			validate(lot);
 			this.lotService.updateLot(lot);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
@@ -152,8 +162,9 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void bidForLot(Bid bid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException {
+	public void bidForLot(Bid bid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException, ValidationException {
 		if(this.accountService.isLoggedIn()) {
+			validate(bid);
 			bid.bidderId = this.accountService.getCurrentUser().id;
 			this.lotService.bidForLot(bid);
 		} else {
@@ -300,6 +311,15 @@ public class ConcreteAuctionController implements AuctionController {
 			this.notificationService.markNotificationRead(notificationId);
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
+		}
+	}
+	
+	private void validate(Object o) throws ValidationException {
+		Validator validator = new Validator();
+		List<ConstraintViolation> violations = validator.validate(o);
+		
+		if(violations.size() > 0) {
+			throw new ValidationException(violations.size() + " validation errors.", violations);
 		}
 	}
 	

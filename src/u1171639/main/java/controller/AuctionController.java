@@ -15,6 +15,7 @@ import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.exception.UserNotFoundException;
+import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
@@ -25,9 +26,9 @@ public interface AuctionController {
 	public void launch();
 	
 	/* Account methods */
-	public long register(User newUser) throws RegistrationException;
+	public long register(User newUser) throws RegistrationException, ValidationException;
 	
-	public void login(User credentials) throws AuthenticationException;
+	public void login(User credentials) throws AuthenticationException, ValidationException;
 	
 	public void logout();
 	
@@ -44,15 +45,15 @@ public interface AuctionController {
 	public void removeUser(String username) throws UserNotFoundException;
 	
 	/* Lot methods */
-	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException;
+	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException, ValidationException;
 	
 	public List<Lot> searchLots(Lot template) throws RequiresLoginException, AuctionCommunicationException, UserNotFoundException;
 	
 	public List<Lot> getUsersLots() throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void updateLot(Lot lot) throws RequiresLoginException, AuctionCommunicationException;
+	public void updateLot(Lot lot) throws RequiresLoginException, AuctionCommunicationException, ValidationException;
 	
-	public void bidForLot(Bid bid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException;
+	public void bidForLot(Bid bid) throws RequiresLoginException, UnauthorisedBidException, InvalidBidException, LotNotFoundException, AuctionCommunicationException, ValidationException;
 	
 	public void acceptBid(long bidId) throws RequiresLoginException, BidNotFoundException, AuctionCommunicationException;
 	

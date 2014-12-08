@@ -2,18 +2,24 @@ package u1171639.main.java.model.account;
 
 import java.util.Date;
 
+import net.sf.oval.constraint.NotEmpty;
+import net.sf.oval.constraint.NotNull;
+
 public class Person {
+	@NotNull
+	@NotEmpty
 	public String forename;
+	
+	@NotNull
+	@NotEmpty
 	public String surname;
-	public Date dob;
 	
 	public Person() {
 		
 	}
 
-	public Person(String forename, String surname, Date dob) {
+	public Person(String forename, String surname) {
 		this.forename = forename;
 		this.surname = surname;
-		this.dob = dob;
 	}
 }

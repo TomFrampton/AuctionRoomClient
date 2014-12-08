@@ -26,6 +26,7 @@ import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UserNotFoundException;
+import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
@@ -102,6 +103,9 @@ public class DummyView implements AuctionView {
 			this.controller.register(user);
 		} catch(RegistrationException e) {
 			fail("Registering new user failed.");
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
@@ -109,6 +113,9 @@ public class DummyView implements AuctionView {
 			fail("User with non-unique username added.");
 		} catch(RegistrationException e) {
 			// Passed
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -122,6 +129,9 @@ public class DummyView implements AuctionView {
 			newUser.id = this.controller.register(newUser);
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// Test that incorrect username stops login
@@ -133,6 +143,9 @@ public class DummyView implements AuctionView {
 			fail("Incorrect username. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// Test that a correct username but incorrect password stops login
@@ -144,6 +157,9 @@ public class DummyView implements AuctionView {
 			fail("Incorrect password. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// Test that a correct username and password allows login
@@ -154,6 +170,9 @@ public class DummyView implements AuctionView {
 			this.controller.login(credentials);
 		} catch(AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			this.controller.logout();
 		}
@@ -220,6 +239,9 @@ public class DummyView implements AuctionView {
 			assertTrue(this.controller.isLoggedIn());
 		} catch (AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			this.controller.logout();
 		}
@@ -300,6 +322,9 @@ public class DummyView implements AuctionView {
 			fail("Unique users - should have been registered.");
 		} catch (UserNotFoundException e) {
 			fail("User was registered so should be able to be found.");
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
@@ -323,6 +348,9 @@ public class DummyView implements AuctionView {
 			fail("Unique users - should have been registered.");
 		} catch (UserNotFoundException e) {
 			fail("User was registered so should be able to be found.");
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
@@ -360,6 +388,9 @@ public class DummyView implements AuctionView {
 			// Pass
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		login(user);
@@ -491,6 +522,9 @@ public class DummyView implements AuctionView {
 		} catch (UserNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			this.controller.logout();
 		}
@@ -534,6 +568,9 @@ public class DummyView implements AuctionView {
 			fail("Lot was added. Should have been found.");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			this.controller.logout();
 		}
@@ -575,12 +612,18 @@ public class DummyView implements AuctionView {
 			fail("Lot exist. Should have been found.");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
 			this.controller.login(user1);
 		} catch (AuthenticationException e) {
 			fail("User was registered. Should be able to login");
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
@@ -653,6 +696,9 @@ public class DummyView implements AuctionView {
 			fail("Lot exists. Should have been found.");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (ValidationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		} finally {
 			this.controller.logout();
 		}
@@ -688,6 +734,9 @@ public class DummyView implements AuctionView {
 			fail("User logged in. Lot should have been added.");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		this.controller.logout();
@@ -711,6 +760,9 @@ public class DummyView implements AuctionView {
 			fail("Lots existed. Should have been found.");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		this.controller.logout();
@@ -1045,6 +1097,9 @@ public class DummyView implements AuctionView {
 			newUser.id = this.controller.register(newUser);
 		} catch (RegistrationException e) {
 			e.printStackTrace();
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -1052,6 +1107,9 @@ public class DummyView implements AuctionView {
 		try {
 			this.controller.login(credentials);
 		} catch (AuthenticationException e) {
+			e.printStackTrace();
+		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

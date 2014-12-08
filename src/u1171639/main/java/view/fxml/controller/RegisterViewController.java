@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.RegistrationException;
+import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -44,6 +45,8 @@ public class RegisterViewController extends ViewController {
 			alert.setHeaderText("Username Already in Use");
 			alert.setContentText("Please choose another username. The one you entered is already being used by another user.");
 			alert.show();
+		} catch (ValidationException e) {
+			showValidationAlert(e.getViolations());
 		}
 		
 	}

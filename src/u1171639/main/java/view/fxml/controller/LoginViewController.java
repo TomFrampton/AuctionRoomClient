@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.AuthenticationException;
+import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.User;
 import u1171639.main.java.utilities.Callback;
 import javafx.event.ActionEvent;
@@ -34,6 +35,8 @@ public class LoginViewController extends ViewController {
 			alert.setHeaderText("Invalid Username or Password");
 			alert.setContentText("The username and password combination you entered could not be verified.");
 			alert.show();
+		} catch (ValidationException e) {
+			showValidationAlert(e.getViolations());
 		}
 	}
 

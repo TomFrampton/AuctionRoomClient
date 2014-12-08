@@ -5,13 +5,18 @@ import java.util.Date;
 
 import u1171639.main.java.model.account.User;
 import net.jini.core.entry.Entry;
+import net.sf.oval.constraint.NotNull;
 
 public class Bid implements Entry {
 	public Long id;
 	public Long lotId;
 	public Long bidderId;
+	
+	@NotNull
 	public BigDecimal amount;
 	public Date bidTime;
+	
+	@NotNull
 	public Boolean privateBid;
 	
 	public transient Lot lot;
@@ -30,13 +35,13 @@ public class Bid implements Entry {
 		this.lotId = lotId;
 	}
 	
-	public Bid(long lotId, BigDecimal amount, boolean privateBid) {
+	public Bid(long lotId, BigDecimal amount, Boolean privateBid) {
 		this.lotId = lotId;
 		this.amount = amount;
 		this.privateBid = privateBid;
 	}
 	
-	public Bid(long lotId, BigDecimal amount, long bidderId, boolean privateBid) {
+	public Bid(long lotId, BigDecimal amount, long bidderId, Boolean privateBid) {
 		this(lotId, amount, privateBid);
 		this.bidderId = bidderId;
 	}

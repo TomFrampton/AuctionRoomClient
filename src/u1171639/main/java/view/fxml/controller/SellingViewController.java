@@ -2,6 +2,7 @@ package u1171639.main.java.view.fxml.controller;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
@@ -60,11 +61,25 @@ public class SellingViewController extends ViewController {
 		
 		this.updateLotController.setLotUpdatedCallback(new Callback<Lot, Void>() {
 			@Override
-			public Void call(Lot lot) {
+			public Void call(Lot updatedLot) {
+				// Update the lot in your lot list
+				Lot lotToUpdate = null;
+				
+				for(Lot lot : yourRetrivedLots) {
+					if(lot.id.equals(updatedLot.id)) {
+						lotToUpdate = lot;
+						break;
+					}
+				}
+				
+				if(lotToUpdate != null) {
+					yourRetrivedLots.set(yourRetrivedLots.indexOf(lotToUpdate), updatedLot);
+				}
+				
 				Alert alert = new Alert(AlertType.INFORMATION);
 				alert.setTitle("Lot Updated");
 				alert.setHeaderText("Lot Updated");
-				alert.setContentText("Lot '" + lot.name + "' has been updated successfully.");
+				alert.setContentText("Lot '" + updatedLot.name + "' has been updated successfully.");
 				alert.show();
 				
 				return null;
