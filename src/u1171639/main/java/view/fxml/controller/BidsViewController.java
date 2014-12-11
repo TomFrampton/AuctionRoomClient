@@ -70,8 +70,11 @@ public class BidsViewController extends ViewController {
 			this.retrievedBids.clear();
 			this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 		} catch (RequiresLoginException | LotNotFoundException | AuctionCommunicationException e) {
-			System.out.println("Error loading lot");
-			//MessageBox.show(getWindow(), e.toString(), "Error Loading Lot", MessageBox.ICON_ERROR | MessageBox.OK);
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Lot Not Found");
+			alert.setHeaderText("Lot Not Found");
+			alert.setContentText("That Lot was not found. It may have been removed.");
+			alert.show();
 		}
 	}
 	

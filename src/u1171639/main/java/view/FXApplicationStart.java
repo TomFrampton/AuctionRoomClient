@@ -1,5 +1,7 @@
 package u1171639.main.java.view;
 
+import java.io.File;
+
 import u1171639.main.java.controller.AuctionController;
 import u1171639.main.java.view.fxml.controller.MainViewController;
 import u1171639.main.java.view.fxml.controller.ViewController;
@@ -33,6 +35,15 @@ public class FXApplicationStart extends Application {
 			alert.show();
 		} else {
 			Scene scene = new Scene(mainView.getViewComponent(), 1200, 800);
+			
+			// Load CSS
+			// Load all CSS files
+			File cssDirectory = new File("./src/u1171639/main/resources/styles/");
+			for(File cssFile : cssDirectory.listFiles()) {
+				String css = this.getClass().getResource("/u1171639/main/resources/styles/" + cssFile.getName()).toExternalForm();
+				scene.getStylesheets().add(css);
+			}
+			
 			stage.setScene(scene);
 			stage.show();
 		}

@@ -57,7 +57,7 @@ public class AddLotViewController extends ViewController {
 								Notification notification = new Notification();
 								notification.title = "Bid Received!";
 								notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
-										bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
+										bid.lot.name + "'  by " + bid.bidder.username + ".";
 								
 								try {
 									getAuctionController().addNotification(notification);

@@ -119,11 +119,27 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException, ValidationException {
+	public long addLot(Lot lot, final Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException, ValidationException {
 		if(this.accountService.isLoggedIn()) {
 			validate(lot);
 			lot.sellerId = this.accountService.getCurrentUser().id;
-			return this.lotService.addLot(lot, bidCallback);
+			return this.lotService.addLot(lot, new Callback<Bid, Void>() {
+
+				@Override
+				public Void call(Bid bid) {
+					try {
+						bid.bidder = accountService.getUserDetails(bid.bidderId);
+						
+						if(bidCallback != null) {
+							bidCallback.call(bid);
+						}
+					} catch (UserNotFoundException e) {
+						// Something went wrong. Don't call the callback.
+					}	
+					
+					return null;
+				}
+			});
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}
@@ -240,7 +256,23 @@ public class ConcreteAuctionController implements AuctionController {
 	@Override
 	public void listenForBidsOnLot(long lotId, final Callback<Bid, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
-			this.lotService.listenForBidsOnLot(lotId, callback);
+			this.lotService.listenForBidsOnLot(lotId, new Callback<Bid, Void>() {
+
+				@Override
+				public Void call(Bid bid) {
+					try {
+						bid.bidder = accountService.getUserDetails(bid.bidderId);
+						
+						if(callback != null) {
+							callback.call(bid);
+						}
+					} catch (UserNotFoundException e) {
+						// Something went wrong. Don't call the callback.
+					}	
+					
+					return null;
+				}
+			});
 		} else {
 			throw new RequiresLoginException("User must be logged in to partake in auction");
 		}

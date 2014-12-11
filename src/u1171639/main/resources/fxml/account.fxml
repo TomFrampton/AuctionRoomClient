@@ -13,14 +13,13 @@
 	
 	<left>
 		<VBox>
-			<padding>
-				<Insets top="25" right="25" bottom="10" left="25" />	
-			</padding>
-	
 			<Text text="Your Account Details" />
 			
-			<GridPane>
-		
+			<GridPane hgap="10" vgap="10">	
+				<padding>
+					<Insets top="25" right="25" bottom="10" left="25" />	
+				</padding>
+			
 				<Label text="Forename"
 					GridPane.rowIndex="0"
 					GridPane.columnIndex="0" />

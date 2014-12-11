@@ -15,5 +15,5 @@
 	
 	<Text text="Notifications" />
 	
-	<TableView fx:id="notificationList" />
+	<TableView fx:id="notificationList" onMouseClicked="#handleNotificationClicked" />
 </VBox>

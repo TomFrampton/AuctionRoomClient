@@ -38,7 +38,7 @@ public abstract class ViewController implements Initializable {
 		});
 		
 		try {
-			Parent component = (Parent) fxmlLoader.load(ViewController.class.getClass().getResource("/u1171639/main/resources/" + fxmlResource).openStream());
+			Parent component = (Parent) fxmlLoader.load(ViewController.class.getClass().getResource("/u1171639/main/resources/fxml/" + fxmlResource).openStream());
 			ViewController controller = (ViewController) fxmlLoader.getController();
 			
 			controller.setAuctionController(auctionController);

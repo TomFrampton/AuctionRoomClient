@@ -4,22 +4,34 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
+import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.model.lot.Bid;
+import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
 public class NotificationsViewController extends ViewController {
@@ -57,12 +69,35 @@ public class NotificationsViewController extends ViewController {
 		}
 	}
 	
+	@FXML protected void handleNotificationClicked(MouseEvent event) {
+		if(this.notificationList.getSelectionModel().getSelectedIndex() >= 0) {
+			Notification notification = this.notificationList.getSelectionModel().getSelectedItem();
+			
+			if(!notification.read) {
+				// Mark notification as read
+				try {
+					getAuctionController().markNotificationRead(notification.id);
+					notification.read = true;
+					
+					this.setTabText();
+					
+				} catch (RequiresLoginException
+						| UnauthorisedNotificationActionException
+						| AuctionCommunicationException
+						| NotificationNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
 	public void setNotificationTab(Tab notificationTab) {
 		this.notificationTab = notificationTab;
 		this.setTabText();
 	}
 	
-	public static ArrayList<TableColumn<Notification, ?>> getColumns(TableView<Notification> table) {
+	public static ArrayList<TableColumn<Notification, ?>> getColumns(final TableView<Notification> table) {
 		ArrayList<TableColumn<Notification, ?>> columns = new ArrayList<>();
 		
 		TableColumn<Notification,String> notificationTimeCol = new TableColumn<Notification,String>("Time Received");
@@ -92,6 +127,37 @@ public class NotificationsViewController extends ViewController {
 			public ObservableValue<String> call(CellDataFeatures<Notification, String> param) {
 				return new SimpleStringProperty(param.getValue().message);
 				
+			}
+		});	
+		
+		table.setRowFactory(new javafx.util.Callback<TableView<Notification>, TableRow<Notification>>() {
+			
+			@Override
+			public TableRow<Notification> call(TableView<Notification> param) {
+				final TableRow<Notification> row = new TableRow<Notification>() {
+					@Override
+					public void updateItem(Notification item, boolean empty) {
+						super.updateItem(item, empty);
+						if(item != null) {
+							if(!item.read) {
+								if(!this.getStyleClass().contains("unread-notification")) {
+									this.getStyleClass().add("unread-notification");
+								}
+							}
+						}
+					}
+				};
+				
+				row.setOnMouseClicked(new EventHandler<MouseEvent>() {
+
+					@Override
+					public void handle(MouseEvent event) {
+						row.getStyleClass().remove("unread-notification");
+					}
+					
+				});
+				
+				return row;
 			}
 		});
 			
