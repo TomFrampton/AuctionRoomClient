@@ -5,7 +5,7 @@ import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.ValidationException;
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -25,7 +25,7 @@ public class RegisterViewController extends ViewController {
 	}
 	
 	@FXML protected void handleRegisterButtonAction(ActionEvent event) {
-		User newUser = new User();
+		UserAccount newUser = new UserAccount();
 		newUser.forename = this.forename.getText();
 		newUser.surname = this.surname.getText();
 		newUser.username = this.username.getText();

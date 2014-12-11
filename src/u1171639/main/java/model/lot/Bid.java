@@ -3,7 +3,7 @@ package u1171639.main.java.model.lot;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import net.jini.core.entry.Entry;
 import net.sf.oval.constraint.NotNull;
 
@@ -20,7 +20,7 @@ public class Bid implements Entry {
 	public Boolean privateBid;
 	
 	public transient Lot lot;
-	public transient User bidder;
+	public transient UserAccount bidder;
 	
 	public Bid() {
 		

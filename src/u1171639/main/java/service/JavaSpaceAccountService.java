@@ -9,7 +9,7 @@ import net.jini.space.JavaSpace;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.UserNotFoundException;
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.counters.UserIDCounter;
@@ -18,7 +18,7 @@ public class JavaSpaceAccountService implements AccountService {
 	private JavaSpace space;
 	private PasswordHashScheme hashScheme;
 	
-	private User loggedInUser;
+	private UserAccount loggedInUser;
 	
 	public JavaSpaceAccountService(JavaSpace space, PasswordHashScheme hashScheme) {
 		this.space = space;
@@ -26,9 +26,9 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 	
 	@Override
-	public void login(User credentials) throws AuthenticationException {
+	public void login(UserAccount credentials) throws AuthenticationException {
 		try {
-			User registeredUser = (User) this.space.readIfExists(new User(credentials.username), null, 0);
+			UserAccount registeredUser = (UserAccount) this.space.readIfExists(new UserAccount(credentials.username), null, 0);
 			if(registeredUser == null) {
 				throw new AuthenticationException("Invalid username or password.");
 			}
@@ -61,18 +61,18 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public User getCurrentUser() {
+	public UserAccount getCurrentUser() {
 		return this.loggedInUser;
 	}
 
 	@Override
-	public long register(User newUser) throws RegistrationException {
-		User template = new User();
+	public long register(UserAccount newUser) throws RegistrationException {
+		UserAccount template = new UserAccount();
 		template.username = newUser.username;
 		
 		try {
 			// TODO improve this in case user exists but is temporarily taken from space
-			User sameusernameUser = (User) this.space.readIfExists(template, null, 0);
+			UserAccount sameusernameUser = (UserAccount) this.space.readIfExists(template, null, 0);
 			if(sameusernameUser != null) {
 				throw new RegistrationException("username already in use.");
 			}
@@ -128,21 +128,21 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public User getUserDetails(long userId) throws UserNotFoundException {
-		return this.getUserDetails(new User(userId));
+	public UserAccount getUserDetails(long userId) throws UserNotFoundException {
+		return this.getUserDetails(new UserAccount(userId));
 	}
 
 	@Override
-	public User getUserDetails(String username) throws UserNotFoundException {
-		return this.getUserDetails(new User(username));
+	public UserAccount getUserDetails(String username) throws UserNotFoundException {
+		return this.getUserDetails(new UserAccount(username));
 	}
 	
-	private User getUserDetails(User template) throws UserNotFoundException {
-		User retrievedUser = null;
+	private UserAccount getUserDetails(UserAccount template) throws UserNotFoundException {
+		UserAccount retrievedUser = null;
 		
 		try {
 			// TODO improve this in case user is temporarily taken from space
-			retrievedUser = (User) this.space.readIfExists(template, null, 0);
+			retrievedUser = (UserAccount) this.space.readIfExists(template, null, 0);
 			if(retrievedUser == null) {
 				throw new UserNotFoundException("That user does not exist.");
 			}
@@ -165,17 +165,17 @@ public class JavaSpaceAccountService implements AccountService {
 
 	@Override
 	public void removeUser(long userId) throws UserNotFoundException {
-		this.removeUser(new User(userId));
+		this.removeUser(new UserAccount(userId));
 	}
 
 	@Override
 	public void removeUser(String username) throws UserNotFoundException {
-		this.removeUser(new User(username));
+		this.removeUser(new UserAccount(username));
 	}
 	
-	private void removeUser(User template) throws UserNotFoundException {
+	private void removeUser(UserAccount template) throws UserNotFoundException {
 		try {
-			User removedUser = (User) this.space.takeIfExists(template, null, 0);
+			UserAccount removedUser = (UserAccount) this.space.takeIfExists(template, null, 0);
 			if(removedUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}

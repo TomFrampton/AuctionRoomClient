@@ -5,7 +5,7 @@ import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.ValidationException;
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.utilities.Callback;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,7 +21,7 @@ public class LoginViewController extends ViewController {
 	private Callback<Object, Void> loginSuccessCallback;
 	
 	@FXML protected void handleLoginButtonAction(ActionEvent event) {
-		User credentials = new User(this.username.getText(), this.password.getText());
+		UserAccount credentials = new UserAccount(this.username.getText(), this.password.getText());
 		
 		try {
 			getAuctionController().login(credentials);

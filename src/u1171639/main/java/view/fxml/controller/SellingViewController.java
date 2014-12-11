@@ -113,11 +113,9 @@ public class SellingViewController extends ViewController {
 			this.yourRetrivedLots.clear();
 			this.yourRetrivedLots.addAll(getAuctionController().getUsersLots());
 		} catch (RequiresLoginException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showErrorAlert(e);
 		} catch (AuctionCommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showErrorAlert(e);
 		}
 		
 	}

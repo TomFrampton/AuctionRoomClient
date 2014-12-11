@@ -15,7 +15,7 @@ import org.junit.Test;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.UserNotFoundException;
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.utilities.MediumSecurityHashScheme;
 import u1171639.main.java.utilities.PasswordHashScheme;
@@ -30,7 +30,7 @@ public class AccountServiceTest {
 	
 	private JavaSpace space;
 	
-	private List<User> usersToRemove = new ArrayList<User>();
+	private List<UserAccount> usersToRemove = new ArrayList<UserAccount>();
 	
 	@Before
 	public void setUp() throws Exception {
@@ -46,12 +46,12 @@ public class AccountServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		TestUtils.removeAllFromSpace(new User(), this.space);
+		TestUtils.removeAllFromSpace(new UserAccount(), this.space);
 	}
 	
 	@Test
 	public void testRegister() {
-		User newUser = new User();
+		UserAccount newUser = new UserAccount();
 		newUser.username = "test@register.com";
 		newUser.password = "password";
 		
@@ -62,7 +62,7 @@ public class AccountServiceTest {
 			
 			assertTrue(newUser.username.equals("test@register.com"));
 			
-			User retrievedUser = this.accountService.getUserDetails(newUser.id);
+			UserAccount retrievedUser = this.accountService.getUserDetails(newUser.id);
 			assertTrue(retrievedUser.password.equals(this.hashScheme.hashPassword(newUser.password, retrievedUser.salt)));
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
@@ -72,7 +72,7 @@ public class AccountServiceTest {
 		
 		// Test that trying to add a user with a username that is already in use throws an exception
 		try {
-			User newUser2 = new User(this.accountService.register(newUser));
+			UserAccount newUser2 = new UserAccount(this.accountService.register(newUser));
 			this.usersToRemove.add(newUser2);
 			fail("Added two users with same username.");
 		} catch (RegistrationException e) {
@@ -80,7 +80,7 @@ public class AccountServiceTest {
 		}
 		
 		// Test that IDs are incremented correctly
-		User newUser2 = new User();
+		UserAccount newUser2 = new UserAccount();
 		newUser2.username = "test2@register.com";
 		newUser2.password = "password2";
 		
@@ -97,7 +97,7 @@ public class AccountServiceTest {
 	
 	@Test
 	public void testLogin() {
-		User newUser = new User();
+		UserAccount newUser = new UserAccount();
 		newUser.username = "test@login.com";
 		newUser.password = "password";
 		
@@ -110,7 +110,7 @@ public class AccountServiceTest {
 		
 		// Test that incorrect username stops login
 		try {
-			User credentials = new User();
+			UserAccount credentials = new UserAccount();
 			credentials.username = "test@incorrect.com";
 			credentials.username = "password";
 			this.accountService.login(credentials);
@@ -121,7 +121,7 @@ public class AccountServiceTest {
 		
 		// Test that a correct username but incorrect password stops login
 		try {
-			User credentials = new User();
+			UserAccount credentials = new UserAccount();
 			credentials.username = "test@login.com";
 			credentials.username = "incorrectPass";
 			this.accountService.login(credentials);
@@ -132,7 +132,7 @@ public class AccountServiceTest {
 		
 		// Test that a correct username and password allows login
 		try {
-			User credentials = new User();
+			UserAccount credentials = new UserAccount();
 			credentials.username = "test@login.com";
 			credentials.password = "password";
 			this.accountService.login(credentials);
@@ -145,7 +145,7 @@ public class AccountServiceTest {
 	
 	@Test
 	public void testLogout() {
-		User newUser = new User();
+		UserAccount newUser = new UserAccount();
 		newUser.username = "test@logout.com";
 		newUser.password = "password";
 		
@@ -165,7 +165,7 @@ public class AccountServiceTest {
 			fail("Credentials were correct. User should have been able to log in");
 		}
 		
-		User retrievedCurrentUser = this.accountService.getCurrentUser();
+		UserAccount retrievedCurrentUser = this.accountService.getCurrentUser();
 		
 		// Test we can get the current user and that we are logged in
 		assertNotNull(retrievedCurrentUser);
@@ -181,11 +181,11 @@ public class AccountServiceTest {
 	
 	@Test 
 	public void testGetCurrentUser() {
-		User user1 = new User();
+		UserAccount user1 = new UserAccount();
 		user1.username = "test@currentUser1.com";
 		user1.password = "password1";
 		
-		User user2 = new User();
+		UserAccount user2 = new UserAccount();
 		user2.username = "test@currentUser2.com";
 		user2.password = "password2";
 		
@@ -202,7 +202,7 @@ public class AccountServiceTest {
 		try {
 			// Test logging in with user1 sets user1 as the current user
 			this.accountService.login(user1);
-			User retrievedCurrentUser = this.accountService.getCurrentUser();
+			UserAccount retrievedCurrentUser = this.accountService.getCurrentUser();
 						
 			assertNotNull(retrievedCurrentUser);
 			assertTrue(retrievedCurrentUser.id.equals(user1.id));
@@ -228,11 +228,11 @@ public class AccountServiceTest {
 	
 	@Test
 	public void testGetUserDetails() {
-		User user1 = new User();
+		UserAccount user1 = new UserAccount();
 		user1.username = "test@getUserDetails1.com";
 		user1.password = "password1";
 		
-		User user2 = new User();
+		UserAccount user2 = new UserAccount();
 		user2.username = "test@getUserDetails2.com";
 		user2.password = "password2";
 		
@@ -248,8 +248,8 @@ public class AccountServiceTest {
 		
 		// Test we can retrieve registered users using their ID
 		try {
-			User retrievedUserId1 = this.accountService.getUserDetails(user1.id);
-			User retrievedUserId2 = this.accountService.getUserDetails(user2.id);
+			UserAccount retrievedUserId1 = this.accountService.getUserDetails(user1.id);
+			UserAccount retrievedUserId2 = this.accountService.getUserDetails(user2.id);
 			
 			assertEquals(user1.id, retrievedUserId1.id);
 			assertEquals(user1.username, retrievedUserId1.username);
@@ -262,8 +262,8 @@ public class AccountServiceTest {
 		
 		// Test that we can get registered users using their username
 		try {
-			User retrievedUserId1 = this.accountService.getUserDetails(user1.username);
-			User retrievedUserId2 = this.accountService.getUserDetails(user2.username);
+			UserAccount retrievedUserId1 = this.accountService.getUserDetails(user1.username);
+			UserAccount retrievedUserId2 = this.accountService.getUserDetails(user2.username);
 			
 			assertEquals(user1.id, retrievedUserId1.id);
 			assertEquals(user1.username, retrievedUserId1.username);
@@ -292,11 +292,11 @@ public class AccountServiceTest {
 	
 	@Test
 	public void testRemoveUser() {
-		User user1 = new User();
+		UserAccount user1 = new UserAccount();
 		user1.username = "test@removeUser1.com";
 		user1.password = "password1";
 		
-		User user2 = new User();
+		UserAccount user2 = new UserAccount();
 		user2.username = "test@removeUser2.com";
 		user2.password = "password2";
 		

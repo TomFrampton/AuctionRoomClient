@@ -25,7 +25,6 @@ import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
-import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
@@ -490,7 +489,7 @@ public class JavaSpaceLotService implements LotService {
 	 * @throws AuctionCommunicationException There was an error when communicating with the auction server.
 	 */
 	@Override
-	public void listenForLotUpdates(final long lotId, final Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException {
+	public void listenForLotUpdates(final long lotId, final Callback<Lot, Void> callback) throws LotNotFoundException, AuctionCommunicationException {
 		
 		Transaction transaction = TransactionUtils.create(this.transMgr);
 		try {

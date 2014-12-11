@@ -5,6 +5,12 @@ import java.util.List;
 
 import net.sf.oval.ConstraintViolation;
 import u1171639.main.java.controller.AuctionController;
+import u1171639.main.java.exception.AuctionCommunicationException;
+import u1171639.main.java.exception.BidNotFoundException;
+import u1171639.main.java.exception.InvalidBidException;
+import u1171639.main.java.exception.LotNotFoundException;
+import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.exception.UnauthorisedLotActionException;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -74,6 +80,54 @@ public abstract class ViewController implements Initializable {
 	
 	public Stage getWindow() {
 		return (Stage) this.viewComponent.getScene().getWindow();
+	}
+	
+	public void showErrorAlert(AuctionCommunicationException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Error Communicating With Server");
+		alert.setHeaderText("Error Communicating With Server");
+		alert.setContentText("There was an error when communicating with the auction server. Please try again.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(RequiresLoginException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Login Required");
+		alert.setHeaderText("Login Required");
+		alert.setContentText("You must log in to partake in the auction.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(InvalidBidException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Invalid Bid Amount");
+		alert.setHeaderText("Invalid Bid Amount");
+		alert.setContentText("You must make a bid greater than the currrent highest bid.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(LotNotFoundException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Lot Not Found");
+		alert.setHeaderText("Lot Not Found");
+		alert.setContentText("That Lot was not found in the auction. It may have ended or been withdrawn by the seller.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(BidNotFoundException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Bid Not Found");
+		alert.setHeaderText("Bid Not Found");
+		alert.setContentText("We could not find that bid in the auction.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(UnauthorisedLotActionException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Unauthorised Lot Action");
+		alert.setHeaderText("Unauthorised Lot Action");
+		alert.setContentText("Only the seller of the Lot is authorised to do that.");
+		alert.show();
 	}
 	
 	public void showValidationAlert(List<ConstraintViolation> violations) {

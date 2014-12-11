@@ -16,7 +16,7 @@ import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.Notification;
+import u1171639.main.java.model.notification.UserNotification;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.view.fxml.lot.editor.LotFormViewController;
 
@@ -54,15 +54,17 @@ public class AddLotViewController extends ViewController {
 
 							@Override
 							public Void call(Bid bid) {
-								Notification notification = new Notification();
+								UserNotification notification = new UserNotification();
 								notification.title = "Bid Received!";
-								notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
+								notification.message = "A bid of ï¿½" + bid.amount.toString() + " was placed on '" +
 										bid.lot.name + "'  by " + bid.bidder.username + ".";
 								
 								try {
 									getAuctionController().addNotification(notification);
-								} catch (RequiresLoginException | AuctionCommunicationException e) {
-									// Something went wrong.
+								} catch (RequiresLoginException e) {
+									showErrorAlert(e);
+								} catch (AuctionCommunicationException e) {
+									showErrorAlert(e);
 								}
 								
 								return null;
@@ -77,14 +79,15 @@ public class AddLotViewController extends ViewController {
 						lotAddedCallback.call(param);
 						return null;
 						
-					} catch (RequiresLoginException | AuctionCommunicationException e) {
-						System.out.println("Error addign lot");
-						//MessageBox.show(getWindow(), e.toString(), "Error Adding Lot", MessageBox.ICON_ERROR | MessageBox.OK);
-						return null;
 					} catch (ValidationException e) {
 						showValidationAlert(e.getViolations());
-						return null;
+					} catch (RequiresLoginException e) {
+						showErrorAlert(e);
+					} catch (AuctionCommunicationException e) {
+						showErrorAlert(e);
 					}
+					
+					return null;
 				}
 			});
 			

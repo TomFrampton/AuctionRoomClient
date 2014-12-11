@@ -8,7 +8,6 @@ import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
-import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.model.lot.Bid;
@@ -38,7 +37,7 @@ public interface LotService {
 	
 	public void removeLot(long lotId, long userId) throws UnauthorisedLotActionException, LotNotFoundException, AuctionCommunicationException;
 	
-	public void listenForLotUpdates(long lotId, Callback<Lot, Void> callback) throws NotificationException, LotNotFoundException, AuctionCommunicationException;
+	public void listenForLotUpdates(long lotId, Callback<Lot, Void> callback) throws LotNotFoundException, AuctionCommunicationException;
 	
 	public void listenForLotAddition(final Lot template, Callback<Lot, Void> callback) throws AuctionCommunicationException;
 	

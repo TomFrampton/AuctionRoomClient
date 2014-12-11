@@ -12,14 +12,13 @@ import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
-import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.Notification;
+import u1171639.main.java.model.notification.UserNotification;
 import u1171639.main.java.utilities.Callback;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -109,7 +108,7 @@ public class BidsViewController extends ViewController {
 
 					@Override
 					public Void call(Lot lot) {
-						Notification notification = new Notification();
+						UserNotification notification = new UserNotification();
 						notification.title = "Lot Updated!";
 						notification.message = "Lot '" + lot.name + "' has been updated.";
 						
@@ -128,9 +127,9 @@ public class BidsViewController extends ViewController {
 					@Override
 					public Void call(Bid bid) {
 						if(!bid.bidderId.equals(getAuctionController().getCurrentUser().id)) {
-							Notification notification = new Notification();
+							UserNotification notification = new UserNotification();
 							notification.title = "Bid Placed!";
-							notification.message = "A bid of £" + bid.amount.toString() + " was placed on '" +
+							notification.message = "A bid of ï¿½" + bid.amount.toString() + " was placed on '" +
 									bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
 							
 							try {
@@ -152,11 +151,11 @@ public class BidsViewController extends ViewController {
 							
 							@Override
 							public void run() {
-								Notification notification = new Notification();
+								UserNotification notification = new UserNotification();
 								// Test if the accepted bid was on one of our lots.
 								if(bid.bidderId.equals(getAuctionController().getCurrentUser().id)) {
 									notification.title = "Lot Won!";
-									notification.message = "The bid of £" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
+									notification.message = "The bid of ï¿½" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
 											bid.bidTime.toString() + " has been accepted!";
 								} else {
 									notification.title = "Lot Not Won";
@@ -166,11 +165,9 @@ public class BidsViewController extends ViewController {
 								try {
 									getAuctionController().addNotification(notification);
 								} catch (RequiresLoginException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
+									showErrorAlert(e);
 								} catch (AuctionCommunicationException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
+									showErrorAlert(e);
 								}
 							}
 						});
@@ -184,18 +181,16 @@ public class BidsViewController extends ViewController {
 
 					@Override
 					public Void call(Lot removedLot) {
-						Notification notification = new Notification();
+						UserNotification notification = new UserNotification();
 						notification.title = "Lot Removed";
 						notification.message =  "The lot '" + removedLot.name + "' has been removed from the auction by the seller.";
 						
 						try {
 							getAuctionController().addNotification(notification);
 						} catch (RequiresLoginException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							showErrorAlert(e);
 						} catch (AuctionCommunicationException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							showErrorAlert(e);
 						}
 						
 						return null;
@@ -205,7 +200,7 @@ public class BidsViewController extends ViewController {
 				this.retrievedBids.clear();
 				this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
 			} catch (RequiresLoginException e) {
-				// TODO
+				showErrorAlert(e);
 			} catch (UnauthorisedBidException e) {
 				Alert alert = new Alert(AlertType.ERROR);
 				alert.setTitle("Invalid Bid");
@@ -213,13 +208,11 @@ public class BidsViewController extends ViewController {
 				alert.setContentText("You cannot bid on your own Lot.");
 				alert.show();
 			} catch(InvalidBidException e) {
-				// TODO
+				showErrorAlert(e);
 			} catch (AuctionCommunicationException e) {
-				// TODO
-			} catch (NotificationException e) {
-				// TODO
+				showErrorAlert(e);
 			} catch (LotNotFoundException e) {
-				// TODO
+				showErrorAlert(e);
 			} catch (ValidationException e) {
 				showValidationAlert(e.getViolations());
 			}
@@ -238,9 +231,19 @@ public class BidsViewController extends ViewController {
 			
 			try {
 				getAuctionController().acceptBid(selected.id);
-			} catch (RequiresLoginException | BidNotFoundException | AuctionCommunicationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setTitle("Bid Accepted");
+				alert.setHeaderText("Bid Accepted");
+				alert.setContentText("The bid has been accepted and " + selected.bidder + " has been informed.");
+				alert.show();
+				
+			} catch (RequiresLoginException e) {
+				showErrorAlert(e);
+			} catch(BidNotFoundException e) {
+				showErrorAlert(e);
+			} catch(AuctionCommunicationException e) {
+				showErrorAlert(e);
 			}
 			
 		} else {
@@ -260,17 +263,13 @@ public class BidsViewController extends ViewController {
 				this.lotWithdrawnCallback.call(this.lotForBids);
 			}
 		} catch (UnauthorisedLotActionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showErrorAlert(e);
 		} catch (LotNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showErrorAlert(e);
 		} catch (RequiresLoginException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showErrorAlert(e);
 		} catch (AuctionCommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showErrorAlert(e);
 		}
 	}
 	

@@ -22,7 +22,7 @@ import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.Notification;
+import u1171639.main.java.model.notification.UserNotification;
 import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.service.JavaSpaceNotificationService;
 import u1171639.main.java.service.LotService;
@@ -59,24 +59,24 @@ public class NotificationServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		TestUtils.removeAllFromSpace(new Notification(), this.space);
+		TestUtils.removeAllFromSpace(new UserNotification(), this.space);
 		TestUtils.removeAllFromSpace(new NotificationAddedFlag(), this.space);
 		TestUtils.removeAllFromSpace(new NotificationIDCounter(), this.space);
 	}
 	
 	@Test
 	public void retrieveAllNotifications() {
-		Notification notification1 = new Notification();
+		UserNotification notification1 = new UserNotification();
 		notification1.title = "Testing Title 1";
 		notification1.message = "Testing Message 1";
 		notification1.recipientId = 0l;
 		
-		Notification notification2 = new Notification();
+		UserNotification notification2 = new UserNotification();
 		notification2.title = "Testing Title 2";
 		notification2.message = "Testing Message 2";
 		notification2.recipientId = 0l;
 		
-		Notification notification3 = new Notification();
+		UserNotification notification3 = new UserNotification();
 		notification3.title = "Testing Title 3";
 		notification3.message = "Testing Message 3";
 		notification3.recipientId = 1l;
@@ -86,13 +86,13 @@ public class NotificationServiceTest {
 			this.notificationService.addNotification(notification2);
 			this.notificationService.addNotification(notification3);
 			
-			List<Notification> retrievedNotifications1 = this.notificationService.retrieveAllNotifications(0l);
+			List<UserNotification> retrievedNotifications1 = this.notificationService.retrieveAllNotifications(0l);
 			
 			assertTrue(retrievedNotifications1.size() == 2);
 			
-			Collections.sort(retrievedNotifications1, new Comparator<Notification>() {
+			Collections.sort(retrievedNotifications1, new Comparator<UserNotification>() {
 				@Override
-				public int compare(Notification o1, Notification o2) {
+				public int compare(UserNotification o1, UserNotification o2) {
 					return Long.compare(o1.id, o2.id);
 				}
 			});
@@ -101,7 +101,7 @@ public class NotificationServiceTest {
 			assertEquals(retrievedNotifications1.get(1).title, "Testing Title 2");
 			
 			
-			List<Notification> retrievedNotifications2 = this.notificationService.retrieveAllNotifications(1l);
+			List<UserNotification> retrievedNotifications2 = this.notificationService.retrieveAllNotifications(1l);
 			
 			assertTrue(retrievedNotifications2.size() == 1);
 					
@@ -114,7 +114,7 @@ public class NotificationServiceTest {
 	
 	@Test
 	public void testListenForNotifications() {
-		final Notification notification1 = new Notification();
+		final UserNotification notification1 = new UserNotification();
 		notification1.title = "Testing Title 1";
 		notification1.message = "Testing Message 1";
 		notification1.recipientId = 0l;
@@ -122,10 +122,10 @@ public class NotificationServiceTest {
 		final Object lock = new Object();
 		
 		try {
-			this.notificationService.listenForNotifications(0l, new Callback<Notification, Void>() {
+			this.notificationService.listenForNotifications(0l, new Callback<UserNotification, Void>() {
 
 				@Override
-				public Void call(Notification notification) {
+				public Void call(UserNotification notification) {
 					assertEquals(notification.title, notification1.title);
 					assertEquals(notification.message, notification1.message);
 					
@@ -147,7 +147,7 @@ public class NotificationServiceTest {
 	
 	@Test
 	public void testMarkNotificationRead() {
-		Notification notification = new Notification();
+		UserNotification notification = new UserNotification();
 		notification.recipientId = 0l;
 		notification.title = "Testing Title";
 		notification.message = "Testing Message";
@@ -155,7 +155,7 @@ public class NotificationServiceTest {
 		try {
 			this.notificationService.addNotification(notification);
 			
-			Notification retrieved = this.notificationService.retrieveAllNotifications(0l).get(0);
+			UserNotification retrieved = this.notificationService.retrieveAllNotifications(0l).get(0);
 			assertTrue(retrieved.read == false);
 			
 			this.notificationService.markNotificationRead(retrieved.id);

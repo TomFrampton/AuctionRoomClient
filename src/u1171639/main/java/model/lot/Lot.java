@@ -3,7 +3,7 @@ package u1171639.main.java.model.lot;
 import java.util.Date;
 import java.util.List;
 
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import net.jini.core.entry.Entry;
 import net.sf.oval.constraint.MinLength;
 import net.sf.oval.constraint.NotEmpty;
@@ -26,7 +26,7 @@ public class Lot implements Entry {
 	public Long sellerId;
 	
 	public transient List<Bid> bids;
-	public transient User seller;
+	public transient UserAccount seller;
 	
 	public Lot() {
 		

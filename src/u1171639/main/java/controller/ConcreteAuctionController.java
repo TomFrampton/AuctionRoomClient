@@ -17,7 +17,6 @@ import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
-import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
@@ -26,10 +25,10 @@ import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.exception.ValidationException;
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.Notification;
+import u1171639.main.java.model.notification.UserNotification;
 import u1171639.main.java.service.AccountService;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
@@ -69,13 +68,13 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public long register(User newUser) throws RegistrationException, ValidationException {
+	public long register(UserAccount newUser) throws RegistrationException, ValidationException {
 		validate(newUser);
 		return this.accountService.register(newUser);
 	}
 	
 	@Override
-	public void login(User credentials) throws AuthenticationException, ValidationException {
+	public void login(UserAccount credentials) throws AuthenticationException, ValidationException {
 		credentials.forename = " ";
 		credentials.surname = " ";
 		
@@ -94,17 +93,17 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public User getCurrentUser() {
+	public UserAccount getCurrentUser() {
 		return this.accountService.getCurrentUser();
 	}
 	
 	@Override
-	public User getUserDetails(long userId) throws UserNotFoundException {
+	public UserAccount getUserDetails(long userId) throws UserNotFoundException {
 		return this.accountService.getUserDetails(userId);
 	}
 	
 	@Override
-	public User getUserDetails(String username) throws UserNotFoundException {
+	public UserAccount getUserDetails(String username) throws UserNotFoundException {
 		return this.accountService.getUserDetails(username);
 	}
 	
@@ -236,7 +235,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 
 	@Override
-	public void listenForLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException {
+	public void listenForLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			this.lotService.listenForLotUpdates(id, callback);
 		} else {
@@ -308,7 +307,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public List<Notification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException {
+	public List<UserNotification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			return this.notificationService.retrieveAllNotifications(this.accountService.getCurrentUser().id);
 		} else {
@@ -317,7 +316,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 
 	@Override
-	public void listenForNotifications(Callback<Notification, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
+	public void listenForNotifications(Callback<UserNotification, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			this.notificationService.listenForNotifications(this.accountService.getCurrentUser().id, callback);
 		} else {
@@ -327,7 +326,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void addNotification(Notification notification) throws RequiresLoginException, AuctionCommunicationException {
+	public void addNotification(UserNotification notification) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			notification.recipientId = this.accountService.getCurrentUser().id;
 			this.notificationService.addNotification(notification);
@@ -356,13 +355,21 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	public static void main(String[] args) {
-		JavaSpace space = SpaceUtils.getSpace(SpaceConsts.HOST);
+		String hostname = "";
+		
+		if(args.length > 0) {
+			hostname = args[0];
+		} else {
+			hostname = SpaceConsts.HOST;
+		}
+		
+		JavaSpace space = SpaceUtils.getSpace(hostname);
 		if(space == null) {
 			FXApplicationStart.connectionError();
 			System.exit(1);
 		}
 		
-		TransactionManager transMgr = SpaceUtils.getManager(SpaceConsts.HOST);
+		TransactionManager transMgr = SpaceUtils.getManager(hostname);
 		if(transMgr == null) {
 			FXApplicationStart.connectionError();
 			System.exit(1);

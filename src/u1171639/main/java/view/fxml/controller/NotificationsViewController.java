@@ -12,7 +12,7 @@ import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.Notification;
+import u1171639.main.java.model.notification.UserNotification;
 import u1171639.main.java.utilities.Callback;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -35,10 +35,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
 public class NotificationsViewController extends ViewController {
-	@FXML private TableView<Notification> notificationList;
+	@FXML private TableView<UserNotification> notificationList;
 	@FXML private Pane notificationDetailPane;
 	
-	private ObservableList<Notification> retrievedNotifications = FXCollections.observableArrayList();
+	private ObservableList<UserNotification> retrievedNotifications = FXCollections.observableArrayList();
 	
 	private Tab notificationTab;
 	
@@ -53,25 +53,26 @@ public class NotificationsViewController extends ViewController {
 			this.retrievedNotifications.addAll(getAuctionController().retrieveAllNotifications());
 			
 			//.. and register for future notifications
-			getAuctionController().listenForNotifications(new Callback<Notification, Void>() {
+			getAuctionController().listenForNotifications(new Callback<UserNotification, Void>() {
 				
 				@Override
-				public Void call(Notification notification) {
+				public Void call(UserNotification notification) {
 					retrievedNotifications.add(notification);
 					setTabText();
 					return null;
 				}
 			});
 			
-		} catch (RequiresLoginException | AuctionCommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (RequiresLoginException e) {
+			showErrorAlert(e);
+		} catch(AuctionCommunicationException e) {
+			showErrorAlert(e);
 		}
 	}
 	
 	@FXML protected void handleNotificationClicked(MouseEvent event) {
 		if(this.notificationList.getSelectionModel().getSelectedIndex() >= 0) {
-			Notification notification = this.notificationList.getSelectionModel().getSelectedItem();
+			UserNotification notification = this.notificationList.getSelectionModel().getSelectedItem();
 			
 			if(!notification.read) {
 				// Mark notification as read
@@ -81,12 +82,8 @@ public class NotificationsViewController extends ViewController {
 					
 					this.setTabText();
 					
-				} catch (RequiresLoginException
-						| UnauthorisedNotificationActionException
-						| AuctionCommunicationException
-						| NotificationNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} catch (RequiresLoginExceptione e) {
+					
 				}
 			}
 		}
@@ -97,46 +94,46 @@ public class NotificationsViewController extends ViewController {
 		this.setTabText();
 	}
 	
-	public static ArrayList<TableColumn<Notification, ?>> getColumns(final TableView<Notification> table) {
-		ArrayList<TableColumn<Notification, ?>> columns = new ArrayList<>();
+	public static ArrayList<TableColumn<UserNotification, ?>> getColumns(final TableView<UserNotification> table) {
+		ArrayList<TableColumn<UserNotification, ?>> columns = new ArrayList<>();
 		
-		TableColumn<Notification,String> notificationTimeCol = new TableColumn<Notification,String>("Time Received");
-		notificationTimeCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Notification, String>, ObservableValue<String>>() {
+		TableColumn<UserNotification,String> notificationTimeCol = new TableColumn<UserNotification,String>("Time Received");
+		notificationTimeCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<UserNotification, String>, ObservableValue<String>>() {
 
 			@Override
-			public ObservableValue<String> call(CellDataFeatures<Notification, String> param) {
+			public ObservableValue<String> call(CellDataFeatures<UserNotification, String> param) {
 				return new SimpleStringProperty(param.getValue().timeReceived.toString());
 				
 			}
 		});
 		
-		TableColumn<Notification,String> notificationTitleCol = new TableColumn<Notification,String>("Title");
-		notificationTitleCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Notification, String>, ObservableValue<String>>() {
+		TableColumn<UserNotification,String> notificationTitleCol = new TableColumn<UserNotification,String>("Title");
+		notificationTitleCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<UserNotification, String>, ObservableValue<String>>() {
 
 			@Override
-			public ObservableValue<String> call(CellDataFeatures<Notification, String> param) {
+			public ObservableValue<String> call(CellDataFeatures<UserNotification, String> param) {
 				return new SimpleStringProperty(param.getValue().title);
 				
 			}
 		 });
 		
-		TableColumn<Notification,String> notificationMessageCol = new TableColumn<Notification,String>("Message");
-		notificationMessageCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<Notification, String>, ObservableValue<String>>() {
+		TableColumn<UserNotification,String> notificationMessageCol = new TableColumn<UserNotification,String>("Message");
+		notificationMessageCol.setCellValueFactory(new javafx.util.Callback<CellDataFeatures<UserNotification, String>, ObservableValue<String>>() {
 
 			@Override
-			public ObservableValue<String> call(CellDataFeatures<Notification, String> param) {
+			public ObservableValue<String> call(CellDataFeatures<UserNotification, String> param) {
 				return new SimpleStringProperty(param.getValue().message);
 				
 			}
 		});	
 		
-		table.setRowFactory(new javafx.util.Callback<TableView<Notification>, TableRow<Notification>>() {
+		table.setRowFactory(new javafx.util.Callback<TableView<UserNotification>, TableRow<UserNotification>>() {
 			
 			@Override
-			public TableRow<Notification> call(TableView<Notification> param) {
-				final TableRow<Notification> row = new TableRow<Notification>() {
+			public TableRow<UserNotification> call(TableView<UserNotification> param) {
+				final TableRow<UserNotification> row = new TableRow<UserNotification>() {
 					@Override
-					public void updateItem(Notification item, boolean empty) {
+					public void updateItem(UserNotification item, boolean empty) {
 						super.updateItem(item, empty);
 						if(item != null) {
 							if(!item.read) {
@@ -172,7 +169,7 @@ public class NotificationsViewController extends ViewController {
 	private void setTabText() {
 		int notificationCounter = 0;
 		
-		for(Notification notification : this.retrievedNotifications) {
+		for(UserNotification notification : this.retrievedNotifications) {
 			if(!notification.read) {
 				notificationCounter++;
 			}

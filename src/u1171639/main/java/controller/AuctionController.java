@@ -7,7 +7,6 @@ import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
-import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.RequiresLoginException;
@@ -16,29 +15,29 @@ import u1171639.main.java.exception.UnauthorisedLotActionException;
 import u1171639.main.java.exception.UnauthorisedNotificationActionException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.exception.ValidationException;
-import u1171639.main.java.model.account.User;
+import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.Notification;
+import u1171639.main.java.model.notification.UserNotification;
 import u1171639.main.java.utilities.Callback;
 
 public interface AuctionController {
 	public void launch();
 	
 	/* Account methods */
-	public long register(User newUser) throws RegistrationException, ValidationException;
+	public long register(UserAccount newUser) throws RegistrationException, ValidationException;
 	
-	public void login(User credentials) throws AuthenticationException, ValidationException;
+	public void login(UserAccount credentials) throws AuthenticationException, ValidationException;
 	
 	public void logout();
 	
 	public boolean isLoggedIn();
 	
-	public User getCurrentUser();
+	public UserAccount getCurrentUser();
 	
-	public User getUserDetails(long userId) throws UserNotFoundException;
+	public UserAccount getUserDetails(long userId) throws UserNotFoundException;
 	
-	public User getUserDetails(String username) throws UserNotFoundException;
+	public UserAccount getUserDetails(String username) throws UserNotFoundException;
 	
 	public void removeUser(long userId) throws UserNotFoundException;
 	
@@ -63,7 +62,7 @@ public interface AuctionController {
 	
 	public void listenForLotAddition(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void listenForLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, NotificationException, LotNotFoundException, AuctionCommunicationException;
+	public void listenForLotUpdates(long id, Callback<Lot, Void> callback) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
 	
 	public void listenForLotRemoval(long lotId, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
@@ -76,11 +75,11 @@ public interface AuctionController {
 	public void removeLot(long lotId) throws UnauthorisedLotActionException, LotNotFoundException, RequiresLoginException, AuctionCommunicationException;
 	
 	/* Notification  methods */
-	public List<Notification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException;
+	public List<UserNotification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void listenForNotifications(Callback<Notification, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
+	public void listenForNotifications(Callback<UserNotification, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void addNotification(Notification notification) throws RequiresLoginException, AuctionCommunicationException;
+	public void addNotification(UserNotification notification) throws RequiresLoginException, AuctionCommunicationException;
 	
 	public void markNotificationRead(long notificationId) throws RequiresLoginException, UnauthorisedNotificationActionException, AuctionCommunicationException, NotificationNotFoundException;
 }
