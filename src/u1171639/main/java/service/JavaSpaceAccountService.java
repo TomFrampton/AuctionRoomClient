@@ -4,31 +4,37 @@ import java.rmi.RemoteException;
 
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.lease.Lease;
+import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
+import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceConsts;
+import u1171639.main.java.utilities.TransactionUtils;
 import u1171639.main.java.utilities.counters.UserIDCounter;
 
 public class JavaSpaceAccountService implements AccountService {
 	private JavaSpace space;
 	private PasswordHashScheme hashScheme;
+	private TransactionManager transMgr;
 	
 	private UserAccount loggedInUser;
 	
-	public JavaSpaceAccountService(JavaSpace space, PasswordHashScheme hashScheme) {
+	public JavaSpaceAccountService(JavaSpace space, PasswordHashScheme hashScheme, TransactionManager transMgr) {
 		this.space = space;
 		this.hashScheme = hashScheme;
+		this.transMgr = transMgr;
 	}
 	
 	@Override
-	public void login(UserAccount credentials) throws AuthenticationException {
+	public void login(UserAccount credentials) throws AuthenticationException, AuctionCommunicationException {
 		try {
-			UserAccount registeredUser = (UserAccount) this.space.readIfExists(new UserAccount(credentials.username), null, 0);
+			UserAccount registeredUser = (UserAccount) this.space.readIfExists(new UserAccount(credentials.username), null, SpaceConsts.WAIT_TIME);
 			if(registeredUser == null) {
 				throw new AuthenticationException("Invalid username or password.");
 			}
@@ -40,18 +46,8 @@ public class JavaSpaceAccountService implements AccountService {
 			
 			// User logged in
 			this.loggedInUser = registeredUser;
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnusableEntryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransactionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+			throw new AuctionCommunicationException();
 		}
 	}
 
@@ -66,57 +62,40 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public long register(UserAccount newUser) throws RegistrationException {
+	public long register(UserAccount newUser) throws RegistrationException, AuctionCommunicationException {
 		UserAccount template = new UserAccount();
 		template.username = newUser.username;
 		
 		try {
-			// TODO improve this in case user exists but is temporarily taken from space
-			UserAccount sameusernameUser = (UserAccount) this.space.readIfExists(template, null, 0);
-			if(sameusernameUser != null) {
+			UserAccount sameUsernameUser = (UserAccount) this.space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
+			if(sameUsernameUser != null) {
 				throw new RegistrationException("username already in use.");
 			}
-		} catch (RemoteException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (UnusableEntryException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (TransactionException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+			throw new AuctionCommunicationException();
 		}
-			
+		
+		Transaction transaction = TransactionUtils.create(this.transMgr);
+		
 		try {
-			String unhashedPass = newUser.password;
-			
 			newUser.salt = this.hashScheme.generateSalt();
 			newUser.password = this.hashScheme.hashPassword(newUser.password, newUser.salt);
 			
-			UserIDCounter counter = (UserIDCounter) this.space.take(new UserIDCounter(), null, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			UserIDCounter counter = (UserIDCounter) this.space.take(new UserIDCounter(), transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
 		
 			newUser.id = counter.id;
 			counter.increment();
 		
-			this.space.write(counter, null, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
-			this.space.write(newUser, null, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			this.space.write(counter, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
+			this.space.write(newUser, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
 			
-			newUser.password = unhashedPass;
-		} catch (RemoteException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (UnusableEntryException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (TransactionException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			TransactionUtils.commit(transaction);
+			
+			newUser.salt = null;
+			newUser.password = null;
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+			TransactionUtils.abort(transaction);
+			throw new AuctionCommunicationException();
 		}
 		
 		return newUser.id;
@@ -128,69 +107,51 @@ public class JavaSpaceAccountService implements AccountService {
 	}
 
 	@Override
-	public UserAccount getUserDetails(long userId) throws UserNotFoundException {
+	public UserAccount getUserDetails(long userId) throws UserNotFoundException, AuctionCommunicationException {
 		return this.getUserDetails(new UserAccount(userId));
 	}
 
 	@Override
-	public UserAccount getUserDetails(String username) throws UserNotFoundException {
+	public UserAccount getUserDetails(String username) throws UserNotFoundException, AuctionCommunicationException {
 		return this.getUserDetails(new UserAccount(username));
 	}
 	
-	private UserAccount getUserDetails(UserAccount template) throws UserNotFoundException {
+	private UserAccount getUserDetails(UserAccount template) throws UserNotFoundException, AuctionCommunicationException {
 		UserAccount retrievedUser = null;
 		
 		try {
-			// TODO improve this in case user is temporarily taken from space
-			retrievedUser = (UserAccount) this.space.readIfExists(template, null, 0);
+			retrievedUser = (UserAccount) this.space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
 			if(retrievedUser == null) {
 				throw new UserNotFoundException("That user does not exist.");
 			}
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnusableEntryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransactionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+			throw new AuctionCommunicationException();
 		}
+		
+		retrievedUser.password = null;
+		retrievedUser.salt = null;
 		
 		return retrievedUser;
 	}
 
 	@Override
-	public void removeUser(long userId) throws UserNotFoundException {
+	public void removeUser(long userId) throws UserNotFoundException, AuctionCommunicationException {
 		this.removeUser(new UserAccount(userId));
 	}
 
 	@Override
-	public void removeUser(String username) throws UserNotFoundException {
+	public void removeUser(String username) throws UserNotFoundException, AuctionCommunicationException {
 		this.removeUser(new UserAccount(username));
 	}
 	
-	private void removeUser(UserAccount template) throws UserNotFoundException {
+	private void removeUser(UserAccount template) throws UserNotFoundException, AuctionCommunicationException {
 		try {
-			UserAccount removedUser = (UserAccount) this.space.takeIfExists(template, null, 0);
+			UserAccount removedUser = (UserAccount) this.space.takeIfExists(template, null, SpaceConsts.WAIT_TIME);
 			if(removedUser == null) {
 				throw new UserNotFoundException("User not found.");
 			}
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnusableEntryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransactionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (RemoteException | UnusableEntryException | TransactionException | InterruptedException e) {
+			throw new AuctionCommunicationException();
 		}
 	}
 

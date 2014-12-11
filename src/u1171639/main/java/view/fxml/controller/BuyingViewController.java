@@ -8,6 +8,9 @@ import java.util.ResourceBundle;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialogs;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
+import u1171639.main.java.exception.LotNotFoundException;
+import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
 import javafx.beans.property.SimpleStringProperty;
@@ -71,14 +74,34 @@ public class BuyingViewController extends ViewController {
 		if(this.lotList.getSelectionModel().getSelectedIndex() >= 0) {
 			Lot selectedLot = this.lotList.getSelectionModel().getSelectedItem();
 			
-			this.viewLotController.setLotToView(selectedLot);
-			this.bidsController.setLotForBids(selectedLot);
+			// Get the Lot from the server to ensure that it still exists
+			try {
+				Lot retrievedLot = getAuctionController().getLotDetails(selectedLot.id);
+				
+				this.viewLotController.setLotToView(retrievedLot);
+				this.bidsController.setLotForBids(retrievedLot);
 
-			this.lotPane.getChildren().clear();
-			this.lotPane.getChildren().add(this.viewLotController.getViewComponent());
-			
-			this.bidsPane.getChildren().clear();
-			this.bidsPane.getChildren().add(this.bidsController.getViewComponent());
+				this.lotPane.getChildren().clear();
+				this.lotPane.getChildren().add(this.viewLotController.getViewComponent());
+				
+				this.bidsPane.getChildren().clear();
+				this.bidsPane.getChildren().add(this.bidsController.getViewComponent());
+				
+			} catch (LotNotFoundException e) {
+				// Remove Lot from the list
+				this.retrievedLots.remove(selectedLot);
+
+				if(this.viewLotController.getLotToView().id.equals(selectedLot.id)){
+					this.lotPane.getChildren().clear();
+					this.bidsPane.getChildren().clear();
+				}
+				
+				showErrorAlert(e);
+			} catch (RequiresLoginException e) {
+				showErrorAlert(e);
+			} catch (AuctionCommunicationException e) {
+				showErrorAlert(e);
+			}
 		}
 	}
 	

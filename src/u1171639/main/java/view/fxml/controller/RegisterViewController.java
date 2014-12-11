@@ -3,6 +3,7 @@ package u1171639.main.java.view.fxml.controller;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.UserAccount;
@@ -47,6 +48,8 @@ public class RegisterViewController extends ViewController {
 			alert.show();
 		} catch (ValidationException e) {
 			showValidationAlert(e.getViolations());
+		} catch (AuctionCommunicationException e) {
+			showErrorAlert(e);
 		}
 		
 	}

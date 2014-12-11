@@ -511,8 +511,6 @@ public class LotServiceTest {
 					return null;
 				}
 			});
-		} catch (NotificationException e) {
-			fail("Was not already subscribed to Lot.");
 		} catch (LotNotFoundException e) {
 			fail("Lot was added. Should have been found.");
 		} catch (AuctionCommunicationException e) {

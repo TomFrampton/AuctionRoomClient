@@ -18,8 +18,8 @@ public class SpaceConsts {
 	
 	public static final int TRANSACTION_TIME = TEN_SECONDS;
 	
-	public static final int AUCTION_ENTITY_WRITE_TIME = FIVE_MINUTES;
+	public static final int AUCTION_ENTITY_WRITE_TIME = TEN_MINUTES;
 	public static final int FLAG_WRITE_TIME = TEN_SECONDS;
 	
-	public static final String HOST = "waterloo";
+	public static final String HOST = "localhost";
 }

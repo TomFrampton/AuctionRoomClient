@@ -9,8 +9,12 @@ import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;
 import u1171639.main.java.exception.LotNotFoundException;
+import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.RequiresLoginException;
+import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
+import u1171639.main.java.exception.UnauthorisedNotificationActionException;
+import u1171639.main.java.exception.UserNotFoundException;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -52,8 +56,8 @@ public abstract class ViewController implements Initializable {
 			
 			return controller;
 		} catch(IOException e) {
-			// TODO
-			e.printStackTrace();
+			System.err.println("Error: " + e.getMessage());
+			System.exit(1);
 			return null;
 		}
 	}
@@ -127,6 +131,38 @@ public abstract class ViewController implements Initializable {
 		alert.setTitle("Unauthorised Lot Action");
 		alert.setHeaderText("Unauthorised Lot Action");
 		alert.setContentText("Only the seller of the Lot is authorised to do that.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(NotificationNotFoundException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Notification Not Found");
+		alert.setHeaderText("Notification Not Found");
+		alert.setContentText("We could not find that notification on our server.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(UnauthorisedNotificationActionException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Unauthorised Notification Action");
+		alert.setHeaderText("Unauthorised Notification Action");
+		alert.setContentText("Only the receipient of the notification is allowed to mark it as read.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(UserNotFoundException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("User Not Found");
+		alert.setHeaderText("User Not Found");
+		alert.setContentText("We could not find that user in our database.");
+		alert.show();
+	}
+	
+	public void showErrorAlert(UnauthorisedBidException e) {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Invalid Bid");
+		alert.setHeaderText("Invalid Bid");
+		alert.setContentText("You cannot bid on your own Lot.");
 		alert.show();
 	}
 	

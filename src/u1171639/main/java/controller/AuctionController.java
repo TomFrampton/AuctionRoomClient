@@ -25,9 +25,9 @@ public interface AuctionController {
 	public void launch();
 	
 	/* Account methods */
-	public long register(UserAccount newUser) throws RegistrationException, ValidationException;
+	public long register(UserAccount newUser) throws RegistrationException, ValidationException, AuctionCommunicationException;
 	
-	public void login(UserAccount credentials) throws AuthenticationException, ValidationException;
+	public void login(UserAccount credentials) throws AuthenticationException, ValidationException, AuctionCommunicationException;
 	
 	public void logout();
 	
@@ -35,13 +35,13 @@ public interface AuctionController {
 	
 	public UserAccount getCurrentUser();
 	
-	public UserAccount getUserDetails(long userId) throws UserNotFoundException;
+	public UserAccount getUserDetails(long userId) throws UserNotFoundException, AuctionCommunicationException;
 	
-	public UserAccount getUserDetails(String username) throws UserNotFoundException;
+	public UserAccount getUserDetails(String username) throws UserNotFoundException, AuctionCommunicationException;
 	
-	public void removeUser(long userId) throws UserNotFoundException;
+	public void removeUser(long userId) throws UserNotFoundException, AuctionCommunicationException;
 	
-	public void removeUser(String username) throws UserNotFoundException;
+	public void removeUser(String username) throws UserNotFoundException, AuctionCommunicationException;
 	
 	/* Lot methods */
 	public long addLot(Lot lot, Callback<Bid, Void> bidCallback) throws RequiresLoginException, AuctionCommunicationException, ValidationException;
@@ -58,7 +58,7 @@ public interface AuctionController {
 	
 	public Bid getHighestBid(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
 	
-	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException;
+	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException, UserNotFoundException;
 	
 	public void listenForLotAddition(Lot template, Callback<Lot, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	

@@ -6,12 +6,14 @@ import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.AuthenticationException;
 import u1171639.main.java.exception.RegistrationException;
 import u1171639.main.java.exception.UserNotFoundException;
@@ -22,6 +24,7 @@ import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.UserIDCounter;
+import u1171639.main.java.view.FXApplicationStart;
 import u1171639.test.utilities.TestUtils;
 
 public class AccountServiceTest {
@@ -30,8 +33,6 @@ public class AccountServiceTest {
 	
 	private JavaSpace space;
 	
-	private List<UserAccount> usersToRemove = new ArrayList<UserAccount>();
-	
 	@Before
 	public void setUp() throws Exception {
 		this.space = SpaceUtils.getSpace(SpaceConsts.HOST);
@@ -39,8 +40,13 @@ public class AccountServiceTest {
 			throw new ConnectException("Could not connect to JavaSpace");
 		}
 		
+		TransactionManager transMgr = SpaceUtils.getManager(SpaceConsts.HOST);
+		if(transMgr == null) {
+			throw new ConnectException("Could not connect to Transaction service");
+		}
+		
 		this.hashScheme = new MediumSecurityHashScheme();
-		this.accountService = new JavaSpaceAccountService(this.space, this.hashScheme);
+		this.accountService = new JavaSpaceAccountService(this.space, this.hashScheme, transMgr);
 		UserIDCounter.initialiseInSpace(this.space);
 	}
 
@@ -58,25 +64,26 @@ public class AccountServiceTest {
 		// Test that we can add a new user
 		try {
 			newUser.id = this.accountService.register(newUser);
-			this.usersToRemove.add(newUser);
 			
 			assertTrue(newUser.username.equals("test@register.com"));
 			
 			UserAccount retrievedUser = this.accountService.getUserDetails(newUser.id);
-			assertTrue(retrievedUser.password.equals(this.hashScheme.hashPassword(newUser.password, retrievedUser.salt)));
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
 		} catch(UserNotFoundException e) {
 			fail("User was registed. They should be able to be found.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that trying to add a user with a username that is already in use throws an exception
 		try {
-			UserAccount newUser2 = new UserAccount(this.accountService.register(newUser));
-			this.usersToRemove.add(newUser2);
+			UserAccount newUser2 = new UserAccount(this.accountService.register(newUser));;
 			fail("Added two users with same username.");
 		} catch (RegistrationException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that IDs are incremented correctly
@@ -86,12 +93,13 @@ public class AccountServiceTest {
 		
 		try {
 			newUser2.id = this.accountService.register(newUser2);
-			this.usersToRemove.add(newUser2);
 			
 			assertTrue(newUser2.id.equals(newUser.id + 1));
 
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 	}
 	
@@ -103,9 +111,10 @@ public class AccountServiceTest {
 		
 		try {
 			newUser.id = this.accountService.register(newUser);
-			this.usersToRemove.add(newUser);
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that incorrect username stops login
@@ -117,6 +126,8 @@ public class AccountServiceTest {
 			fail("Incorrect username. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that a correct username but incorrect password stops login
@@ -128,6 +139,8 @@ public class AccountServiceTest {
 			fail("Incorrect password. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that a correct username and password allows login
@@ -138,6 +151,8 @@ public class AccountServiceTest {
 			this.accountService.login(credentials);
 		} catch(AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		} finally {
 			this.accountService.logout();
 		}
@@ -154,15 +169,20 @@ public class AccountServiceTest {
 		
 		try {
 			newUser.id = this.accountService.register(newUser);
-			this.usersToRemove.add(newUser);
+			newUser.password = "password";
+			
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
 			this.accountService.login(newUser);
 		} catch (AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		UserAccount retrievedCurrentUser = this.accountService.getCurrentUser();
@@ -193,10 +213,12 @@ public class AccountServiceTest {
 			user1.id = this.accountService.register(user1);
 			user2.id = this.accountService.register(user2);
 			
-			this.usersToRemove.add(user1);
-			this.usersToRemove.add(user2);
+			user1.password = "password1";
+			user2.password = "password2";
 		} catch (RegistrationException e) {
 			fail("Unique user - Should have been added.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
@@ -221,6 +243,8 @@ public class AccountServiceTest {
 			assertTrue(this.accountService.isLoggedIn());
 		} catch (AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		} finally {
 			this.accountService.logout();
 		}
@@ -238,12 +262,11 @@ public class AccountServiceTest {
 		
 		try {
 			user1.id = this.accountService.register(user1);
-			this.usersToRemove.add(user1);
-			
 			user2.id = this.accountService.register(user2);
-			this.usersToRemove.add(user2);
 		} catch (RegistrationException e) {
 			fail("Unique users - should have been registered.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test we can retrieve registered users using their ID
@@ -258,6 +281,8 @@ public class AccountServiceTest {
 			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that we can get registered users using their username
@@ -272,6 +297,8 @@ public class AccountServiceTest {
 			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that trying to retrieve unregistered users results in an exception
@@ -280,6 +307,8 @@ public class AccountServiceTest {
 			fail("User doesn't exist. UserNotFoundException should have been thrown.");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
@@ -287,6 +316,8 @@ public class AccountServiceTest {
 			fail("User doesn't exist. UserNotFoundException should have been thrown.");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 	}
 	
@@ -308,12 +339,16 @@ public class AccountServiceTest {
 			fail("Unique users - should have been registered.");
 		} catch (UserNotFoundException e) {
 			fail("User was registered so should be able to be found.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
 			this.accountService.removeUser(user1.id);
 		} catch(UserNotFoundException e) {
 			fail("User was registered so should be able to be removed.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
@@ -321,6 +356,8 @@ public class AccountServiceTest {
 			fail("User was removed so details should not be found");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		// Test that we can removed a user using their username
@@ -331,12 +368,16 @@ public class AccountServiceTest {
 			fail("Unique users - should have been registered.");
 		} catch (UserNotFoundException e) {
 			fail("User was registered so should be able to be found.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
 			this.accountService.removeUser(user2.username);
 		} catch(UserNotFoundException e) {
 			fail("User was registered so should be able to be removed.");
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 		
 		try {
@@ -344,6 +385,8 @@ public class AccountServiceTest {
 			fail("User was removed so details should not be found");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			fail(e.getMessage());
 		}
 	}
 }

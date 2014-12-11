@@ -68,13 +68,13 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public long register(UserAccount newUser) throws RegistrationException, ValidationException {
+	public long register(UserAccount newUser) throws RegistrationException, ValidationException, AuctionCommunicationException {
 		validate(newUser);
 		return this.accountService.register(newUser);
 	}
 	
 	@Override
-	public void login(UserAccount credentials) throws AuthenticationException, ValidationException {
+	public void login(UserAccount credentials) throws AuthenticationException, ValidationException, AuctionCommunicationException {
 		credentials.forename = " ";
 		credentials.surname = " ";
 		
@@ -98,22 +98,22 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public UserAccount getUserDetails(long userId) throws UserNotFoundException {
+	public UserAccount getUserDetails(long userId) throws UserNotFoundException, AuctionCommunicationException {
 		return this.accountService.getUserDetails(userId);
 	}
 	
 	@Override
-	public UserAccount getUserDetails(String username) throws UserNotFoundException {
+	public UserAccount getUserDetails(String username) throws UserNotFoundException, AuctionCommunicationException {
 		return this.accountService.getUserDetails(username);
 	}
 	
 	@Override
-	public void removeUser(long userId) throws UserNotFoundException {
+	public void removeUser(long userId) throws UserNotFoundException, AuctionCommunicationException {
 		this.accountService.removeUser(userId);
 	}
 	
 	@Override
-	public void removeUser(String username) throws UserNotFoundException {
+	public void removeUser(String username) throws UserNotFoundException, AuctionCommunicationException {
 		this.accountService.removeUser(username);
 	}
 	
@@ -132,7 +132,7 @@ public class ConcreteAuctionController implements AuctionController {
 						if(bidCallback != null) {
 							bidCallback.call(bid);
 						}
-					} catch (UserNotFoundException e) {
+					} catch (UserNotFoundException | AuctionCommunicationException e) {
 						// Something went wrong. Don't call the callback.
 					}	
 					
@@ -206,7 +206,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException {
+	public List<Bid> getVisibleBids(long lotId) throws RequiresLoginException, LotNotFoundException, AuctionCommunicationException, UserNotFoundException {
 		if(this.accountService.isLoggedIn()) {
 			List<Bid> bids = this.lotService.getVisibleBids(lotId, this.accountService.getCurrentUser().id);
 			
@@ -214,8 +214,7 @@ public class ConcreteAuctionController implements AuctionController {
 				try {
 					bid.bidder = this.accountService.getUserDetails(bid.bidderId);
 				} catch (UserNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					throw new UserNotFoundException("Bidder not found.");
 				}
 			}
 			
@@ -265,7 +264,7 @@ public class ConcreteAuctionController implements AuctionController {
 						if(callback != null) {
 							callback.call(bid);
 						}
-					} catch (UserNotFoundException e) {
+					} catch (UserNotFoundException | AuctionCommunicationException e) {
 						// Something went wrong. Don't call the callback.
 					}	
 					
@@ -383,7 +382,7 @@ public class ConcreteAuctionController implements AuctionController {
 		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
 		
 		LotService lotService = new JavaSpaceLotService(space, transMgr);
-		AccountService accountService = new JavaSpaceAccountService(space, hashScheme);
+		AccountService accountService = new JavaSpaceAccountService(space, hashScheme, transMgr);
 		NotificationService notificationService = new JavaSpaceNotificationService(space, transMgr);
 		
 		AuctionView view = new JavaFXAuctionView();

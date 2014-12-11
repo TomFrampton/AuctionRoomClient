@@ -52,14 +52,11 @@ public class SearchLotsViewController extends ViewController {
 					try {
 						lotsFound = getAuctionController().searchLots(param);
 					} catch (RequiresLoginException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						showErrorAlert(e);
 					} catch (AuctionCommunicationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						showErrorAlert(e);
 					} catch (UserNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						showErrorAlert(e);
 					}
 					
 					searchReturnedCallback.call(lotsFound);

@@ -72,7 +72,7 @@ public class DummyView implements AuctionView {
 		
 		LotService lotService = new JavaSpaceLotService(this.space, transMgr);
 		NotificationService notificationService = new JavaSpaceNotificationService(this.space, transMgr);
-		AccountService accountService = new JavaSpaceAccountService(this.space, hashScheme);
+		AccountService accountService = new JavaSpaceAccountService(this.space, hashScheme, transMgr);
 		
 		AuctionController controller = new ConcreteAuctionController(this, lotService, accountService, notificationService);
 		controller.launch();
@@ -96,14 +96,20 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testRegister() {
 		UserAccount user = new UserAccount();
+		user.forename = "Testing";
+		user.surname = "Testing";
 		user.username = "registration@testing.com";
 		user.password = "password";
 		
 		try {
 			this.controller.register(user);
+			user.password = "password";
 		} catch(RegistrationException e) {
 			fail("Registering new user failed.");
 		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -116,12 +122,17 @@ public class DummyView implements AuctionView {
 		} catch (ValidationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
 	@Test
 	public void testLogin() {
 		UserAccount newUser = new UserAccount();
+		newUser.forename = "Testing";
+		newUser.surname = "Testing";
 		newUser.username = "test@login.com";
 		newUser.password = "password";
 		
@@ -132,18 +143,24 @@ public class DummyView implements AuctionView {
 		} catch (ValidationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// Test that incorrect username stops login
 		try {
 			UserAccount credentials = new UserAccount();
 			credentials.username = "test@incorrect.com";
-			credentials.username = "password";
+			credentials.password = "password";
 			this.controller.login(credentials);
 			fail("Incorrect username. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
 		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -152,12 +169,15 @@ public class DummyView implements AuctionView {
 		try {
 			UserAccount credentials = new UserAccount();
 			credentials.username = "test@login.com";
-			credentials.username = "incorrectPass";
+			credentials.password = "incorrectPass";
 			this.controller.login(credentials);
 			fail("Incorrect password. User should not have been able to log in");
 		} catch(AuthenticationException e) {
 			// Pass
 		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -171,6 +191,9 @@ public class DummyView implements AuctionView {
 		} catch(AuthenticationException e) {
 			fail("Credentials were correct. User should have been able to log in");
 		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
@@ -242,6 +265,9 @@ public class DummyView implements AuctionView {
 		} catch (ValidationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			this.controller.logout();
 		}
@@ -272,6 +298,9 @@ public class DummyView implements AuctionView {
 			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// Test that we can get registered users using their username
@@ -286,6 +315,9 @@ public class DummyView implements AuctionView {
 			assertEquals(user2.username, retrievedUserId2.username);
 		} catch (UserNotFoundException e) {
 			fail("Users were registered so should be able to retrieve details.");
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// Test that trying to retrieve unregistered users results in an exception
@@ -294,6 +326,9 @@ public class DummyView implements AuctionView {
 			fail("User doesn't exist. UserNotFoundException should have been thrown.");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
@@ -301,6 +336,9 @@ public class DummyView implements AuctionView {
 			fail("User doesn't exist. UserNotFoundException should have been thrown.");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -316,21 +354,22 @@ public class DummyView implements AuctionView {
 		
 		// Test we can remove user using their ID
 		try {
-			user1.id = this.controller.register(user1);
+			register(user1);
 			this.controller.getUserDetails(user1.id);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
-		} catch (UserNotFoundException e) {
-			fail("User was registered so should be able to be found.");
-		} catch (ValidationException e) {
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (UserNotFoundException e) {
+			fail("User was registered. Should have been found.");
 		}
 		
 		try {
 			this.controller.removeUser(user1.id);
 		} catch(UserNotFoundException e) {
 			fail("User was registered so should be able to be removed.");
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
@@ -338,17 +377,18 @@ public class DummyView implements AuctionView {
 			fail("User was removed so details should not be found");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// Test that we can removed a user using their username
 		try {
-			user2.id = this.controller.register(user2);
+			register(user2);
 			this.controller.getUserDetails(user2.username);
-		} catch (RegistrationException e) {
-			fail("Unique users - should have been registered.");
 		} catch (UserNotFoundException e) {
 			fail("User was registered so should be able to be found.");
-		} catch (ValidationException e) {
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -357,6 +397,9 @@ public class DummyView implements AuctionView {
 			this.controller.removeUser(user2.username);
 		} catch(UserNotFoundException e) {
 			fail("User was registered so should be able to be removed.");
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		try {
@@ -364,6 +407,9 @@ public class DummyView implements AuctionView {
 			fail("User was removed so details should not be found");
 		} catch(UserNotFoundException e) {
 			// Pass
+		} catch (AuctionCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -372,6 +418,8 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testAddLot() {
 		Car car = new Car();
+		car.name = "Integration";
+		car.description = "TestingTestingTesting";
 		car.make = "Ford";
 		car.model = "Focus";
 		
@@ -418,21 +466,29 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testSearchForLot() {
 		Car car1 = new Car();
+		car1.name = "Integration";
+		car1.description = "TestingTestingTesting";
 		car1.make = "Honda"; 
 		car1.model = "Civic";
 		car1.description = "A really nice car!";
 		
 		Car car2 = new Car();
+		car2.name = "Integration";
+		car2.description = "TestingTestingTesting";
 		car2.make = "Honda"; 
 		car2.model = "NSX";
 		car2.description = "A really nice car!";
 		
 		Car car3 = new Car();
+		car3.name = "Integration";
+		car3.description = "TestingTestingTesting";
 		car3.make = "Ford"; 
 		car3.model = "Focus";
 		car3.description = "A really rubbish car!";
 		
 		Car car4 = new Car();
+		car4.name = "Integration";
+		car4.description = "TestingTestingTesting";
 		car4.make = "Ford"; 
 		car4.model = "Fiesta";
 		car4.description = "A really nice car!";
@@ -538,6 +594,8 @@ public class DummyView implements AuctionView {
 	@Test
 	public void  testUpdateLot() {
 		Car car = new Car();
+		car.name = "Integration";
+		car.description = "TestingTestingTesting";
 		car.make = "UnitTest"; 
 		car.model = "UpdateLot";
 		car.sellerId = 0l;
@@ -552,7 +610,7 @@ public class DummyView implements AuctionView {
 		try {
 			car.id = this.controller.addLot(car, null);
 			
-			car.description = "Updated!";
+			car.description = "Updated!!!!";
 			this.controller.updateLot(car);
 			
 			Car retrievedCar = (Car) this.controller.getLotDetails(car.id);
@@ -579,14 +637,20 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testBidForLot() {
 		Car car = new Car();
+		car.name = "Integration";
+		car.description = "TestingTestingTesting";
 		car.make = "Test";
 		car.model = "BidForLot";
 		
 		Car car2 = new Car();
+		car2.name = "Integration";
+		car2.description = "TestingTestingTesting";
 		car2.make = "Test2";
 		car2.model = "BidForLot2";
 		
 		Car car3 = new Car();
+		car3.name = "Integration";
+		car3.description = "TestingTestingTesting";
 		car3.make = "Test3";
 		car3.model = "BidForLot3";
 		
@@ -622,6 +686,9 @@ public class DummyView implements AuctionView {
 		} catch (AuthenticationException e) {
 			fail("User was registered. Should be able to login");
 		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -707,6 +774,8 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testGetVisibleBids() {
 		Car car = new Car();
+		car.name = "Integration";
+		car.description = "TestingTestingTesting";
 		car.make = "IntegrationTest"; 
 		car.model = "GetVisibleLots";
 		
@@ -845,12 +914,17 @@ public class DummyView implements AuctionView {
 			fail("Lots exist. Should have been found");
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());
+		} catch (UserNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
 	@Test
 	public void testSubscribeToLot() throws Exception {
 		Car car = new Car();
+		car.name = "Integration";
+		car.description = "TestingTestingTesting";
 		car.make = "Mazda";
 		car.model = "RX8";
 		
@@ -916,6 +990,8 @@ public class DummyView implements AuctionView {
 	@Test
 	public void testListenForLot() throws Exception {
 		Car car = new Car();
+		car.name = "Integration";
+		car.description = "TestingTestingTesting";
 		car.make = "Honda";
 		car.model = "Civic";
 		
@@ -994,11 +1070,11 @@ public class DummyView implements AuctionView {
 		notification3.message = "Testing Message 3";
 		
 		UserAccount user1 = new UserAccount();
-		user1.username = "test@retrieveAllNotifications1.com";
+		user1.username = "test@retrieveAllNot1.com";
 		user1.password = "password1";
 		
 		UserAccount user2 = new UserAccount();
-		user2.username = "test@retrieveAllNotifications2.com";
+		user2.username = "test@retrieveNot2.com";
 		user2.password = "password2";
 		
 		register(user1);
@@ -1021,7 +1097,6 @@ public class DummyView implements AuctionView {
 			
 			assertEquals(retrievedNotifications1.get(0).title, "Testing Title 1");
 			assertEquals(retrievedNotifications1.get(1).title, "Testing Title 2");
-			
 			
 			register(user2);
 			login(user2);
@@ -1048,7 +1123,7 @@ public class DummyView implements AuctionView {
 		notification1.message = "Testing Message 1";
 		
 		UserAccount user = new UserAccount();
-		user.username = "test@retrieveAllNotifications.com";
+		user.username = "test@retrieveAllNot.com";
 		user.password = "password";
 		
 		register(user);
@@ -1094,10 +1169,18 @@ public class DummyView implements AuctionView {
 	
 	private void register(UserAccount newUser) {
 		try {
+			newUser.forename = "Testing";
+			newUser.surname = "Testing";
+			
+			String password = newUser.password;
 			newUser.id = this.controller.register(newUser);
+			newUser.password = password;
 		} catch (RegistrationException e) {
 			e.printStackTrace();
 		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -1109,6 +1192,9 @@ public class DummyView implements AuctionView {
 		} catch (AuthenticationException e) {
 			e.printStackTrace();
 		} catch (ValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuctionCommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

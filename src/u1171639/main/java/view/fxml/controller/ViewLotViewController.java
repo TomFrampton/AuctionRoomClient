@@ -17,6 +17,8 @@ public class ViewLotViewController extends ViewController {
 	
 	@FXML private Pane lotForm;
 	
+	private Lot lotToView;
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ObservableList<String> typeList = FXCollections.observableArrayList();
@@ -28,12 +30,18 @@ public class ViewLotViewController extends ViewController {
 	}
 	
 	public void setLotToView(Lot lot) {
-		String lotType = lot.getClass().getSimpleName();
+		this.lotToView = lot;
+		
+		String lotType = lotToView.getClass().getSimpleName();
 	
 		LotInfoViewController lotFormController = this.lotForms.get(lotType);
 		this.lotForm.getChildren().clear();
 		this.lotForm.getChildren().add(lotFormController.getViewComponent());
 
 		lotFormController.setLot(lot);
+	}
+	
+	public Lot getLotToView() {
+		return this.lotToView;
 	}
 }

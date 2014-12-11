@@ -43,19 +43,16 @@ public class UpdateLotViewController extends ViewController {
 					try {
 						getAuctionController().updateLot(param);
 						lotUpdatedCallback.call(param);
-						return null;
+						
 					} catch (RequiresLoginException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						return null;
+						showErrorAlert(e);
 					} catch (AuctionCommunicationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						return null;
+						showErrorAlert(e);
 					} catch (ValidationException e) {
 						showValidationAlert(e.getViolations());
-						return null;
 					}
+					
+					return null;
 				}
 			});
 		}

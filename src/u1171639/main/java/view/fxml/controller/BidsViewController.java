@@ -15,6 +15,7 @@ import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedBidException;
 import u1171639.main.java.exception.UnauthorisedLotActionException;
+import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
@@ -68,12 +69,14 @@ public class BidsViewController extends ViewController {
 			this.lotForBids = lot;
 			this.retrievedBids.clear();
 			this.retrievedBids.addAll(getAuctionController().getVisibleBids(this.lotForBids.id));
-		} catch (RequiresLoginException | LotNotFoundException | AuctionCommunicationException e) {
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.setTitle("Lot Not Found");
-			alert.setHeaderText("Lot Not Found");
-			alert.setContentText("That Lot was not found. It may have been removed.");
-			alert.show();
+		} catch (UserNotFoundException e) {
+			showErrorAlert(e);
+		} catch (RequiresLoginException e) {
+			showErrorAlert(e);
+		} catch (LotNotFoundException e) {
+			showErrorAlert(e);
+		} catch (AuctionCommunicationException e) {
+			showErrorAlert(e);
 		}
 	}
 	
@@ -202,11 +205,7 @@ public class BidsViewController extends ViewController {
 			} catch (RequiresLoginException e) {
 				showErrorAlert(e);
 			} catch (UnauthorisedBidException e) {
-				Alert alert = new Alert(AlertType.ERROR);
-				alert.setTitle("Invalid Bid");
-				alert.setHeaderText("Invalid Bid");
-				alert.setContentText("You cannot bid on your own Lot.");
-				alert.show();
+				showErrorAlert(e);
 			} catch(InvalidBidException e) {
 				showErrorAlert(e);
 			} catch (AuctionCommunicationException e) {
@@ -215,6 +214,8 @@ public class BidsViewController extends ViewController {
 				showErrorAlert(e);
 			} catch (ValidationException e) {
 				showValidationAlert(e.getViolations());
+			} catch (UserNotFoundException e) {
+				showErrorAlert(e);
 			}
 		} catch (ParseException e1) {
 			Alert alert = new Alert(AlertType.ERROR);
@@ -235,7 +236,7 @@ public class BidsViewController extends ViewController {
 				Alert alert = new Alert(AlertType.INFORMATION);
 				alert.setTitle("Bid Accepted");
 				alert.setHeaderText("Bid Accepted");
-				alert.setContentText("The bid has been accepted and " + selected.bidder + " has been informed.");
+				alert.setContentText("The bid has been accepted and " + selected.bidder.username + " has been informed.");
 				alert.show();
 				
 			} catch (RequiresLoginException e) {

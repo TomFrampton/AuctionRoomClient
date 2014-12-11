@@ -82,8 +82,14 @@ public class NotificationsViewController extends ViewController {
 					
 					this.setTabText();
 					
-				} catch (RequiresLoginExceptione e) {
-					
+				} catch (RequiresLoginException e) {
+					showErrorAlert(e);
+				} catch (UnauthorisedNotificationActionException e) {
+					showErrorAlert(e);
+				} catch (AuctionCommunicationException e) {
+					showErrorAlert(e);
+				} catch (NotificationNotFoundException e) {
+					showErrorAlert(e);
 				}
 			}
 		}
