@@ -34,7 +34,7 @@ import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.TransactionUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
-import u1171639.main.java.utilities.flags.BidAcceptedFlag;
+import u1171639.main.java.utilities.flags.BidAcceptedFlag2;
 import u1171639.main.java.utilities.flags.BidPlacedFlag;
 import u1171639.main.java.utilities.flags.LotAddedFlag;
 import u1171639.main.java.utilities.flags.LotRemovedFlag;
@@ -370,14 +370,22 @@ public class JavaSpaceLotService implements LotService {
 			throw new BidNotFoundException("Bid was not found.");
 		}
 		
-		// Announce that this bid has been accepted
-		BidAcceptedFlag bidAccepted = new BidAcceptedFlag();
-		bidAccepted.lotId = bid.lotId;
-		bidAccepted.bidId = bid.id;
+		Transaction transaction = TransactionUtils.create(this.transMgr);
 		
 		try {
-			this.space.write(bidAccepted, null, SpaceConsts.FLAG_WRITE_TIME);
-		} catch (RemoteException | TransactionException e) {
+			// Announce that this bid has been accepted
+			BidAcceptedFlag2 bidAccepted = new BidAcceptedFlag2();
+			bidAccepted.lotId = bid.lotId;
+			bidAccepted.bidId = bid.id;
+			bidAccepted.lot = this.getLotDetails(bidAccepted.lotId);
+			
+			this.space.write(bidAccepted, transaction, SpaceConsts.FLAG_WRITE_TIME);
+			this.space.take(new Lot(bidAccepted.lotId), transaction, SpaceConsts.WAIT_TIME);
+			
+			TransactionUtils.commit(transaction);
+			
+		} catch (RemoteException | TransactionException | LotNotFoundException | UnusableEntryException | InterruptedException e) {
+			TransactionUtils.abort(transaction);
 			throw new AuctionCommunicationException();
 		}
 	}
@@ -666,8 +674,8 @@ public class JavaSpaceLotService implements LotService {
 	@Override
 	public void listenForAcceptedBidOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException {
 		// registerForAvailabilityEvent requires a list of templates
-		List<BidAcceptedFlag> templates = new ArrayList<BidAcceptedFlag>();
-		BidAcceptedFlag template = new BidAcceptedFlag();
+		List<BidAcceptedFlag2> templates = new ArrayList<BidAcceptedFlag2>();
+		BidAcceptedFlag2 template = new BidAcceptedFlag2();
 		template.lotId = lotId;
 		
 		templates.add(template);
@@ -680,17 +688,17 @@ public class JavaSpaceLotService implements LotService {
 				
 				try {
 					// Retrieve the entry that triggered the notification
-					BidAcceptedFlag bidPlacedFlag = (BidAcceptedFlag) event.getEntry();
+					BidAcceptedFlag2 bidAcceptedFlag = (BidAcceptedFlag2) event.getEntry();
 					
 					// Get the details of the bid that was accepted
-					Bid bid = getBidDetails(bidPlacedFlag.bidId);
+					Bid bid = getBidDetails(bidAcceptedFlag.bidId);
 					
 					if(callback != null) {
-						bid.lot = getLotDetails(bid.lotId);
+						bid.lot = bidAcceptedFlag.lot;
 						callback.call(bid);
 					}
 					
-				} catch (UnusableEntryException | LotNotFoundException | AuctionCommunicationException | BidNotFoundException e) {
+				} catch (UnusableEntryException | AuctionCommunicationException | BidNotFoundException e) {
 					// An error occurred. Do not call the callback.
 				}
 			}

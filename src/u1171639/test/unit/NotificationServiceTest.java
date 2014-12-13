@@ -16,7 +16,6 @@ import org.junit.Test;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.LotNotFoundException;
-import u1171639.main.java.exception.NotificationException;
 import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.model.lot.Bid;

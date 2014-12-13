@@ -187,6 +187,6 @@ public abstract class ViewController implements Initializable {
 		alert.setContentText(errors);
 		
 		alert.show();
-		alert.setHeight(150 + ( 25 * violations.size()));
+		alert.setHeight(175 + ( 25 * violations.size()));
 	}
 }

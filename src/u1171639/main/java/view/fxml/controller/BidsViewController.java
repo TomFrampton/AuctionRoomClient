@@ -37,6 +37,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 
 public class BidsViewController extends ViewController {
@@ -129,10 +130,10 @@ public class BidsViewController extends ViewController {
 
 					@Override
 					public Void call(Bid bid) {
-						if(!bid.bidderId.equals(getAuctionController().getCurrentUser().id)) {
+						if(!bid.bidderId.equals(getAuctionController().getCurrentUser().id) && !bid.privateBid) {
 							UserNotification notification = new UserNotification();
 							notification.title = "Bid Placed!";
-							notification.message = "A bid of �" + bid.amount.toString() + " was placed on '" +
+							notification.message = "A bid of \u00A3" + bid.amount.toString() + " was placed on '" +
 									bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
 							
 							try {
@@ -158,7 +159,7 @@ public class BidsViewController extends ViewController {
 								// Test if the accepted bid was on one of our lots.
 								if(bid.bidderId.equals(getAuctionController().getCurrentUser().id)) {
 									notification.title = "Lot Won!";
-									notification.message = "The bid of �" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
+									notification.message = "The bid of \u00A3" + bid.amount.toString() + " that you placed on '" + bid.lot.name + "' at " +
 											bid.bidTime.toString() + " has been accepted!";
 								} else {
 									notification.title = "Lot Not Won";
@@ -326,7 +327,7 @@ public class BidsViewController extends ViewController {
 
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<Bid, String> param) {
-				return new SimpleStringProperty("�" + param.getValue().amount.toString());
+				return new SimpleStringProperty("\u00A3" + param.getValue().amount.toString());
 				
 			}
 		});

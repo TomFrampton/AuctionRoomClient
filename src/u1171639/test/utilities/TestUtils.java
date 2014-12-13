@@ -30,6 +30,8 @@ public class TestUtils {
 			}
 		}
 		
+		System.out.println(objectCounter);
+		
 		return objectCounter;
 	}
 }

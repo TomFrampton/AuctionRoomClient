@@ -11,6 +11,7 @@ public class SpaceConsts {
 	public static final int TWO_MINUTES = 2 * ONE_MINUTE;
 	public static final int FIVE_MINUTES = 5 * ONE_MINUTE;
 	public static final int TEN_MINUTES = 10 * ONE_MINUTE;
+	public static final int THIRTY_MINUTES = 30 * ONE_MINUTE;
 	public static final int ONE_HOUR = 60 * ONE_MINUTE;
 	public static final int ONE_DAY = 24 * ONE_HOUR;
 	
@@ -18,8 +19,8 @@ public class SpaceConsts {
 	
 	public static final int TRANSACTION_TIME = TEN_SECONDS;
 	
-	public static final int AUCTION_ENTITY_WRITE_TIME = TEN_MINUTES;
+	public static final int AUCTION_ENTITY_WRITE_TIME = ONE_HOUR;
 	public static final int FLAG_WRITE_TIME = TEN_SECONDS;
 	
-	public static final String HOST = "localhost";
+	public static final String HOST = "waterloo";
 }
