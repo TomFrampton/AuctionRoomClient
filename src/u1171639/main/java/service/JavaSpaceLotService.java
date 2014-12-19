@@ -33,7 +33,7 @@ import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.TransactionUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
-import u1171639.main.java.utilities.flags.BidAcceptedFlag2;
+import u1171639.main.java.utilities.flags.BidAcceptedFlag;
 import u1171639.main.java.utilities.flags.BidPlacedFlag;
 import u1171639.main.java.utilities.flags.LotAddedFlag;
 import u1171639.main.java.utilities.flags.LotRemovedFlag;
@@ -373,7 +373,7 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			// Announce that this bid has been accepted
-			BidAcceptedFlag2 bidAccepted = new BidAcceptedFlag2();
+			BidAcceptedFlag bidAccepted = new BidAcceptedFlag();
 			bidAccepted.lotId = bid.lotId;
 			bidAccepted.bidId = bid.id;
 			bidAccepted.lot = getLotDetails(bidAccepted.lotId);
@@ -673,8 +673,8 @@ public class JavaSpaceLotService implements LotService {
 	@Override
 	public void listenForAcceptedBidOnLot(long lotId, final Callback<Bid, Void> callback) throws AuctionCommunicationException {
 		// registerForAvailabilityEvent requires a list of templates
-		List<BidAcceptedFlag2> templates = new ArrayList<BidAcceptedFlag2>();
-		BidAcceptedFlag2 template = new BidAcceptedFlag2();
+		List<BidAcceptedFlag> templates = new ArrayList<BidAcceptedFlag>();
+		BidAcceptedFlag template = new BidAcceptedFlag();
 		template.lotId = lotId;
 		
 		templates.add(template);
@@ -687,7 +687,7 @@ public class JavaSpaceLotService implements LotService {
 				
 				try {
 					// Retrieve the entry that triggered the notification
-					BidAcceptedFlag2 bidAcceptedFlag = (BidAcceptedFlag2) event.getEntry();
+					BidAcceptedFlag bidAcceptedFlag = (BidAcceptedFlag) event.getEntry();
 					
 					// Get the details of the bid that was accepted
 					Bid bid = getBidDetails(bidAcceptedFlag.bidId);

@@ -15,7 +15,7 @@ import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.UserNotification;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.view.fxml.lot.editor.LotFormViewController;
 
@@ -53,7 +53,7 @@ public class AddLotViewController extends ViewController {
 
 							@Override
 							public Void call(Bid bid) {
-								UserNotification notification = new UserNotification();
+								Notification notification = new Notification();
 								notification.title = "Bid Received!";
 								notification.message = "A bid of �" + bid.amount.toString() + " was placed on '" +
 										bid.lot.name + "'  by " + bid.bidder.username + ".";

@@ -5,12 +5,12 @@ import java.net.ConnectException;
 import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.UserNotification;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.counters.BidIDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.main.java.utilities.counters.NotificationIDCounter;
 import u1171639.main.java.utilities.counters.UserIDCounter;
-import u1171639.main.java.utilities.flags.BidAcceptedFlag2;
+import u1171639.main.java.utilities.flags.BidAcceptedFlag;
 import u1171639.main.java.utilities.flags.BidPlacedFlag;
 import u1171639.main.java.utilities.flags.LotAddedFlag;
 import u1171639.main.java.utilities.flags.LotRemovedFlag;
@@ -28,10 +28,10 @@ public class ObjectRemover {
 		
 		TestUtils.removeAllFromSpace(new Lot(), space);
 		TestUtils.removeAllFromSpace(new Bid(), space);
-		TestUtils.removeAllFromSpace(new UserNotification(), space);
+		TestUtils.removeAllFromSpace(new Notification(), space);
 		TestUtils.removeAllFromSpace(new UserAccount(), space);
 		
-		TestUtils.removeAllFromSpace(new BidAcceptedFlag2(), space);
+		TestUtils.removeAllFromSpace(new BidAcceptedFlag(), space);
 		TestUtils.removeAllFromSpace(new BidPlacedFlag(), space);
 		TestUtils.removeAllFromSpace(new LotAddedFlag(), space);
 		TestUtils.removeAllFromSpace(new LotRemovedFlag(), space);

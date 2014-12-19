@@ -19,7 +19,7 @@ import net.jini.space.JavaSpace;
 import net.jini.space.JavaSpace05;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.NotificationNotFoundException;
-import u1171639.main.java.model.notification.UserNotification;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.TransactionUtils;
@@ -36,10 +36,10 @@ public class JavaSpaceNotificationService implements NotificationService {
 	}
 
 	@Override
-	public List<UserNotification> retrieveAllNotifications(long userId) throws AuctionCommunicationException {
-		List<UserNotification> retrievedNotifications = new ArrayList<UserNotification>();
+	public List<Notification> retrieveAllNotifications(long userId) throws AuctionCommunicationException {
+		List<Notification> retrievedNotifications = new ArrayList<Notification>();
 		
-		UserNotification template = new UserNotification();
+		Notification template = new Notification();
 		template.recipientId = userId;
 		
 		// Create a transaction - we will abort later to return the listed
@@ -53,7 +53,7 @@ public class JavaSpaceNotificationService implements NotificationService {
 			// Keep taking notifications out until there are no more that match the template
 			boolean notificationsToTake = true;
 			while(notificationsToTake) {
-					UserNotification retrievedNotification = (UserNotification) this.space.takeIfExists(snapshot, transaction, SpaceConsts.WAIT_TIME);
+					Notification retrievedNotification = (Notification) this.space.takeIfExists(snapshot, transaction, SpaceConsts.WAIT_TIME);
 					
 					if(retrievedNotification != null) {
 						retrievedNotifications.add(retrievedNotification);
@@ -73,7 +73,7 @@ public class JavaSpaceNotificationService implements NotificationService {
 	}
 	
 	@Override
-	public void listenForNotifications(long userId, final Callback<UserNotification, Void> callback) throws AuctionCommunicationException {
+	public void listenForNotifications(long userId, final Callback<Notification, Void> callback) throws AuctionCommunicationException {
 		List<NotificationAddedFlag> templates = new ArrayList<NotificationAddedFlag>();
 		
 		// Create template to match any notification flags for this user
@@ -92,10 +92,10 @@ public class JavaSpaceNotificationService implements NotificationService {
 					NotificationAddedFlag flag = (NotificationAddedFlag) event.getEntry();
 					
 					// Use the flag to read the notification itself
-					UserNotification template = new UserNotification();
+					Notification template = new Notification();
 					template.id = flag.notificationId;
 					
-					UserNotification retrievedNotification = (UserNotification) JavaSpaceNotificationService.this.space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
+					Notification retrievedNotification = (Notification) JavaSpaceNotificationService.this.space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
 					
 					if(retrievedNotification != null && callback != null) {
 						callback.call(retrievedNotification);
@@ -117,7 +117,7 @@ public class JavaSpaceNotificationService implements NotificationService {
 	}
 
 	@Override
-	public void addNotification(UserNotification notification) throws AuctionCommunicationException {
+	public void addNotification(Notification notification) throws AuctionCommunicationException {
 		// Create a transaction
 		Transaction transaction = TransactionUtils.create(this.transMgr);
 		
@@ -158,12 +158,12 @@ public class JavaSpaceNotificationService implements NotificationService {
 	@Override
 	public void markNotificationRead(long id) throws NotificationNotFoundException, AuctionCommunicationException {
 		// Take the notification that we need to update
-		UserNotification template = new UserNotification(id);
+		Notification template = new Notification(id);
 		
 		Transaction transaction = TransactionUtils.create(this.transMgr);
 			
 		try {
-			UserNotification notification = (UserNotification) this.space.takeIfExists(template, transaction, SpaceConsts.WAIT_TIME);
+			Notification notification = (Notification) this.space.takeIfExists(template, transaction, SpaceConsts.WAIT_TIME);
 			if(notification == null) {
 				TransactionUtils.abort(transaction);
 				throw new NotificationNotFoundException("Notification with that ID could not be found.");

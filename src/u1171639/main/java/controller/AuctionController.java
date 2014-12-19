@@ -18,7 +18,7 @@ import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.UserNotification;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
 
 public interface AuctionController {
@@ -75,11 +75,11 @@ public interface AuctionController {
 	public void removeLot(long lotId) throws UnauthorisedLotActionException, LotNotFoundException, RequiresLoginException, AuctionCommunicationException;
 	
 	/* Notification  methods */
-	public List<UserNotification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException;
+	public List<Notification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void listenForNotifications(Callback<UserNotification, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
+	public void listenForNotifications(Callback<Notification, Void> callback) throws RequiresLoginException, AuctionCommunicationException;
 	
-	public void addNotification(UserNotification notification) throws RequiresLoginException, AuctionCommunicationException;
+	public void addNotification(Notification notification) throws RequiresLoginException, AuctionCommunicationException;
 	
 	public void markNotificationRead(long notificationId) throws RequiresLoginException, UnauthorisedNotificationActionException, AuctionCommunicationException, NotificationNotFoundException;
 }

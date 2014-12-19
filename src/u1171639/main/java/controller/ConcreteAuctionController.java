@@ -22,7 +22,7 @@ import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.UserNotification;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.service.AccountService;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
@@ -301,7 +301,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public List<UserNotification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException {
+	public List<Notification> retrieveAllNotifications() throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			return this.notificationService.retrieveAllNotifications(this.accountService.getCurrentUser().id);
 		} else {
@@ -310,7 +310,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 
 	@Override
-	public void listenForNotifications(Callback<UserNotification, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
+	public void listenForNotifications(Callback<Notification, Void> callback) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			this.notificationService.listenForNotifications(this.accountService.getCurrentUser().id, callback);
 		} else {
@@ -320,7 +320,7 @@ public class ConcreteAuctionController implements AuctionController {
 	}
 	
 	@Override
-	public void addNotification(UserNotification notification) throws RequiresLoginException, AuctionCommunicationException {
+	public void addNotification(Notification notification) throws RequiresLoginException, AuctionCommunicationException {
 		if(this.accountService.isLoggedIn()) {
 			notification.recipientId = this.accountService.getCurrentUser().id;
 			this.notificationService.addNotification(notification);

@@ -19,7 +19,7 @@ import u1171639.main.java.exception.UserNotFoundException;
 import u1171639.main.java.exception.ValidationException;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.UserNotification;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.utilities.Callback;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -111,7 +111,7 @@ public class BidsViewController extends ViewController {
 
 					@Override
 					public Void call(Lot lot) {
-						UserNotification notification = new UserNotification();
+						Notification notification = new Notification();
 						notification.title = "Lot Updated!";
 						notification.message = "Lot '" + lot.name + "' has been updated.";
 						
@@ -130,7 +130,7 @@ public class BidsViewController extends ViewController {
 					@Override
 					public Void call(Bid bid) {
 						if(!bid.bidderId.equals(getAuctionController().getCurrentUser().id) && !bid.privateBid) {
-							UserNotification notification = new UserNotification();
+							Notification notification = new Notification();
 							notification.title = "Bid Placed!";
 							notification.message = "A bid of \u00A3" + bid.amount.toString() + " was placed on '" +
 									bid.lot.name + "'  at " + bid.bidTime.toString() + ".";
@@ -154,7 +154,7 @@ public class BidsViewController extends ViewController {
 							
 							@Override
 							public void run() {
-								UserNotification notification = new UserNotification();
+								Notification notification = new Notification();
 								// Test if the accepted bid was on one of our lots.
 								if(bid.bidderId.equals(getAuctionController().getCurrentUser().id)) {
 									notification.title = "Lot Won!";
@@ -184,7 +184,7 @@ public class BidsViewController extends ViewController {
 
 					@Override
 					public Void call(Lot removedLot) {
-						UserNotification notification = new UserNotification();
+						Notification notification = new Notification();
 						notification.title = "Lot Removed";
 						notification.message =  "The lot '" + removedLot.name + "' has been removed from the auction by the seller.";
 						

@@ -7,7 +7,6 @@ public class MediumSecurityHashScheme implements PasswordHashScheme {
 
 	@Override
 	public String generateSalt() {
-		//http://stackoverflow.com/questions/18268502/how-to-generate-salt-value-in-java
 		final Random random = new SecureRandom();
 		byte[] salt = new byte[32];
 		random.nextBytes(salt);
@@ -16,6 +15,7 @@ public class MediumSecurityHashScheme implements PasswordHashScheme {
 
 	@Override
 	public String hashPassword(String password, String salt) {
+		// Maybe this should be called LowSecurityHashScheme
 		return password + salt;
 	}
 	

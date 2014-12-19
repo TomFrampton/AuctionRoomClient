@@ -31,7 +31,7 @@ import u1171639.main.java.model.account.UserAccount;
 import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Car;
 import u1171639.main.java.model.lot.Lot;
-import u1171639.main.java.model.notification.UserNotification;
+import u1171639.main.java.model.notification.Notification;
 import u1171639.main.java.service.AccountService;
 import u1171639.main.java.service.JavaSpaceAccountService;
 import u1171639.main.java.service.JavaSpaceLotService;
@@ -89,7 +89,7 @@ public class DummyView implements AuctionView {
 		TestUtils.removeAllFromSpace(new UserAccount(), this.space);
 		TestUtils.removeAllFromSpace(new Bid(), this.space);
 		TestUtils.removeAllFromSpace(new Lot(), this.space);
-		TestUtils.removeAllFromSpace(new UserNotification(), this.space);
+		TestUtils.removeAllFromSpace(new Notification(), this.space);
 	}
 	
 	// Account Tests
@@ -1058,15 +1058,15 @@ public class DummyView implements AuctionView {
 	
 	@Test
 	public void retrieveAllNotifications() {
-		UserNotification notification1 = new UserNotification();
+		Notification notification1 = new Notification();
 		notification1.title = "Testing Title 1";
 		notification1.message = "Testing Message 1";
 		
-		UserNotification notification2 = new UserNotification();
+		Notification notification2 = new Notification();
 		notification2.title = "Testing Title 2";
 		notification2.message = "Testing Message 2";
 		
-		UserNotification notification3 = new UserNotification();
+		Notification notification3 = new Notification();
 		notification3.title = "Testing Title 3";
 		notification3.message = "Testing Message 3";
 		
@@ -1085,13 +1085,13 @@ public class DummyView implements AuctionView {
 			this.controller.addNotification(notification1);
 			this.controller.addNotification(notification2);
 			
-			List<UserNotification> retrievedNotifications1 = this.controller.retrieveAllNotifications();
+			List<Notification> retrievedNotifications1 = this.controller.retrieveAllNotifications();
 			
 			assertTrue(retrievedNotifications1.size() == 2);
 			
-			Collections.sort(retrievedNotifications1, new Comparator<UserNotification>() {
+			Collections.sort(retrievedNotifications1, new Comparator<Notification>() {
 				@Override
-				public int compare(UserNotification o1, UserNotification o2) {
+				public int compare(Notification o1, Notification o2) {
 					return Long.compare(o1.id, o2.id);
 				}
 			});
@@ -1104,7 +1104,7 @@ public class DummyView implements AuctionView {
 			
 			this.controller.addNotification(notification3);
 			
-			List<UserNotification> retrievedNotifications2 = this.controller.retrieveAllNotifications();
+			List<Notification> retrievedNotifications2 = this.controller.retrieveAllNotifications();
 			
 			assertTrue(retrievedNotifications2.size() == 1);
 					
@@ -1119,7 +1119,7 @@ public class DummyView implements AuctionView {
 	
 	@Test
 	public void testListenForNotifications() {
-		final UserNotification notification1 = new UserNotification();
+		final Notification notification1 = new Notification();
 		notification1.title = "Testing Title 1";
 		notification1.message = "Testing Message 1";
 		
@@ -1133,10 +1133,10 @@ public class DummyView implements AuctionView {
 		final Object lock = new Object();
 		
 		try {
-			this.controller.listenForNotifications(new Callback<UserNotification, Void>() {
+			this.controller.listenForNotifications(new Callback<Notification, Void>() {
 
 				@Override
-				public Void call(UserNotification notification) {
+				public Void call(Notification notification) {
 					assertEquals(notification.title, notification1.title);
 					assertEquals(notification.message, notification1.message);
 					
