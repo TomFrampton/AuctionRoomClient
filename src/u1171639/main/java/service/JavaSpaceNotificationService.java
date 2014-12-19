@@ -95,7 +95,7 @@ public class JavaSpaceNotificationService implements NotificationService {
 					UserNotification template = new UserNotification();
 					template.id = flag.notificationId;
 					
-					UserNotification retrievedNotification = (UserNotification) space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
+					UserNotification retrievedNotification = (UserNotification) JavaSpaceNotificationService.this.space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
 					
 					if(retrievedNotification != null && callback != null) {
 						callback.call(retrievedNotification);

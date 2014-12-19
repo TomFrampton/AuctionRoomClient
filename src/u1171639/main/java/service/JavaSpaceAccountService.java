@@ -3,7 +3,6 @@ package u1171639.main.java.service;
 import java.rmi.RemoteException;
 
 import net.jini.core.entry.UnusableEntryException;
-import net.jini.core.lease.Lease;
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
 import net.jini.core.transaction.server.TransactionManager;

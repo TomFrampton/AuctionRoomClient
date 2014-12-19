@@ -2,30 +2,20 @@ package u1171639.main.java.view.fxml.controller;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.ResourceBundle;
-import java.util.Set;
-
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.NotificationNotFoundException;
 import u1171639.main.java.exception.RequiresLoginException;
 import u1171639.main.java.exception.UnauthorisedNotificationActionException;
-import u1171639.main.java.model.lot.Bid;
-import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.UserNotification;
 import u1171639.main.java.utilities.Callback;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -57,7 +47,7 @@ public class NotificationsViewController extends ViewController {
 				
 				@Override
 				public Void call(UserNotification notification) {
-					retrievedNotifications.add(notification);
+					NotificationsViewController.this.retrievedNotifications.add(notification);
 					setTabText();
 					return null;
 				}
@@ -80,7 +70,7 @@ public class NotificationsViewController extends ViewController {
 					getAuctionController().markNotificationRead(notification.id);
 					notification.read = true;
 					
-					this.setTabText();
+					setTabText();
 					
 				} catch (RequiresLoginException e) {
 					showErrorAlert(e);
@@ -97,7 +87,7 @@ public class NotificationsViewController extends ViewController {
 	
 	public void setNotificationTab(Tab notificationTab) {
 		this.notificationTab = notificationTab;
-		this.setTabText();
+		setTabText();
 	}
 	
 	public static ArrayList<TableColumn<UserNotification, ?>> getColumns(final TableView<UserNotification> table) {
@@ -143,8 +133,8 @@ public class NotificationsViewController extends ViewController {
 						super.updateItem(item, empty);
 						if(item != null) {
 							if(!item.read) {
-								if(!this.getStyleClass().contains("unread-notification")) {
-									this.getStyleClass().add("unread-notification");
+								if(!getStyleClass().contains("unread-notification")) {
+									getStyleClass().add("unread-notification");
 								}
 							}
 						}
@@ -186,7 +176,7 @@ public class NotificationsViewController extends ViewController {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				notificationTab.setText("Notifications (" + counter + ")");
+				NotificationsViewController.this.notificationTab.setText("Notifications (" + counter + ")");
 			}
 		});
 	}

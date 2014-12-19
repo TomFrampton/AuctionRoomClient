@@ -2,12 +2,10 @@ package u1171639.main.java.view.fxml.controller;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.ResourceBundle;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.RequiresLoginException;
-import u1171639.main.java.model.lot.Bid;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.utilities.Callback;
 import javafx.beans.property.SimpleStringProperty;
@@ -17,7 +15,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Alert.AlertType;
@@ -53,8 +50,8 @@ public class SellingViewController extends ViewController {
 		this.addLotController.setLotAddedCallback(new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot param) {	
-				yourRetrivedLots.add(param);
-				lotPane.getChildren().clear();
+				SellingViewController.this.yourRetrivedLots.add(param);
+				SellingViewController.this.lotPane.getChildren().clear();
 				return null;
 			}
 		});
@@ -65,7 +62,7 @@ public class SellingViewController extends ViewController {
 				// Update the lot in your lot list
 				Lot lotToUpdate = null;
 				
-				for(Lot lot : yourRetrivedLots) {
+				for(Lot lot : SellingViewController.this.yourRetrivedLots) {
 					if(lot.id.equals(updatedLot.id)) {
 						lotToUpdate = lot;
 						break;
@@ -73,7 +70,7 @@ public class SellingViewController extends ViewController {
 				}
 				
 				if(lotToUpdate != null) {
-					yourRetrivedLots.set(yourRetrivedLots.indexOf(lotToUpdate), updatedLot);
+					SellingViewController.this.yourRetrivedLots.set(SellingViewController.this.yourRetrivedLots.indexOf(lotToUpdate), updatedLot);
 				}
 				
 				Alert alert = new Alert(AlertType.INFORMATION);
@@ -89,12 +86,12 @@ public class SellingViewController extends ViewController {
 		this.bidsController.setLotWithdrawnCallback(new Callback<Lot, Void>() {
 			@Override
 			public Void call(Lot withdrawnLot) {
-				lotPane.getChildren().clear();
-				bidsPane.getChildren().clear();
+				SellingViewController.this.lotPane.getChildren().clear();
+				SellingViewController.this.bidsPane.getChildren().clear();
 				
 				Lot lotToRemove = null;
 				
-				for(Lot lot : yourRetrivedLots) {
+				for(Lot lot : SellingViewController.this.yourRetrivedLots) {
 					if(lot.id.equals(withdrawnLot.id)) {
 						lotToRemove = lot;
 						break;
@@ -102,7 +99,7 @@ public class SellingViewController extends ViewController {
 				}
 				
 				if(lotToRemove != null) {
-					yourRetrivedLots.remove(lotToRemove);
+					SellingViewController.this.yourRetrivedLots.remove(lotToRemove);
 				}
 				
 				return null;

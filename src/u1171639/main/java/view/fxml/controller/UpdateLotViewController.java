@@ -42,7 +42,7 @@ public class UpdateLotViewController extends ViewController {
 				public Void call(Lot param) {
 					try {
 						getAuctionController().updateLot(param);
-						lotUpdatedCallback.call(param);
+						UpdateLotViewController.this.lotUpdatedCallback.call(param);
 						
 					} catch (RequiresLoginException e) {
 						showErrorAlert(e);

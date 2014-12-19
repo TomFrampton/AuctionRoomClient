@@ -15,21 +15,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import u1171639.main.java.exception.AuctionCommunicationException;
-import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.NotificationNotFoundException;
-import u1171639.main.java.exception.UserNotFoundException;
-import u1171639.main.java.model.lot.Bid;
-import u1171639.main.java.model.lot.Car;
-import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.model.notification.UserNotification;
-import u1171639.main.java.service.JavaSpaceLotService;
 import u1171639.main.java.service.JavaSpaceNotificationService;
-import u1171639.main.java.service.LotService;
 import u1171639.main.java.service.NotificationService;
 import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
-import u1171639.main.java.utilities.counters.LotIDCounter;
+import u1171639.main.java.utilities.counters.IDCounter;
 import u1171639.main.java.utilities.counters.NotificationIDCounter;
 import u1171639.main.java.utilities.flags.NotificationAddedFlag;
 import u1171639.test.utilities.TestUtils;
@@ -53,7 +46,7 @@ public class NotificationServiceTest {
 		
 		this.notificationService = new JavaSpaceNotificationService(this.space, transMgr);
 		
-		NotificationIDCounter.initialiseInSpace(this.space);
+		IDCounter.initialiseInSpace(NotificationIDCounter.class, this.space);
 	}
 
 	@After
@@ -137,7 +130,7 @@ public class NotificationServiceTest {
 			});
 			
 			this.notificationService.addNotification(notification1);
-			this.waitForNotification(lock);
+			waitForNotification(lock);
 			
 		} catch (AuctionCommunicationException e) {
 			fail(e.getMessage());

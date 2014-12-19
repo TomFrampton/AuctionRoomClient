@@ -13,7 +13,7 @@ public class ValidationException extends AuctionException {
 	}
 
 	public List<ConstraintViolation> getViolations() {
-		return violations;
+		return this.violations;
 	}
 
 	public void setViolations(List<ConstraintViolation> violations) {

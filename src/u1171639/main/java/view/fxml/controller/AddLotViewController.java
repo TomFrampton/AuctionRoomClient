@@ -4,7 +4,6 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.ResourceBundle;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -71,12 +70,12 @@ public class AddLotViewController extends ViewController {
 							}
 						});
 						
-						lotTypeSelect.getSelectionModel().clearSelection();
-						lotForm.getChildren().clear();
+						AddLotViewController.this.lotTypeSelect.getSelectionModel().clearSelection();
+						AddLotViewController.this.lotForm.getChildren().clear();
 						
 						controller.clearFields();
 						
-						lotAddedCallback.call(param);
+						AddLotViewController.this.lotAddedCallback.call(param);
 						return null;
 						
 					} catch (ValidationException e) {

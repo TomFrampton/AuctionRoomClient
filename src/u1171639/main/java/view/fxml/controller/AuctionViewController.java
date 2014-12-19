@@ -26,7 +26,7 @@ public class AuctionViewController extends ViewController {
 		
 		// Pass a reference to the notificationController of its tab so it can change the text value
 		// based on how many notifications are pending.
-		this.notificationsController.setNotificationTab(notificationsTab);
+		this.notificationsController.setNotificationTab(this.notificationsTab);
 		
 		this.buyingTab.setContent(this.buyingController.getViewComponent());
 		this.sellingTab.setContent(this.sellingController.getViewComponent());

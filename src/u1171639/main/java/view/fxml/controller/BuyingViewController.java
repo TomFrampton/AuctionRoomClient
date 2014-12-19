@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import org.controlsfx.control.action.Action;
-import org.controlsfx.dialog.Dialogs;
-
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.LotNotFoundException;
 import u1171639.main.java.exception.RequiresLoginException;
@@ -20,7 +17,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn.CellDataFeatures;
@@ -54,8 +50,8 @@ public class BuyingViewController extends ViewController {
 			
 			@Override
 			public Void call(List<Lot> lotsFound) {
-				retrievedLots.clear();
-				retrievedLots.addAll(lotsFound);
+				BuyingViewController.this.retrievedLots.clear();
+				BuyingViewController.this.retrievedLots.addAll(lotsFound);
 				
 				if(lotsFound.isEmpty()) {
 					Alert alert = new Alert(AlertType.INFORMATION);

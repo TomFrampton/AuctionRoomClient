@@ -3,10 +3,9 @@ package u1171639.main.java.view;
 import java.io.File;
 
 import u1171639.main.java.controller.AuctionController;
-import u1171639.main.java.view.fxml.controller.MainViewController;
+import u1171639.main.java.view.fxml.controller.AuthenticationViewController;
 import u1171639.main.java.view.fxml.controller.ViewController;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -23,7 +22,7 @@ public class FXApplicationStart extends Application {
 	
 	@Override
 	public void start(Stage stage) throws Exception {
-		MainViewController mainView = (MainViewController) ViewController.loadView("main.fxml", FXApplicationStart.controllerInstance);
+		AuthenticationViewController mainView = (AuthenticationViewController) ViewController.loadView("authentication.fxml", FXApplicationStart.controllerInstance);
 		
 		
 		

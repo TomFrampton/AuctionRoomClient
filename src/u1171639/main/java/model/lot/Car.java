@@ -1,6 +1,5 @@
 package u1171639.main.java.model.lot;
 
-import net.sf.oval.constraint.MinLength;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 

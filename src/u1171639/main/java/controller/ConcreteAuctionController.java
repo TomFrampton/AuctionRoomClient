@@ -1,13 +1,7 @@
 package u1171639.main.java.controller;
 
-import java.net.ConnectException;
 import java.util.List;
 
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.stage.Stage;
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 import net.sf.oval.ConstraintViolation;
@@ -41,6 +35,7 @@ import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
+import u1171639.main.java.utilities.counters.IDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.main.java.utilities.counters.NotificationIDCounter;
 import u1171639.main.java.utilities.counters.UserIDCounter;
@@ -127,7 +122,7 @@ public class ConcreteAuctionController implements AuctionController {
 				@Override
 				public Void call(Bid bid) {
 					try {
-						bid.bidder = accountService.getUserDetails(bid.bidderId);
+						bid.bidder = ConcreteAuctionController.this.accountService.getUserDetails(bid.bidderId);
 						
 						if(bidCallback != null) {
 							bidCallback.call(bid);
@@ -259,7 +254,7 @@ public class ConcreteAuctionController implements AuctionController {
 				@Override
 				public Void call(Bid bid) {
 					try {
-						bid.bidder = accountService.getUserDetails(bid.bidderId);
+						bid.bidder = ConcreteAuctionController.this.accountService.getUserDetails(bid.bidderId);
 						
 						if(callback != null) {
 							callback.call(bid);
@@ -374,10 +369,10 @@ public class ConcreteAuctionController implements AuctionController {
 			System.exit(1);
 		}
 		
-		LotIDCounter.initialiseInSpace(space);
-		UserIDCounter.initialiseInSpace(space);
-		BidIDCounter.initialiseInSpace(space);
-		NotificationIDCounter.initialiseInSpace(space);
+		IDCounter.initialiseInSpace(LotIDCounter.class, space);
+		IDCounter.initialiseInSpace(UserIDCounter.class, space);
+		IDCounter.initialiseInSpace(BidIDCounter.class, space);
+		IDCounter.initialiseInSpace(NotificationIDCounter.class, space);
 		
 		PasswordHashScheme hashScheme = new MediumSecurityHashScheme();
 		

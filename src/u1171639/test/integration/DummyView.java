@@ -44,6 +44,7 @@ import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
+import u1171639.main.java.utilities.counters.IDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.main.java.utilities.counters.NotificationIDCounter;
 import u1171639.main.java.utilities.counters.UserIDCounter;
@@ -77,10 +78,10 @@ public class DummyView implements AuctionView {
 		AuctionController controller = new ConcreteAuctionController(this, lotService, accountService, notificationService);
 		controller.launch();
 		
-		LotIDCounter.initialiseInSpace(this.space);
-		UserIDCounter.initialiseInSpace(this.space);
-		BidIDCounter.initialiseInSpace(this.space);
-		NotificationIDCounter.initialiseInSpace(this.space);
+		IDCounter.initialiseInSpace(LotIDCounter.class, this.space);
+		IDCounter.initialiseInSpace(UserIDCounter.class, this.space);
+		IDCounter.initialiseInSpace(BidIDCounter.class, this.space);
+		IDCounter.initialiseInSpace(NotificationIDCounter.class, this.space);
 	}
 	
 	@After

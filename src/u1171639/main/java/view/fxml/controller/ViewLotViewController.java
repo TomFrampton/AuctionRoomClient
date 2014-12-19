@@ -8,7 +8,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
-import javafx.scene.text.Text;
 import u1171639.main.java.model.lot.Lot;
 import u1171639.main.java.view.fxml.lot.display.LotInfoViewController;
 
@@ -32,7 +31,7 @@ public class ViewLotViewController extends ViewController {
 	public void setLotToView(Lot lot) {
 		this.lotToView = lot;
 		
-		String lotType = lotToView.getClass().getSimpleName();
+		String lotType = this.lotToView.getClass().getSimpleName();
 	
 		LotInfoViewController lotFormController = this.lotForms.get(lotType);
 		this.lotForm.getChildren().clear();

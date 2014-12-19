@@ -3,9 +3,6 @@ package u1171639.test.unit;
 import static org.junit.Assert.*;
 
 import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.List;
-
 import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.JavaSpace;
 
@@ -23,8 +20,8 @@ import u1171639.main.java.utilities.MediumSecurityHashScheme;
 import u1171639.main.java.utilities.PasswordHashScheme;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
+import u1171639.main.java.utilities.counters.IDCounter;
 import u1171639.main.java.utilities.counters.UserIDCounter;
-import u1171639.main.java.view.FXApplicationStart;
 import u1171639.test.utilities.TestUtils;
 
 public class AccountServiceTest {
@@ -47,7 +44,8 @@ public class AccountServiceTest {
 		
 		this.hashScheme = new MediumSecurityHashScheme();
 		this.accountService = new JavaSpaceAccountService(this.space, this.hashScheme, transMgr);
-		UserIDCounter.initialiseInSpace(this.space);
+		
+		IDCounter.initialiseInSpace(UserIDCounter.class, this.space);
 	}
 
 	@After

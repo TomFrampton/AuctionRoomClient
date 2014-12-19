@@ -29,6 +29,7 @@ import u1171639.main.java.utilities.Callback;
 import u1171639.main.java.utilities.SpaceConsts;
 import u1171639.main.java.utilities.SpaceUtils;
 import u1171639.main.java.utilities.counters.BidIDCounter;
+import u1171639.main.java.utilities.counters.IDCounter;
 import u1171639.main.java.utilities.counters.LotIDCounter;
 import u1171639.test.utilities.TestUtils;
 
@@ -48,8 +49,8 @@ public class LotServiceTest {
 			throw new ConnectException("Could not connect to TransactionManager");
 		}
 		
-		LotIDCounter.initialiseInSpace(this.space);
-		BidIDCounter.initialiseInSpace(this.space);
+		IDCounter.initialiseInSpace(LotIDCounter.class, this.space);
+		IDCounter.initialiseInSpace(BidIDCounter.class, this.space);
 		
 		this.lotService = new JavaSpaceLotService(this.space, transMgr);
 	}
@@ -598,7 +599,7 @@ public class LotServiceTest {
 			});
 			
 			this.lotService.removeLot(lot.id, 0l);
-			this.waitForNotification(lock);
+			waitForNotification(lock);
 			
 			Lot removedLot = lotHolder[0];
 			
@@ -644,7 +645,7 @@ public class LotServiceTest {
 			});
 			
 			this.lotService.acceptBid(bidId);
-			this.waitForNotification(lock);
+			waitForNotification(lock);
 			
 			assertNotNull(bid[0]);
 			assertTrue(bid[0].id.equals(bidId));

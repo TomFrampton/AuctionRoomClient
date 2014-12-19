@@ -1,9 +1,7 @@
 package u1171639.main.java.service;
 
-import java.rmi.RemoteException;
 import java.util.List;
 
-import net.jini.core.transaction.TransactionException;
 import u1171639.main.java.exception.AuctionCommunicationException;
 import u1171639.main.java.exception.BidNotFoundException;
 import u1171639.main.java.exception.InvalidBidException;

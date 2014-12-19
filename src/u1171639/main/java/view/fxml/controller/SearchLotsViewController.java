@@ -59,7 +59,7 @@ public class SearchLotsViewController extends ViewController {
 						showErrorAlert(e);
 					}
 					
-					searchReturnedCallback.call(lotsFound);
+					SearchLotsViewController.this.searchReturnedCallback.call(lotsFound);
 					return null;
 				}
 			});

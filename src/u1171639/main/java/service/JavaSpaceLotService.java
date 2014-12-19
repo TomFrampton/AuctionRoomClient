@@ -14,7 +14,6 @@ import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
-import net.jini.core.lease.Lease;
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
 import net.jini.core.transaction.server.TransactionManager;
@@ -86,7 +85,7 @@ public class JavaSpaceLotService implements LotService {
 			lot.timeAdded = new Date(System.currentTimeMillis());
 			
 			// As we are adding a Lot we would like to be notified when someone bids on it.
-			this.listenForBidsOnLot(lot.id, bidCallback);
+			listenForBidsOnLot(lot.id, bidCallback);
 			
 			// Add the flag to announce that we have added a Lot in the space
 			LotAddedFlag lotAddedFlag = new LotAddedFlag();
@@ -162,7 +161,7 @@ public class JavaSpaceLotService implements LotService {
 			LotUpdatedFlag lotUpdatedFlag = new LotUpdatedFlag();
 			lotUpdatedFlag.lotId = lot.id;
 			
-			space.write(lotUpdatedFlag, transaction, SpaceConsts.FLAG_WRITE_TIME);
+			this.space.write(lotUpdatedFlag, transaction, SpaceConsts.FLAG_WRITE_TIME);
 			
 			// Remove the old lot and replace with this new one
 			this.space.take(template, transaction, SpaceConsts.AUCTION_ENTITY_WRITE_TIME);
@@ -365,7 +364,7 @@ public class JavaSpaceLotService implements LotService {
 	@Override
 	public void acceptBid(long bidId) throws BidNotFoundException, AuctionCommunicationException {
 		// Make sure the bid exists
-		Bid bid = this.getBidDetails(bidId);
+		Bid bid = getBidDetails(bidId);
 		if(bid == null) {
 			throw new BidNotFoundException("Bid was not found.");
 		}
@@ -377,7 +376,7 @@ public class JavaSpaceLotService implements LotService {
 			BidAcceptedFlag2 bidAccepted = new BidAcceptedFlag2();
 			bidAccepted.lotId = bid.lotId;
 			bidAccepted.bidId = bid.id;
-			bidAccepted.lot = this.getLotDetails(bidAccepted.lotId);
+			bidAccepted.lot = getLotDetails(bidAccepted.lotId);
 			
 			this.space.write(bidAccepted, transaction, SpaceConsts.FLAG_WRITE_TIME);
 			this.space.take(new Lot(bidAccepted.lotId), transaction, SpaceConsts.WAIT_TIME);
@@ -520,7 +519,7 @@ public class JavaSpaceLotService implements LotService {
 				public void notify(RemoteEvent theEvent) throws UnknownEventException, RemoteException {
 					try {
 						// We know that the Lot has been updated. Get the updated Lot.
-						Lot lot = (Lot) space.readIfExists(new Lot(lotId), null, SpaceConsts.WAIT_TIME);
+						Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(new Lot(lotId), null, SpaceConsts.WAIT_TIME);
 						
 						// If the lot was found execute the callback.
 						if(lot != null) {
@@ -572,7 +571,7 @@ public class JavaSpaceLotService implements LotService {
 					template.id = addedLotFlag.lotId;
 					
 					// Try to get the Lot that was added using our template + the ID of the Lot that was added.
-					Lot lot = (Lot) space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
+					Lot lot = (Lot) JavaSpaceLotService.this.space.readIfExists(template, null, SpaceConsts.WAIT_TIME);
 					
 					// Lot was found.
 					if(lot != null) {
@@ -624,7 +623,7 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			UnicastRemoteObject.exportObject(listener, 0);
-			space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
+			this.space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
 		} catch(RemoteException | TransactionException e) {
 			throw new AuctionCommunicationException();
 		}
@@ -665,7 +664,7 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			UnicastRemoteObject.exportObject(listener, 0);
-			space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
+			this.space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
 		} catch(RemoteException | TransactionException e) {
 			throw new AuctionCommunicationException();
 		}
@@ -706,7 +705,7 @@ public class JavaSpaceLotService implements LotService {
 		
 		try {
 			UnicastRemoteObject.exportObject(listener, 0);
-			space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
+			this.space.registerForAvailabilityEvent(templates, null, true, listener, SpaceConsts.AUCTION_ENTITY_WRITE_TIME, null);
 		} catch(RemoteException | TransactionException e) {
 			throw new AuctionCommunicationException();
 		}

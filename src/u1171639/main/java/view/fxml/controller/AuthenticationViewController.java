@@ -10,7 +10,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 
-public class MainViewController extends ViewController {
+public class AuthenticationViewController extends ViewController {
 	@FXML private BorderPane mainLayout;
 	
 	private LoginViewController loginController;
@@ -34,8 +34,8 @@ public class MainViewController extends ViewController {
 			
 			@Override
 			public Void call(Object param) {
-				auctionController = (AuctionViewController) loadView("auction.fxml");
-				mainLayout.setCenter(MainViewController.this.auctionController.getViewComponent());
+				AuthenticationViewController.this.auctionController = (AuctionViewController) loadView("auction.fxml");
+				AuthenticationViewController.this.mainLayout.setCenter(AuthenticationViewController.this.auctionController.getViewComponent());
 				return null;
 			}
 		});

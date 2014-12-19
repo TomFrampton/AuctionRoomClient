@@ -1,7 +1,5 @@
 package u1171639.main.java.model.account;
 
-import java.util.Date;
-
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 
